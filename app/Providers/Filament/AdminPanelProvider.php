@@ -63,7 +63,7 @@ class AdminPanelProvider extends PanelProvider
                 ->providers([
                     Provider::make('microsoft')
                         ->label('Microsoft')
-                        ->icon('fab-microsoft') // Assicurati di avere un set di icone installato
+                 //       ->icon('fab-microsoft') // Assicurati di avere un set di icone installato
                         ->color('info'),
                 ])
                 ->registration(false) // Permette la creazione automatica dell'utente se non esiste

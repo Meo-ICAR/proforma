@@ -35,11 +35,11 @@ return [
         ],
     ],
 
-    'microsoft' => [
-    'client_id' => env('MICROSOFT_CLIENT_ID'),
-    'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
-    'redirect' => env('MICROSOFT_REDIRECT_URI'),
-    'tenant' => env('MICROSOFT_TENANT_ID'),
+ 'microsoft' => [
+  'client_id' => env('MICROSOFT_CLIENT_ID'),
+  'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+  'redirect' => env('MICROSOFT_REDIRECT_URI'),
+ // 'proxy' => env('PROXY')  // Optional, will be used for all requests
 ],
 
 ];
