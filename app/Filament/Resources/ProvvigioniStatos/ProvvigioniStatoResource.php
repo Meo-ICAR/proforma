@@ -11,6 +11,7 @@ use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoInfolist;
 use App\Filament\Resources\ProvvigioniStatos\Tables\ProvvigioniStatosTable;
 use App\Models\ProvvigioniStato;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -21,6 +22,11 @@ class ProvvigioniStatoResource extends Resource
     protected static ?string $model = ProvvigioniStato::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+     protected static ?string $navigationLabel = 'Provvigioni Stato';
+    protected static ?string $modelLabel = 'Provvigioni Stato';
+    protected static ?string $pluralModelLabel = 'Provvigioni Stato';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'provvigioni_stato';
 

@@ -11,6 +11,7 @@ use App\Filament\Resources\PraticheStatos\Schemas\PraticheStatoInfolist;
 use App\Filament\Resources\PraticheStatos\Tables\PraticheStatosTable;
 use App\Models\PraticheStato;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -21,6 +22,11 @@ class PraticheStatoResource extends Resource
     protected static ?string $model = PraticheStato::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Pratiche Stato';
+    protected static ?string $modelLabel = 'Pratiche Stato';
+    protected static ?string $pluralModelLabel = 'Pratiche Stato';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'pratiche_stato';
 
