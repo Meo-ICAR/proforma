@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Provvigiones\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
@@ -18,128 +18,48 @@ class ProvvigionesTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
-                TextColumn::make('data_inserimento_compenso')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('descrizione')
-                    ->searchable(),
-                TextColumn::make('tipo')
+                TextColumn::make('segnalatore')
+                  ->label('Produttore')
                     ->searchable(),
                 TextColumn::make('importo')
-                    ->numeric()
+                 ->label('Provvigione')
+                  ->money('EUR') // Forza Euro e formato italiano
+                  ->alignEnd()
                     ->sortable(),
-                TextColumn::make('importo_effettivo')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status_compenso')
+
+                TextColumn::make('stato')
+                ->badge()
                     ->searchable(),
-                TextColumn::make('data_pagamento')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('n_fattura')
-                    ->searchable(),
-                TextColumn::make('data_fattura')
-                    ->date()
-                    ->sortable(),
                 TextColumn::make('data_status')
                     ->date()
                     ->sortable(),
-                TextColumn::make('denominazione_riferimento')
+                TextColumn::make('pratica.cognome_cliente')
+                ->label('Cognome Cliente')
                     ->searchable(),
-                TextColumn::make('entrata_uscita')
-                    ->searchable(),
-                TextColumn::make('id_pratica')
-                    ->searchable(),
-                TextColumn::make('segnalatore')
+                TextColumn::make('pratica.nome_cliente')
+                ->label('Nome')
                     ->searchable(),
                 TextColumn::make('istituto_finanziario')
                     ->searchable(),
-                TextColumn::make('piva')
+
+                TextColumn::make('id_pratica')
                     ->searchable(),
-                TextColumn::make('cf')
+                TextColumn::make('id')
+                    ->label('ID')
                     ->searchable(),
-                IconColumn::make('annullato')
-                    ->boolean(),
-                IconColumn::make('coordinamento')
-                    ->boolean(),
-                TextColumn::make('stato')
-                    ->searchable(),
-                TextColumn::make('proforma_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('legacy_id')
-                    ->searchable(),
-                TextColumn::make('invoice_number')
-                    ->searchable(),
-                TextColumn::make('cognome')
-                    ->searchable(),
-                TextColumn::make('quota')
-                    ->searchable(),
-                TextColumn::make('nome')
-                    ->searchable(),
-                TextColumn::make('fonte')
-                    ->searchable(),
-                TextColumn::make('tipo_pratica')
-                    ->searchable(),
-                TextColumn::make('data_inserimento_pratica')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('data_stipula')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('prodotto')
-                    ->searchable(),
-                TextColumn::make('macrostatus')
-                    ->searchable(),
-                TextColumn::make('status_pratica')
-                    ->searchable(),
-                TextColumn::make('status_pagamento')
-                    ->searchable(),
-                TextColumn::make('data_status_pratica')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('montante')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('importo_erogato')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('sended_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('received_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('paided_at')
-                    ->dateTime()
-                    ->sortable(),
+
             ])
             ->filters([
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                ViewAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                 BulkActionGroup::make([
+                 //   DeleteBulkAction::make(),
+                 //   ForceDeleteBulkAction::make(),
+                 //   RestoreBulkAction::make(),
                 ]),
             ]);
     }

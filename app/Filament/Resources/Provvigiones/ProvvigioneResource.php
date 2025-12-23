@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Provvigiones;
 
 use App\Filament\Resources\Provvigiones\Pages\CreateProvvigione;
 use App\Filament\Resources\Provvigiones\Pages\EditProvvigione;
+use App\Filament\Resources\Provvigiones\Pages\ViewProvvigione;
 use App\Filament\Resources\Provvigiones\Pages\ListProvvigiones;
 use App\Filament\Resources\Provvigiones\Schemas\ProvvigioneForm;
 use App\Filament\Resources\Provvigiones\Tables\ProvvigionesTable;
@@ -51,8 +52,8 @@ class ProvvigioneResource extends Resource
     {
         return [
             'index' => ListProvvigiones::route('/'),
-            'create' => CreateProvvigione::route('/create'),
-            'edit' => EditProvvigione::route('/{record}/edit'),
+          //  'create' => CreateProvvigione::route('/create'),
+            'view' => ViewProvvigione::route('/{record}'),
         ];
     }
 

@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class PraticaResource extends Resource
 {
@@ -44,7 +45,7 @@ class PraticaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ProvviggioniRelationManager::class,
         ];
     }
 

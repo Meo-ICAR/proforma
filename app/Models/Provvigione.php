@@ -91,6 +91,14 @@ class Provvigione extends Model
      *
      * @var array
      */
+    /**
+     * Get the pratica that owns the provvigione.
+     */
+    public function pratica()
+    {
+        return $this->belongsTo(Pratica::class, 'id_pratica', 'id');
+    }
+
     protected $casts = [
         'importo' => 'decimal:2',
         'importo_effettivo' => 'decimal:2',
@@ -138,13 +146,7 @@ class Provvigione extends Model
         return $this->belongsTo(Proforma::class);
     }
 
-    /**
-     * Get the pratica associated with the provvigione.
-     */
-    public function pratica()
-    {
-        return $this->belongsTo(Pratica::class, 'id_pratica', 'id');
-    }
+
 
     /**
      * Get the stato record associated with the provvigione.

@@ -78,6 +78,16 @@ class Pratica extends Model
      */
     public function stato()
     {
+
         return $this->belongsTo(PraticheStato::class, 'stato_pratica', 'stato_pratica');
     }
+
+        /**
+     * Get the agent (fornitore) associated with the pratica.
+     */
+    public function provvigioni()
+    {
+        return $this->HasMany(Provvigione::class, 'id_pratica', 'id');
+    }
+
 }
