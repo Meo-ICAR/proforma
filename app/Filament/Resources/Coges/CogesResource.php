@@ -11,6 +11,7 @@ use App\Filament\Resources\Coges\Schemas\CogesInfolist;
 use App\Filament\Resources\Coges\Tables\CogesTable;
 use App\Models\Coges;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -21,6 +22,11 @@ class CogesResource extends Resource
     protected static ?string $model = Coges::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Primanota';
+    protected static ?string $modelLabel = 'Primanota';
+    protected static ?string $pluralModelLabel = 'Primanota';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'coges';
 

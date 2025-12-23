@@ -9,6 +9,7 @@ use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Models\Invoice;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,6 +20,11 @@ class InvoiceResource extends Resource
     protected static ?string $model = Invoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Fatturazione';
+    protected static ?string $modelLabel =  'Fatturazione';
+    protected static ?string $pluralModelLabel =  'Fatturazione';
+  //  protected static UnitEnum|string|null $navigationGroup = 'Database';
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'Fatture_Passive';
 

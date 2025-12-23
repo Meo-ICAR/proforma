@@ -9,6 +9,7 @@ use App\Filament\Resources\InvoiceIns\Schemas\InvoiceInForm;
 use App\Filament\Resources\InvoiceIns\Tables\InvoiceInsTable;
 use App\Models\InvoiceIn;
 use BackedEnum;
+use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,6 +20,11 @@ class InvoiceInResource extends Resource
     protected static ?string $model = InvoiceIn::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Fatture';
+    protected static ?string $modelLabel = 'Fatture';
+    protected static ?string $pluralModelLabel = 'Fatture';
+    protected static UnitEnum|string|null $navigationGroup = 'Database';
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'fatture';
 
