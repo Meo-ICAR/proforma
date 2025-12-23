@@ -23,7 +23,7 @@ class ProvvigioneResource extends Resource
     protected static ?string $model = Provvigione::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-       protected static ?string $navigationLabel = 'Provvigioni';
+       protected static ?string $navigationLabel = 'Provv. Maturate';
     protected static ?string $modelLabel =  'Provvigioni';
     protected static ?string $pluralModelLabel =  'Provvigioni';
    // protected static UnitEnum|string|null $navigationGroup = 'Archivi';
@@ -54,7 +54,13 @@ class ProvvigioneResource extends Resource
             'index' => ListProvvigiones::route('/'),
           //  'create' => CreateProvvigione::route('/create'),
             'view' => ViewProvvigione::route('/{record}'),
+            'toggle-status' => Pages\ToggleProvvigioneStatus::route('/{record}/toggle-status'),
         ];
+    }
+
+    public static function getRouteBaseName(): string
+    {
+        return 'filament.admin.resources.provvigiones';
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder
