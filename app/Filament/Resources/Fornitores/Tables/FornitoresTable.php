@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Fornitores\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
@@ -18,96 +18,47 @@ class FornitoresTable
     {
         return $table
             ->columns([
-                TextColumn::make('id')
-                    ->label('ID')
-                    ->searchable(),
-                TextColumn::make('codice')
-                    ->searchable(),
-                TextColumn::make('coge')
-                    ->searchable(),
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('nome')
-                    ->searchable(),
-                TextColumn::make('natoil')
-                    ->date()
+               TextColumn::make('name')
+                    ->searchable()
                     ->sortable(),
-                TextColumn::make('indirizzo')
-                    ->searchable(),
-                TextColumn::make('comune')
-                    ->searchable(),
-                TextColumn::make('cap')
-                    ->searchable(),
-                TextColumn::make('prov')
-                    ->searchable(),
-                TextColumn::make('tel')
-                    ->searchable(),
-                TextColumn::make('coordinatore')
-                    ->searchable(),
-                TextColumn::make('piva')
-                    ->searchable(),
-                TextColumn::make('cf')
-                    ->searchable(),
-                TextColumn::make('nomecoge')
-                    ->searchable(),
-                TextColumn::make('nomefattura')
-                    ->searchable(),
-                TextColumn::make('email')
-                    ->label('Email address')
-                    ->searchable(),
-                TextColumn::make('anticipo')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('enasarco')
-                    ->badge(),
                 TextColumn::make('anticipo_residuo')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('contributo')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('contributo_description')
-                    ->searchable(),
-                TextColumn::make('anticipo_description')
-                    ->searchable(),
-                TextColumn::make('issubfornitore')
-                    ->numeric()
+                TextColumn::make('enasarco')
+                    ->badge()
                     ->sortable(),
-                TextColumn::make('operatore')
-                    ->searchable(),
-                IconColumn::make('iscollaboratore')
-                    ->boolean(),
-                IconColumn::make('isdipendente')
-                    ->boolean(),
+                 TextColumn::make('coordinatore')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('piva'),
+                                
+                TextColumn::make('email')
+                    ->label('Email address'),
+                  
+           
                 TextColumn::make('regione')
-                    ->searchable(),
+                    ->searchable()
+ ->sortable(),
                 TextColumn::make('citta')
+                    ->searchable()
+                     ->sortable(),
+                      TextColumn::make('tel')
                     ->searchable(),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+               
             ])
             ->filters([
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                ViewAction::make(),
+           
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
+               
+                
             ]);
     }
 }

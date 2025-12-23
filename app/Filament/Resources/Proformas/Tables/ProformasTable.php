@@ -17,50 +17,41 @@ class ProformasTable
     {
         return $table
             ->columns([
+                  TextColumn::make('id')
+                  ->sortable()
+                    ->searchable(),
+                 TextColumn::make('fornitore.name')
+                    ->label('Fornitore')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('stato')
+                  ->sortable()
                     ->searchable(),
-                TextColumn::make('fornitori_id')
-                    ->searchable(),
-                TextColumn::make('anticipo')
+                 
+             
+                TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable(),
+                TextColumn::make('sended_at')
+                    ->dateTime()
+                    ->sortable(),
+                     TextColumn::make('anticipo')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('anticipo_descrizione')
-                    ->searchable(),
+                TextColumn::make('paid_at')
+                    ->dateTime()
+                    ->sortable(),                          
                 TextColumn::make('compenso')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('contributo')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('contributo_descrizione')
-                    ->searchable(),
-                TextColumn::make('emailsubject')
-                    ->searchable(),
-                TextColumn::make('emailto')
-                    ->searchable(),
-                TextColumn::make('emailfrom')
-                    ->searchable(),
-                TextColumn::make('sended_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('paid_at')
-                    ->dateTime()
-                    ->sortable(),
+             
                 TextColumn::make('delta')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+             
             ])
             ->filters([
                 TrashedFilter::make(),

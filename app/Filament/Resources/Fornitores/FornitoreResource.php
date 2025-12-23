@@ -4,8 +4,10 @@ namespace App\Filament\Resources\Fornitores;
 
 use App\Filament\Resources\Fornitores\Pages\CreateFornitore;
 use App\Filament\Resources\Fornitores\Pages\EditFornitore;
+use App\Filament\Resources\Fornitores\Pages\ViewFornitore;
 use App\Filament\Resources\Fornitores\Pages\ListFornitores;
 use App\Filament\Resources\Fornitores\Schemas\FornitoreForm;
+use App\Filament\Resources\Fornitores\Schemas\FornitoreInfoList;
 use App\Filament\Resources\Fornitores\Tables\FornitoresTable;
 use App\Models\Fornitore;
 use BackedEnum;
@@ -35,6 +37,11 @@ class FornitoreResource extends Resource
         return FornitoreForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return FornitoreInfoList::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return FornitoresTable::configure($table);
@@ -52,6 +59,7 @@ class FornitoreResource extends Resource
         return [
             'index' => ListFornitores::route('/'),
             'create' => CreateFornitore::route('/create'),
+               'view' => ViewFornitore::route('/{record}'),
             'edit' => EditFornitore::route('/{record}/edit'),
         ];
     }

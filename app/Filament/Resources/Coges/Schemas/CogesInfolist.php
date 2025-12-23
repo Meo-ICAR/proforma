@@ -19,12 +19,7 @@ class CogesInfolist
                 TextEntry::make('descrizione_avere'),
                 TextEntry::make('annotazioni')
                     ->placeholder('-'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-'),
+               
             ]);
     }
 }

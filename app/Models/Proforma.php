@@ -72,7 +72,7 @@ class Proforma extends Model
      */
     public function fornitore()
     {
-        return $this->belongsTo(Fornitori::class, 'fornitori_id', 'id');
+        return $this->belongsTo(Fornitore::class, 'fornitori_id', 'id');
     }
 
     /**
