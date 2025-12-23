@@ -27,31 +27,33 @@ class ProformasTable
                 TextColumn::make('stato')
                   ->sortable()
                     ->searchable(),
-                 
-             
+
+
                 TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->date()
                     ->sortable(),
                 TextColumn::make('sended_at')
-                    ->dateTime()
+                    ->date()
                     ->sortable(),
-                     TextColumn::make('anticipo')
+                                    TextColumn::make('compenso')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('paid_at')
-                    ->dateTime()
-                    ->sortable(),                          
-                TextColumn::make('compenso')
-                    ->numeric()
-                    ->sortable(),
+
+
+
                 TextColumn::make('contributo')
                     ->numeric()
                     ->sortable(),
-             
+                       TextColumn::make('anticipo')
+                    ->numeric()
+                    ->sortable(),
+ TextColumn::make('paid_at')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('delta')
                     ->numeric()
                     ->sortable(),
-             
+
             ])
             ->filters([
                 TrashedFilter::make(),

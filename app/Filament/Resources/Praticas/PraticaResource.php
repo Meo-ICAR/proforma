@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Praticas;
 
 use App\Filament\Resources\Praticas\Pages\CreatePratica;
 use App\Filament\Resources\Praticas\Pages\EditPratica;
+use App\Filament\Resources\Praticas\Pages\ViewPratica;
 use App\Filament\Resources\Praticas\Pages\ListPraticas;
 use App\Filament\Resources\Praticas\Schemas\PraticaForm;
 use App\Filament\Resources\Praticas\Tables\PraticasTable;
@@ -53,7 +54,7 @@ class PraticaResource extends Resource
     {
         return [
             'index' => ListPraticas::route('/'),
-            'create' => CreatePratica::route('/create'),
+         //   'create' => CreatePratica::route('/create'),
             'edit' => EditPratica::route('/{record}/edit'),
         ];
     }

@@ -24,7 +24,7 @@ class ProformaResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Proforma';
     protected static ?string $modelLabel =  'Proforma';
-    protected static ?string $pluralModelLabel =  'Proformas';
+    protected static ?string $pluralModelLabel =  'Proforma';
   //  protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 2;
 

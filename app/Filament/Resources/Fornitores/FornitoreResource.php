@@ -24,9 +24,9 @@ class FornitoreResource extends Resource
     protected static ?string $model = Fornitore::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-    protected static ?string $navigationLabel = 'Agenti';
-    protected static ?string $modelLabel =  'Agenti';
-    protected static ?string $pluralModelLabel =  'Agenti';
+    protected static ?string $navigationLabel = 'Produttori';
+    protected static ?string $modelLabel =  'Produttori';
+    protected static ?string $pluralModelLabel =  'Produttori';
     protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 1;
 

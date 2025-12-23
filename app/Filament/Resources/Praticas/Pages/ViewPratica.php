@@ -3,17 +3,17 @@
 namespace App\Filament\Resources\Praticas\Pages;
 
 use App\Filament\Resources\Praticas\PraticaResource;
-use Filament\Actions\CreateAction;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Actions\EditAction;
+use Filament\Resources\Pages\ViewRecord;
 
-class ListPraticas extends ListRecords
+class ViewPratica extends ViewRecord
 {
     protected static string $resource = PraticaResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-           // CreateAction::make(),
+          //  EditAction::make(),
         ];
     }
 }
