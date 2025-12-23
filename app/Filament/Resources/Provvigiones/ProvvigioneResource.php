@@ -54,14 +54,11 @@ class ProvvigioneResource extends Resource
             'index' => ListProvvigiones::route('/'),
           //  'create' => CreateProvvigione::route('/create'),
             'view' => ViewProvvigione::route('/{record}'),
-            'toggle-status' => Pages\ToggleProvvigioneStatus::route('/{record}/toggle-status'),
+
         ];
     }
 
-    public static function getRouteBaseName(): string
-    {
-        return 'filament.admin.resources.provvigiones';
-    }
+
 
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {

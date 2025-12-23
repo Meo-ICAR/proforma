@@ -9,20 +9,25 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Forms;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Route;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Columns\Summarizers\Sum;
+use App\Models\Provvigione;
+use Filament\Forms\Components\DatePicker;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\Select;
+use Filament\Actions\Action;
+
+
 
 class ProvvigionesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(\App\Models\Provvigione::query()
+            ->query(Provvigione::query()
               ->where('entrata_uscita', 'Uscita')
               ->where(function($query) {
                   $query->where('stato', 'Inserito')
@@ -64,7 +69,7 @@ class ProvvigionesTable
             ->filters([
                 Filter::make('stato')
                     ->form([
-                        Forms\Components\Select::make('stato')
+                        Select::make('stato')
                             ->label('Stato')
                             ->options([
                                 'Inserito' => 'Inserito',
@@ -81,7 +86,7 @@ class ProvvigionesTable
                     }),
                 Filter::make('data_status')
                     ->form([
-                        Forms\Components\DatePicker::make('data_limite')
+                        DatePicker::make('data_limite')
                             ->label('Provvigioni maturate fino al')
                             ->default(now()),
                     ])
@@ -94,11 +99,22 @@ class ProvvigionesTable
                     }),
 
             ])
-            ->recordUrl(
-                fn ($record) => route('filament.admin.resources.provvigiones.toggle-status', $record)
-            )
             ->recordActions([
-                ViewAction::make(),
+                Action::make('toggleStatus')
+                    ->label('')
+                    ->icon('heroicon-o-arrow-path')
+                    ->action(function ($record) {
+                        $record->update([
+                            'stato' => $record->stato === 'Inserito' ? 'Sospeso' : 'Inserito'
+                        ]);
+                        Notification::make()
+                            ->title('Stato aggiornato con successo')
+                            ->success()
+                            ->send();
+                    })
+                    ->iconButton()
+                    ->color('primary'),
+
             ])
             ->toolbarActions([
                  BulkActionGroup::make([
