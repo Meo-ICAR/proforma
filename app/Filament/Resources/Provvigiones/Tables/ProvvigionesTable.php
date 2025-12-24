@@ -29,6 +29,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as Builderq;
+use Illuminate\Database\Eloquent\Collection; // ← Import corretto
 
 use App\Models\Provvigione;
 
@@ -55,17 +56,12 @@ class ProvvigionesTable
               ->headerActions([
              BulkAction::make('emetti')
                ->label('Emetti Proforma')
+               ->color('success')
                ->requiresConfirmation()
-                ->accessSelectedRecords()
-                ->action(function (Model $record, Collection $selectedRecords) {
-                    $selectedRecords->each(
-                        fn (Model $selectedRecord) => $selectedRecord->update([
-                            'Proforma' => $record->stato,
-                        ]),
-                    );
-                })
-
-
+               ->accessSelectedRecords()
+               ->action(function (Collection $records) {
+                    $records->each->update(['stato' => 'Proforma']);
+               })
         ])
             ->columns([
 

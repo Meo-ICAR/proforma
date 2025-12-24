@@ -108,4 +108,62 @@ class Proforma extends Model
     {
         return $query->where('stato', $status);
     }
+
+    /**
+     * Create a new proforma from a fornitore
+     *
+     * @param string $fornitori_id
+     * @return \App\Models\Proforma
+     */
+    public static function createFromFornitore(string $fornitori_id): Proforma
+    {
+        $fornitore = \App\Models\Fornitore::with('company')->findOrFail($fornitori_id);
+
+        $proformaData = [
+            'fornitori_id' => $fornitori_id,
+            'stato' => 'Inserito',
+            'anticipo' => $fornitore->anticipo,
+            'anticipo_descrizione' => $fornitore->anticipo_description,
+            'compenso' => 0,
+            'compenso_descrizione' => $fornitore->company->compenso_descrizione ?? 'Compenso',
+            'contributo' => $fornitore->contributo,
+            'contributo_descrizione' => $fornitore->contributo_description,
+            'emailto' => $fornitore->email,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if ($fornitore->company) {
+            $proformaData['company_id'] = $fornitore->company->id;
+            // Use company's email subject if available
+            if (!empty($fornitore->company->emailsubject)) {
+                $proformaData['emailsubject'] = $fornitore->company->emailsubject;
+                $proformaData['emailfrom'] =  $fornitore->company->emailfrom;
+            }
+        }
+
+        return self::create($proformaData);
+    }
+
+    /**
+     * Find or create a proforma for a fornitore by P.IVA and return its ID
+     *
+     * @param string $piva The VAT number to search for
+     * @return string The ID of the found or created proforma
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no fornitore is found with the given P.IVA
+     */
+    public static function findOrCreateByPiva(string $piva): string
+    {
+        // Find fornitore by P.IVA (case insensitive and ignoring spaces)
+        $fornitore = \App\Models\Fornitore::whereRaw("REPLACE(piva, ' ', '') = ?", [str_replace(' ', '', $piva)])
+            ->firstOrFail();
+
+        // Check if there's already a proforma in 'Inserito' status for this fornitore
+        $existingProforma = self::where('fornitori_id', $fornitore->id)
+            ->where('stato', 'Inserito')
+            ->first();
+
+        // Return existing proforma ID or create a new one and return its ID
+        return $existingProforma ? $existingProforma->id : self::createFromFornitore($fornitore->id)->id;
+    }
 }

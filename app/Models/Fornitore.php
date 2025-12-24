@@ -43,7 +43,9 @@ class Fornitore extends Model
         'iscollaboratore',
         'isdipendente',
         'regione',
-        'citta'
+        'citta',
+        'company_id'
+
     ];
 
     protected $casts = [
@@ -63,6 +65,11 @@ class Fornitore extends Model
         'issubfornitore' => false,
     ];
 
-    // Add any relationships here if needed
-    // For example, if you have relationships with other tables
+    /**
+     * Get the company that owns the fornitore.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id', 'id');
+    }
 }
