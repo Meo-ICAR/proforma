@@ -2,24 +2,35 @@
 
 namespace App\Filament\Resources\Provvigiones\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
-
+use Filament\Actions\BulkAction;
 use Filament\Actions\RestoreBulkAction;
+
+use Filament\Tables\Table;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\Filter;
-use Filament\Forms;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Columns\Summarizers\Sum;
-use App\Models\Provvigione;
-use Filament\Forms\Components\DatePicker;
-use Filament\Notifications\Notification;
-use Filament\Forms\Components\Select;
-use Filament\Actions\Action;
 
+use Filament\Forms;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+
+use Filament\Tables\Actions\ActionGroup;
+
+use Filament\Tables\Enums\RecordActionsPosition;
+
+use Filament\Tables\Filters\Filter;
+
+use Filament\Notifications\Notification;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as Builderq;
+
+use App\Models\Provvigione;
 
 
 class ProvvigionesTable
@@ -27,14 +38,46 @@ class ProvvigionesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(Provvigione::query()
+                    ->query(Provvigione::query()
               ->where('entrata_uscita', 'Uscita')
               ->where(function($query) {
                   $query->where('stato', 'Inserito')
                         ->orWhere('stato', 'Sospeso');
               })
+
+
             )
+             ->reorderableColumns()
+             ->selectable()
+              ->checkIfRecordIsSelectableUsing(
+            fn (Model $record): bool => $record->stato === 'Inserito')
+
+              ->headerActions([
+             BulkAction::make('emetti')
+               ->label('Emetti Proforma')
+               ->requiresConfirmation()
+                ->accessSelectedRecords()
+                ->action(function (Model $record, Collection $selectedRecords) {
+                    $selectedRecords->each(
+                        fn (Model $selectedRecord) => $selectedRecord->update([
+                            'Proforma' => $record->stato,
+                        ]),
+                    );
+                })
+
+
+        ])
             ->columns([
+
+                TextColumn::make('stato')
+                ->badge()
+                        ->color(fn (string $state): string => match($state) {
+            'Inserito' => 'warning',
+            'Sospeso' => 'danger',
+            default => 'gray',
+                            })
+                  ->sortable()
+                    ->searchable(),
                 TextColumn::make('segnalatore')
                   ->label('Produttore')
                   ->sortable()
@@ -43,13 +86,18 @@ class ProvvigionesTable
                  ->label('Provvigione')
                   ->money('EUR') // Forza Euro e formato italiano
                   ->alignEnd()
-                  ->summarize(Sum::make()->label('Totale: '))
+                  ->summarize(Sum::make()->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
 
-                TextColumn::make('stato')
-                ->badge()
-                  ->sortable()
-                    ->searchable(),
+
+                IconColumn::make('coordinamento')
+                ->boolean()
+                ->trueIcon('heroicon-o-check-circle')
+                ->trueColor('success') // Verde
+                ->falseIcon(null) // Nasconde icona se false
+                ->label('Coord'),
+
+
                 TextColumn::make('data_status')
                     ->date()
                     ->sortable(),
@@ -67,7 +115,39 @@ class ProvvigionesTable
 
             ])
             ->filters([
-                Filter::make('stato')
+
+
+                Filter::make('data_status')
+                    ->form([
+                        DatePicker::make('data_limite')
+                            ->label('Provvigioni maturate fino al')
+                            ->default(now()->subMonth()->endOfMonth()),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['data_limite'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('data_status', '<=', $date),
+                            );
+                    }),
+                     Filter::make('coordinamento')
+                    ->form([
+                        Select::make('coordinamento')
+                            ->label('Coordinamento')
+                            ->options([
+                                'Sì' => 'Sì',
+                                'No' => 'No',
+                            ])
+                            ->placeholder('Tutti'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['coordinamento'],
+                                fn (Builder $query, $coordinamento): Builder => $query->where('coordinamento', $coordinamento),
+                            );
+                    }),
+                      Filter::make('stato')
                     ->form([
                         Select::make('stato')
                             ->label('Stato')
@@ -76,25 +156,12 @@ class ProvvigionesTable
                                 'Sospeso' => 'Sospeso',
                             ])
                             ->placeholder('Tutti gli stati'),
-                    ])
+                            ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['stato'],
                                 fn (Builder $query, $stato): Builder => $query->where('stato', $stato),
-                            );
-                    }),
-                Filter::make('data_status')
-                    ->form([
-                        DatePicker::make('data_limite')
-                            ->label('Provvigioni maturate fino al')
-                            ->default(now()),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['data_limite'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('data_status', '<=', $date),
                             );
                     }),
 
@@ -115,7 +182,7 @@ class ProvvigionesTable
                     ->iconButton()
                     ->color('primary'),
 
-            ])
+            ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                  BulkActionGroup::make([
                  //   DeleteBulkAction::make(),
@@ -132,9 +199,41 @@ class ProvvigionesTable
                 ->label('Produttore')
                 ->collapsible(), // SOSTITUISCE le vecchie impostazioni di groupingSettings
            ])
+           /*
+           ->recordGroupActions([
+        Action::make('create_proforma')
+        ->label('Emetti proforma')
+        ->icon('heroicon-o-arrow-down-tray')
+        ->action(function (Group $livewire, array $data, $groupKey) {
+            // $groupKey contiene il valore del raggruppamento
+            // Esporta solo record di questo gruppo
+        }),
+         ])
+         */
         // Se vuoi che sia raggruppato di default:
         ->defaultGroup('segnalatore')
 
             ;
     }
+
+    protected function getTableListeners(): array
+{
+    return [
+        'table-row-selected' => 'handleRowSelected',
+        'table-row-deselected' => 'handleRowDeselected',
+    ];
+}
+    public function handleRowSelected($recordId): void
+{
+    $record = Model::find($recordId);
+    if ($record->stato === 'Inserito') {
+        $record->update(['stato' => 'Sospeso']);
+    }
+}
+
+public function handleRowDeselected($recordId): void
+{
+    $record = Model::find($recordId);
+    $record->update(['stato' => 'Inserito']);
+}
 }

@@ -11,13 +11,19 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
+use App\Models\Proforma;
+
 class ProformasTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+          ->query(Proforma::query()
+              ->where('sended_at', null)
+          )
             ->columns([
                   TextColumn::make('id')
+                    ->label('Proforma')
                   ->sortable()
                     ->searchable(),
                  TextColumn::make('fornitore.name')
@@ -35,7 +41,7 @@ class ProformasTable
                 TextColumn::make('sended_at')
                     ->date()
                     ->sortable(),
-                                    TextColumn::make('compenso')
+                TextColumn::make('compenso')
                     ->numeric()
                     ->sortable(),
 
