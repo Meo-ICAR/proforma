@@ -17,7 +17,8 @@ class VenasarcototsTable
         return $table
             ->columns([
                 TextColumn::make('segnalatore')
-                    ->searchable(),
+                    ->searchable()
+                     ->sortable(),
                 TextColumn::make('montante')
                        ->money('EUR') // Forza Euro e formato italiano
                   ->alignEnd()
