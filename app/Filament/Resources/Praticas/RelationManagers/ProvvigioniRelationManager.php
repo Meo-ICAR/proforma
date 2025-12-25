@@ -12,6 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 
 class ProvvigioniRelationManager extends RelationManager
 {
@@ -76,13 +77,53 @@ class ProvvigioniRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn (\App\Models\Provvigione $record): bool =>
                         $record->entrata_uscita === 'Entrata' &&
-                        (!isset($record->quota) || $record->quota > 0)
+                        (!isset($record->quota) )
                     )
-                    ->action(function (Model $record) {
-                        // Add your storno logic here
-                        // For example:
-                        // $record->update(['entrata_uscita' => 'Storno']);
-                        // or any other storno logic you need
+                    ->form([
+                        TextInput::make('quota')
+                            ->label('Importo Storno')
+                            ->numeric()
+                            ->required()
+                            ->maxValue(fn ($record) => $record->importo)
+                            ->step(0.01)
+                            ->prefix('€')
+                    ])
+                    ->action(function (array $data, \App\Models\Provvigione $record): void {
+                        $provvigioneattiva = $record->importo;
+                        $quotaPercent = - $data['quota'] / $provvigioneattiva;
+
+                        // Update the current record
+                        $record->update([
+                            'quota' => $data['quota'],
+                        ]);
+
+                        // Get all related 'Uscita' provvigioni for the same pratica that are not 'Annullato'
+                        $relatedUscite = \App\Models\Provvigione::where('id_pratica', $record->id_pratica)
+                            ->where('entrata_uscita', 'Uscita')
+                            ->where('stato', '!=', 'Annullato')
+                            ->get();
+
+                        // Update each related 'Uscita' record
+                        foreach ($relatedUscite as $uscita) {
+                            $newRecord = $uscita->replicate();
+        $newRecord->id = $record->id.'-';
+        // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
+        $newRecord->status_compenso = 'Pratica stornata';
+        $newRecord->importo = $uscita->importo * $quotaPercent;
+        $newRecord->decrizione = 'Storno provvigione ' . $record->id;
+
+        // 3. Salva il nuovo record nel database
+        $newRecord->save();
+                            $uscita->update([
+                                'quota' => $uscita->importo * $quotaPercent,
+                            ]);
+                        }
+
+                        Notification::make()
+                            ->title('Provvigione stornata')
+                            ->body('Stornate ' . $relatedUscite->count() . ' provvigioni passive')
+                            ->success()
+                            ->send();
                     }),
               //  EditAction::make(),
               //  DissociateAction::make(),

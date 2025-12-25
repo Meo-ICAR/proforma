@@ -146,6 +146,13 @@ class Provvigione extends Model
         return $this->belongsTo(Proforma::class);
     }
 
+   /**
+     * Get the proforma associated with the provvigione.
+     */
+    public function compenso()
+    {
+        return $this->belongsTo(Compenso::class);
+    }
 
 
     /**
@@ -154,6 +161,14 @@ class Provvigione extends Model
     public function statoRecord()
     {
         return $this->belongsTo(ProvvigioniStato::class, 'stato', 'stato');
+    }
+
+      /**
+     * Get the stato record associated with the provvigione.
+     */
+    public function compensoRecord()
+    {
+        return $this->belongsTo(Compenso::class, 'stato_compenso', 'stato_compenso');
     }
 
     /**

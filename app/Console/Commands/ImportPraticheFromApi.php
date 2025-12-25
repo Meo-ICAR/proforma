@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Pratiche;
+use App\Models\Pratica;
+use App\Models\Fornitore;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
@@ -106,18 +107,24 @@ class ImportPraticheFromApi extends Command
                             continue;
                         }
 
-                        $existing = Pratiche::where('id', $praticaData['id'])->first();
+                        $existing = Pratica::where('id', $praticaData['id'])->first();
 
                         if ($existing) {
                             $existing->update($praticaData);
                             $updated++;
                           //  $this->info("Updated pratica: {$praticaData['id']}");
                         } else {
-                            Pratiche::create($praticaData);
+                            // check fornitore esiste
+                            $fornitore = Fornitore::firstOrCreate(
+                                ['name' => $praticaData['denominazione_agente']],
+                                ['piva' => $praticaData['partita_iva_agente']]
+                            );
+                            Pratica::create($praticaData);
                             $imported++;
                           //  $this->info("Imported new pratica: {$praticaData['id']}");
                         }
                     } catch (\Exception $e) {
+
                         $this->error("Error processing item: " . $e->getMessage());
                         $errors++;
                     }
@@ -174,7 +181,9 @@ class ImportPraticheFromApi extends Command
             'cognome_cliente' => $apiData['Nome Cliente'] ?? null,
             'codice_fiscale' => $apiData['Codice Fiscale'] ?? null,
             'denominazione_agente' => $apiData['Denominazione Agente'] ?? null,
-            'partita_iva_agente' => $apiData['Partita IVA Agente'] ?? null,
+       'partita_iva_agente' => (blank($apiData['Partita IVA Agente'] ?? null) || $apiData['Partita IVA Agente'] < '0')
+    ? '---'
+    : $apiData['Partita IVA Agente'],
             'denominazione_banca' => $apiData['Denominazione Banca'] ?? null,
             'tipo_prodotto' => $apiData['Tipo Prodotto'] ?? null,
             'denominazione_prodotto' => $apiData['Descrizione Prodotto'] ?? null,

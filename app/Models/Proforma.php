@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use \App\Models\Fornitore;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ProformaEmail;
 
 class Proforma extends Model
 {
@@ -206,5 +208,66 @@ class Proforma extends Model
 public function getProformanomeAttribute()
 {
     return $this->emailsubject . ' #' . $this->id;
+}
+
+/**
+ * Send the proforma via email
+ *
+ * @param string $email Recipient email address
+ * @param string|null $subject Optional custom subject
+ * @param string|null $message Optional custom message
+ * @return bool
+ */
+public function sendEmail($email, $subject = null, $message = null)
+{
+    try {
+        $subject = $subject ?? "Proforma #{$this->id} - {$this->fornitore->name}";
+        $message = $message ?? "In allegato trovi la proforma #{$this->id}";
+
+        Mail::to($email)
+            ->send(new ProformaEmail($this, $subject, $message));
+
+        // Update the proforma status
+        $this->update([
+            'stato' => 'Inviato',
+             'sended_at' => now(),
+        ]);
+
+        return true;
+    } catch (\Exception $e) {
+        \Log::error("Errore nell'invio dell'email per la proforma #{$this->id}: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Send the proforma via email
+ *
+ * @param string $email Recipient email address
+ * @param string|null $subject Optional custom subject
+ * @param string|null $message Optional custom message
+ * @return bool
+ */
+public function testEmail($email, $subject = null, $message = null)
+{
+    try {
+        $subject = $subject ?? "Proforma #{$this->id} - {$this->fornitore->name}";
+        $message = $message ?? "In allegato trovi la proforma #{$this->id}";
+
+        Mail::to($email)
+            ->send(new ProformaEmail($this, $subject, $message));
+
+        // Update the proforma status
+        /*
+        $this->update([
+            'stato' => 'Inviato',
+            'sended_at' => now(),
+        ]);
+        */
+        return true;
+    } catch (\Exception $e) {
+        \Log::error("Errore nell'invio dell'email per la proforma #{$this->id}: " . $e->getMessage());
+        return false;
+    }
 }
 }

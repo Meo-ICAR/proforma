@@ -16,12 +16,10 @@ use App\Models\Proforma;
 
 class ProformasTable
 {
+
     public static function configure(Table $table): Table
     {
         return $table
-          ->query(Proforma::query()
-              ->where('stato', 'Inserito')
-          )
             ->columns([
                   TextColumn::make('emailsubject')
                     ->label('Proforma')
@@ -68,7 +66,18 @@ class ProformasTable
 
             ])
             ->filters([
-                TrashedFilter::make(),
+
+                SelectFilter::make('stato')
+        ->label('Stato')
+        ->options([
+            'Inserito' => 'Inserito',
+            'Spedito' => 'Spedito',
+            'Pagato' => 'Pagato',
+            'Annullato' => 'Annullato',
+            // Add other statuses as needed
+        ])
+        ->multiple()
+        ->placeholder('Tutti gli stati')->default('Inserito'),
             ])
             ->recordActions([
                 EditAction::make()->label(false),
@@ -83,6 +92,45 @@ class ProformasTable
                ->action(function (Collection $records) {
                      // Process each record with a visible loop
                     $records->each(function ($record) {
+                         $record->sendEmail();
+                    });
+
+                    // Show success notification with count
+                    Notification::make()
+                        ->title(count($records) . '  proforma inviati')
+                        ->success()
+                        ->send();
+
+             }),
+            // ->iconButton()
+
+  BulkAction::make('test')
+               ->label('Test invio email')
+               ->color('blue')
+               ->requiresConfirmation()
+               ->accessSelectedRecords()
+               ->action(function (Collection $records) {
+                     // Process each record with a visible loop
+                    $records->each(function ($record) {
+                        $record->testEmail();
+
+                    });
+
+                    // Show success notification with count
+                    Notification::make()
+                        ->title(count($records) . '  proforma modificati')
+                        ->success()
+                        ->send();
+
+             }),
+               BulkAction::make('forza')
+               ->label('Forza data invio email')
+               ->color('success')
+               ->requiresConfirmation()
+               ->accessSelectedRecords()
+               ->action(function (Collection $records) {
+                     // Process each record with a visible loop
+                    $records->each(function ($record) {
 
                         $record->update([
                             'stato' => 'Inviato',
@@ -92,13 +140,13 @@ class ProformasTable
 
                     // Show success notification with count
                     Notification::make()
-                        ->title(count($records) . '  proforma inviati')
+                        ->title(count($records) . '  proforma forzata data invio')
                         ->success()
                         ->send();
 
              })
             // ->iconButton()
-             ->color('primary'),
+            // ->color('primary'),
   ]);
 
     }

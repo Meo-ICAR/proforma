@@ -259,7 +259,7 @@ class ImportProvvigioniFromApi extends Command
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
                     if ($existing) {
                         // Check if any of the timestamp fields are already set
-                        if (empty($existing->sended_at) && empty($existing->received_at) && empty($existing->paided_at)) {
+                        if (empty($existing->sended_at) ) {
                             $existing->update($provvigioneData);
                             $updated++;
                            // $this->info("Updated provvigione: {$provvigioneData['id']}");
@@ -279,44 +279,17 @@ class ImportProvvigioniFromApi extends Command
                     $errors++;
                 }
             }
-            // Update customer names from pratiche if we have imported any records
-
-            if ($updated > 0) {
-
-
                 $updatedCount = \DB::update(
-                    "UPDATE provvigioni p
-                    INNER JOIN pratiches k ON k.id = p.id_pratica
-                    SET  p.status_pratica = k.stato_pratica
-                    WHERE p.cognome IS NOT NULL"
-                );
-
-                $this->info("Updated {$updatedCount} records with status from pratiche.");
-            }
-              // Update customer names from pratiche if we have imported any records
-              if ($imported + $updatedCount> 0) {
-                $this->info("Updating customer names from pratiche...");
-
-                $updatedCount = \DB::update(
-                    "UPDATE provvigioni p
-                    INNER JOIN pratiches k ON k.id = p.id_pratica
-                    SET p.cognome = k.cognome_cliente, p.nome = k.nome_cliente , p.status_pratica = k.stato_pratica
-                    WHERE p.cognome IS NULL"
-                );
-
-                $this->info("Updated {$updatedCount} records with customer names from pratiche.");
-            }
-                $updatedCount = \DB::update(
-                    "update provvigioni set status_pratica = 'PERFEZIONATA'  WHERE status_pratica <'A' and status_compenso  = 'Pratica perfezionata'"
-                );
-                $this->info("Updated {$updatedCount} records with status_pratica PERFEZIONATA");
-               $updatedCount = \DB::update(
                     "UPDATE provvigioni p
 
                     SET  p.stato = 'Inserito', p.deleted_at = NULL
-                    WHERE p.stato IS  NULL and (p.status_pratica = 'PERFEZIONATA' or p.status_pratica = 'IN AMMORTAMENTO')"
+                    WHERE p.stato IS  NULL and (p.status_compenso = 'Pratica perfezionata' or p.status_pratica = 'IN AMMORTAMENTO')"
                 );
-                $this->info("Updated {$updatedCount} records with stato from pratiche.");
+                $this->info("Updated {$updatedCount} records to stato inserito from pratiche.");
+                /*
+                --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese
+                --- guardando updated_at
+                ---
                 $updatedCount = \DB::update(
                     "UPDATE provvigioni p
                     INNER JOIN vwprovvcoordinamento  v on v.id_pratica = p.id_pratica and p.importo = v.minimo
@@ -324,28 +297,9 @@ class ImportProvvigioniFromApi extends Command
                     where p.stato = 'Inserito'"
                 );
                 $this->info("Updated {$updatedCount} records with provv. stato = coordinamento");
+                */
 
-            $insertedFornitoriCount = \DB::insert(
-                    "insert into fornitoris (id,name,nome, piva, cf ) select uuid(),denominazione_riferimento,denominazione_riferimento, piva, cf from vwfornitorinew"
-            );
-            $this->info("Inserted {$insertedFornitoriCount} records into produttori.");
 
-            $insertedClientiCount = \DB::insert(
-                "insert into clientis (id,name,nome) select uuid(),denominazione_riferimento,denominazione_riferimento from vwclientinew"
-            );
-            $this->info("Inserted {$insertedClientiCount} records into mandatarie.");
-
-            $insertedFornitoriCount = \DB::update("update provvigioni p inner join fornitoris f on f.name = p.denominazione_riferimento set p.fornitori_id = f.id");
-            $this->info("Updated {$insertedFornitoriCount} records with fornitori_id from fornitori.");
-
-            $insertedClientiCount = \DB::update("update provvigioni p inner join clientis c on c.name = p.denominazione_riferimento set p.clienti_id = c.id");
-            $this->info("Updated {$insertedClientiCount} records with clientis_id from clientis.");
-
-/*
- $insertedClientiCount = \DB::update("UPDATE provvigioni p inner join vwprovvdoppie v on v.minimo = p.id set  stato = 'Annullato', sended_at = null, paided_at= null, received_at = null, annullato = true
-where v.minimo < v.maximo");
- $this->info("Deleted {$insertedClientiCount} records with duplicated provvigioni.");
-*/
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
         } catch (\Illuminate\Http\Client\RequestException $e) {

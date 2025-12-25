@@ -23,6 +23,7 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Enums\RecordActionsPosition;
 
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 
 use Filament\Notifications\Notification;
 
@@ -34,6 +35,7 @@ use Illuminate\Database\Eloquent\Collection; // ← Import corretto
 
 use App\Models\Provvigione;
 use App\Models\Proforma;
+use App\Models\Compenso;
 
 class ProvvigionesTable
 {
@@ -42,13 +44,7 @@ class ProvvigionesTable
         return $table
                     ->query(Provvigione::query()
               ->where('entrata_uscita', 'Uscita')
-              ->where(function($query) {
-                  $query->where('stato', 'Inserito')
-                        ->orWhere('stato', 'Sospeso');
-              })
-
-
-            )
+                        )
              ->reorderableColumns()
              ->selectable()
               ->checkIfRecordIsSelectableUsing(
@@ -175,6 +171,23 @@ class ProvvigionesTable
                                 fn (Builder $query, $stato): Builder => $query->where('stato', $stato),
                             );
                     }),
+SelectFilter::make('status_compenso')
+
+                ->label('Stato Compenso')
+                ->multiple()
+                ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
+
+                   SelectFilter::make('stati')
+        ->label('Stato')
+        ->options([
+            'Inserito' => 'Inserito',
+            'Spedito' => 'Spedito',
+            'Pagato' => 'Pagato',
+            'Annullato' => 'Annullato',
+            // Add other statuses as needed
+        ])
+        ->multiple()
+        ->placeholder('Tutti gli stati')->default(['Inserito','Sospeso']),
 
             ])
             ->recordActions([
