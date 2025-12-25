@@ -104,4 +104,26 @@ class Invoice extends Model
     {
         return $this->belongsTo(Clienti::class, 'clienti_id');
     }
+
+    /**
+     * Get the related proformas for this invoice.
+     * Matches proformas where:
+     * - proforma->fornitore->piva matches invoice->fornitore_piva
+     * - invoice->invoice_date is on or after proforma->sended_at
+     * - proforma->paid_at is null
+     */
+public function relatedProformas()
+{
+    return $this->hasManyThrough(
+        Proforma::class,
+        Fornitore::class,
+        'piva', // Foreign key on fornitore table
+        'fornitori_id', // Foreign key on proformas table
+        'fornitore_piva', // Local key on invoices table
+        'id' // Local key on fornitore table
+    )
+    ->whereDate('proformas.sended_at', '<=', $this->invoice_date)
+    ->whereNull('proformas.paid_at')
+    ->with('fornitore');
+}
 }

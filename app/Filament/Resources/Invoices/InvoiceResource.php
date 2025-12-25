@@ -4,12 +4,14 @@ namespace App\Filament\Resources\Invoices;
 
 use App\Filament\Resources\Invoices\Pages\CreateInvoice;
 use App\Filament\Resources\Invoices\Pages\EditInvoice;
+use App\Filament\Resources\Invoices\Pages\ViewInvoice;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
 use App\Filament\Resources\Invoices\Schemas\InvoiceForm;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Models\Invoice;
 use BackedEnum;
 use UnitEnum;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,12 +21,22 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-    protected static ?string $navigationLabel = 'Fatturazione';
-    protected static ?string $modelLabel =  'Fatturazione';
-    protected static ?string $pluralModelLabel =  'Fatturazione';
-  //  protected static UnitEnum|string|null $navigationGroup = 'Database';
+     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?string $navigationLabel = 'Riconciliazione Fatture';
+    protected static ?string $modelLabel =  'Riconciliazione Fatture';
+    protected static ?string $pluralModelLabel =  'Riconciliazione Fatture';
+//    protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::where('isreconiled', false)->count() ?: null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
 
     protected static ?string $recordTitleAttribute = 'Fatture_Passive';
 
@@ -41,7 +53,7 @@ class InvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ProformasRelationManager::class,
         ];
     }
 
@@ -49,8 +61,31 @@ class InvoiceResource extends Resource
     {
         return [
             'index' => ListInvoices::route('/'),
+            'import' => Pages\ImportInvoices::route('/import'),
             'create' => CreateInvoice::route('/create'),
-            'edit' => EditInvoice::route('/{record}/edit'),
+            'view' => ViewInvoice::route('/{record}'),
+            // Edit page is intentionally disabled
+            // 'edit' => EditInvoice::route('/{record}/edit'),
         ];
     }
+
+    public static function getNavigationItems(): array
+    {
+        return [
+            NavigationItem::make()
+                ->label('Importa Fatture')
+                ->url(static::getUrl('import'))
+                ->icon('heroicon-o-arrow-up-tray')
+             //   ->group('Fatturazione')
+                ->sort(3),
+            ...parent::getNavigationItems(),
+        ];
+    }
+
+    /*
+    public static function canEdit(Model $record): bool
+    {
+        return false;
+    }
+    */
 }

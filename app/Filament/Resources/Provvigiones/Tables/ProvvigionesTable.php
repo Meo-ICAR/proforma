@@ -31,8 +31,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as Builderq;
 use Illuminate\Database\Eloquent\Collection; // ← Import corretto
 
-use App\Models\Provvigione;
 
+use App\Models\Provvigione;
+use App\Models\Proforma;
 
 class ProvvigionesTable
 {
@@ -60,7 +61,20 @@ class ProvvigionesTable
                ->requiresConfirmation()
                ->accessSelectedRecords()
                ->action(function (Collection $records) {
-                    $records->each->update(['stato' => 'Proforma']);
+                     // Process each record with a visible loop
+                    $records->each(function ($record) {
+                        $proformaId = Proforma::findOrCreateByPiva($record->piva,$record->importo );
+                        $record->update([
+                            'stato' => 'Proforma',
+                            'proforma_id' => $proformaId
+                        ]);
+                    });
+
+                    // Show success notification with count
+                    Notification::make()
+                        ->title(count($records) . ' provvigioni abbinate a proforma')
+                        ->success()
+                        ->send();
                })
         ])
             ->columns([
@@ -82,7 +96,7 @@ class ProvvigionesTable
                  ->label('Provvigione')
                   ->money('EUR') // Forza Euro e formato italiano
                   ->alignEnd()
-                  ->summarize(Sum::make()->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
+                  ->summarize(Sum::make()->money('EUR')->label('')->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
 
 
@@ -108,7 +122,8 @@ class ProvvigionesTable
 
                 TextColumn::make('id_pratica')
                     ->searchable(),
-
+                    TextColumn::make('descrizione'),
+                TextColumn::make('piva'),
             ])
             ->filters([
 

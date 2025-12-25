@@ -23,8 +23,8 @@ class InvoiceInResource extends Resource
     protected static ?string $navigationLabel = 'Fatture';
     protected static ?string $modelLabel = 'Fatture';
     protected static ?string $pluralModelLabel = 'Fatture';
-    protected static UnitEnum|string|null $navigationGroup = 'Database';
-    protected static ?int $navigationSort = 4;
+    protected static UnitEnum|string|null $navigationGroup = 'Archivi';
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $recordTitleAttribute = 'fatture';
 

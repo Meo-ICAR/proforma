@@ -4,9 +4,11 @@ namespace App\Filament\Resources\Fornitores\Pages;
 
 use App\Filament\Resources\Fornitores\FornitoreResource;
 use App\Filament\Resources\Proformas\ProformaResource;
+use App\Filament\Resources\Proformas\Schemas\ProformaEditSchema;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use App\Models\Proforma;
 
@@ -17,26 +19,34 @@ class ViewFornitore extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            
+
             Action::make('erogaAnticipo')
                 ->label('Eroga Anticipo')
                 ->color('success')
-                ->requiresConfirmation()
-                ->action(function () {
-                    $proforma = Proforma::create([
-                        'fornitori_id' => $this->record->id,
-                        'stato' => 'Inserito', // Or whatever default status you want
-                        // You might want to copy other fields from Fornitore if needed, 
-                        // e.g., 'anticipo' => $this->record->anticipo
-                    ]);
+                ->form([
+                    ...ProformaEditSchema::configure(
+                        Form::make()
+                    )->getComponents(),
+                ])
+                ->action(function (array $data) {
+                    // Use a transaction to ensure data consistency
+                    return \DB::transaction(function () use ($data) {
+                        // Create the proforma
+                        $proforma = Proforma::create([
+                            'fornitori_id' => $this->record->id,
+                            'anticipo_descrizione' => 'Anticipo provvigionale',
+                            'stato' => 'Inserito',
+                            'anticipo' => $data['anticipo'] ?? 0,
+                            'commenti' => $data['commenti'] ?? null,
+                        ]);
 
-                    Notification::make()
-                        ->title('Anticipo erogato con successo')
-                        ->success()
-                        ->send();
-                    
-                    return redirect()
-                    ->to(ProformaResource::getUrl('edit', ['record' => $proforma]));
+                        // Increment the anticipo_residuo in the Fornitore model
+                        if (isset($data['anticipo']) && is_numeric($data['anticipo']) && $data['anticipo'] > 0) {
+                            $this->record->increment('anticipo_residuo', $data['anticipo']);
+                        }
+                        return redirect()
+                            ->to(ProformaResource::getUrl('edit', ['record' => $proforma]));
+                    });
                 }),
                  EditAction::make(),
             ];

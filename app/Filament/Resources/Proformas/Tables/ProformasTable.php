@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\Proformas\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
+
+
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -19,45 +20,50 @@ class ProformasTable
     {
         return $table
           ->query(Proforma::query()
-              ->where('sended_at', null)
+              ->where('stato', 'Inserito')
           )
             ->columns([
-                  TextColumn::make('id')
+                  TextColumn::make('emailsubject')
                     ->label('Proforma')
                   ->sortable()
                     ->searchable(),
-                 TextColumn::make('fornitore.name')
-                    ->label('Fornitore')
-                    ->sortable()
-                    ->searchable(),
+
                 TextColumn::make('stato')
                   ->sortable()
                     ->searchable(),
 
 
-                TextColumn::make('updated_at')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('sended_at')
-                    ->date()
-                    ->sortable(),
+
                 TextColumn::make('compenso')
-                    ->numeric()
+                    ->money('EUR') // Forza Euro e formato italiano
+                  ->alignEnd()
                     ->sortable(),
 
 
 
                 TextColumn::make('contributo')
-                    ->numeric()
+                    ->money('EUR') // Forza Euro e formato italiano
+                  ->alignEnd()
                     ->sortable(),
                        TextColumn::make('anticipo')
-                    ->numeric()
+                   ->money('EUR') // Forza Euro e formato italiano
+                  ->alignEnd()
+                    ->sortable(),
+                  TextColumn::make('updated_at')
+                  ->label('Modificato')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('sended_at')
+                 ->label('Inviato')
+                    ->date()
                     ->sortable(),
  TextColumn::make('paid_at')
+                 ->label('Pagato')
                     ->date()
                     ->sortable(),
                 TextColumn::make('delta')
-                    ->numeric()
+                    ->money('EUR') // Forza Euro e formato italiano
+                  ->alignEnd()
                     ->sortable(),
 
             ])
@@ -65,14 +71,35 @@ class ProformasTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->label(false),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
-                ]),
-            ]);
+
+              BulkAction::make('Invia')
+               ->label('Invia email Proforma')
+               ->color('primary')
+               ->requiresConfirmation()
+               ->accessSelectedRecords()
+               ->action(function (Collection $records) {
+                     // Process each record with a visible loop
+                    $records->each(function ($record) {
+
+                        $record->update([
+                            'stato' => 'Inviato',
+                            'sended_at' => now(),
+                        ]);
+                    });
+
+                    // Show success notification with count
+                    Notification::make()
+                        ->title(count($records) . '  proforma inviati')
+                        ->success()
+                        ->send();
+
+             })
+            // ->iconButton()
+             ->color('primary'),
+  ]);
+
     }
 }

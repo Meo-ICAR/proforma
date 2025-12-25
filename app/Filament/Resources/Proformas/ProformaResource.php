@@ -43,7 +43,7 @@ class ProformaResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Resources\Proformas\RelationManagers\ProvvigioniRelationManager::class,
         ];
     }
 
@@ -51,7 +51,7 @@ class ProformaResource extends Resource
     {
         return [
             'index' => ListProformas::route('/'),
-            'create' => CreateProforma::route('/create'),
+          //  'create' => CreateProforma::route('/create'),
             'edit' => EditProforma::route('/{record}/edit'),
         ];
     }

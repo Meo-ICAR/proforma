@@ -7,42 +7,81 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
 
+use Filament\Infolists\Components\IconEntry;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Infolists\Components\TextEntry;
+
+use Filament\Forms\Components\Section;
+
 class ProformaForm
 {
     public static function configure(Schema $schema): Schema
     {
         return $schema
             ->components([
-                TextInput::make('stato')
-                    ->required()
-                    ->default('Inserito'),
-                TextInput::make('fornitori_id'),
-                TextInput::make('anticipo')
-                    ->numeric(),
-                TextInput::make('anticipo_descrizione'),
-                TextInput::make('compenso')
-                    ->numeric(),
-                Textarea::make('compenso_descrizione')
-                    ->columnSpanFull(),
-                TextInput::make('contributo')
-                    ->numeric(),
-                TextInput::make('contributo_descrizione'),
-                Textarea::make('annotation')
-                    ->columnSpanFull(),
-                TextInput::make('emailsubject')
-                    ->email(),
-                TextInput::make('emailto')
-                    ->email(),
-                Textarea::make('emailbody')
-                    ->columnSpanFull(),
-                TextInput::make('emailfrom')
-                    ->email(),
-                DateTimePicker::make('sended_at'),
-                DateTimePicker::make('paid_at'),
-                TextInput::make('delta')
-                    ->numeric(),
-                Textarea::make('delta_annotation')
-                    ->columnSpanFull(),
-            ]);
+                Tabs::make('Proforma')
+                ->tabs([
+                    Tab::make('Dati Generali')
+                        ->schema([
+                                     TextInput::make('anticipo')
+                                        ->label('Recupero Anticipo')
+                                        ->numeric()
+                                        ->prefix('€'),
+                                    TextInput::make('fornitore.anticipo_residuo')
+                                        ->numeric()
+                                        ->disabled()
+                                        ->prefix('€'),
+                                    TextInput::make('anticipo_descrizione')
+                                        ->maxLength(255),
+                                    TextInput::make('compenso')
+                                        ->numeric()
+                                        ->disabled()
+                                        ->prefix('€'),
+                                    Textarea::make('compenso_descrizione')
+                                        ->columnSpanFull(),
+                                        TextInput::make('contributo')
+                                        ->numeric()
+                                        ->prefix('€'),
+                                    TextInput::make('contributo_descrizione')
+                                        ->maxLength(255),
+                                ])
+
+                                ->columns(2),
+
+
+                        Tab::make('Email')
+                        ->schema([
+
+                                    TextInput::make('emailsubject')
+                                        ->label('Oggetto')
+                                        ->required()
+                                        ->maxLength(255),
+                                    TextInput::make('emailto')
+                                        ->label('A')
+                                        ->email()
+                                        ->required(),
+                                    TextInput::make('emailfrom')
+                                        ->label('Da')
+                                        ->email()
+                                        ->required(),
+                                    Textarea::make('emailbody')
+                                        ->label('Corpo Email')
+                                        ->columnSpanFull(),
+                                ])
+                                ->columns(2),
+
+
+                        Tab::make('Note')
+                        ->schema([
+                                    Textarea::make('annotation')
+                                        ->label('Note')
+                                        ->columnSpanFull(),
+
+                                ]),
+
+                ])
+                ->columnSpanFull(),
+        ]);
     }
 }

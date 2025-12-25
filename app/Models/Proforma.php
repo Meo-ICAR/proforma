@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use \App\Models\Fornitore;
 
 class Proforma extends Model
 {
@@ -39,6 +40,7 @@ class Proforma extends Model
         'paid_at',
         'delta',
         'delta_annotation',
+        'proforma_id',
     ];
 
     /**
@@ -73,6 +75,14 @@ class Proforma extends Model
     public function fornitore()
     {
         return $this->belongsTo(Fornitore::class, 'fornitori_id', 'id');
+    }
+
+    /**
+     * Get the provvigioni for the proforma.
+     */
+    public function provvigioni()
+    {
+        return $this->hasMany(Provvigione::class, 'proforma_id');
     }
 
     /**
@@ -117,18 +127,20 @@ class Proforma extends Model
      */
     public static function createFromFornitore(string $fornitori_id): Proforma
     {
-        $fornitore = \App\Models\Fornitore::with('company')->findOrFail($fornitori_id);
+        $fornitore = Fornitore::with('company')->findOrFail($fornitori_id);
 
         $proformaData = [
             'fornitori_id' => $fornitori_id,
-            'stato' => 'Inserito',
+
             'anticipo' => $fornitore->anticipo,
             'anticipo_descrizione' => $fornitore->anticipo_description,
-            'compenso' => 0,
-            'compenso_descrizione' => $fornitore->company->compenso_descrizione ?? 'Compenso',
+             'compenso_descrizione' => $fornitore->company->compenso_descrizione ?? 'Compenso',
             'contributo' => $fornitore->contributo,
             'contributo_descrizione' => $fornitore->contributo_description,
+            'emailsubject' => 'Proforma - '.$fornitore->name,
             'emailto' => $fornitore->email,
+            'stato' => 'Inserito',
+            'compenso' => 0,
             'created_at' => now(),
             'updated_at' => now(),
         ];
@@ -137,7 +149,8 @@ class Proforma extends Model
             $proformaData['company_id'] = $fornitore->company->id;
             // Use company's email subject if available
             if (!empty($fornitore->company->emailsubject)) {
-                $proformaData['emailsubject'] = $fornitore->company->emailsubject;
+
+
                 $proformaData['emailfrom'] =  $fornitore->company->emailfrom;
             }
         }
@@ -152,10 +165,16 @@ class Proforma extends Model
      * @return string The ID of the found or created proforma
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no fornitore is found with the given P.IVA
      */
-    public static function findOrCreateByPiva(string $piva): string
-    {
+    public static function findOrCreateByPiva(string $piva, float $importo): string
+{
+    try {
+        // Clean up the P.IVA
+        $cleanedPiva = str_replace(' ', '', $piva);
+
+        \Log::info("Searching for fornitore with P.IVA: " . $cleanedPiva);
+
         // Find fornitore by P.IVA (case insensitive and ignoring spaces)
-        $fornitore = \App\Models\Fornitore::whereRaw("REPLACE(piva, ' ', '') = ?", [str_replace(' ', '', $piva)])
+        $fornitore = Fornitore::whereRaw("REPLACE(piva, ' ', '') = ?", [$cleanedPiva])
             ->firstOrFail();
 
         // Check if there's already a proforma in 'Inserito' status for this fornitore
@@ -163,7 +182,29 @@ class Proforma extends Model
             ->where('stato', 'Inserito')
             ->first();
 
-        // Return existing proforma ID or create a new one and return its ID
-        return $existingProforma ? $existingProforma->id : self::createFromFornitore($fornitore->id)->id;
+        if (!$existingProforma) {
+            \Log::info("Creating new proforma for fornitore ID: " . $fornitore->id);
+            $existingProforma = self::createFromFornitore($fornitore->id);
+        }
+
+        // Update the compenso
+        $compenso = $existingProforma->compenso;
+        $existingProforma->update([
+            'compenso' => $importo + $compenso,
+        ]);
+
+        \Log::info("Returning proforma ID: " . $existingProforma->id);
+        return $existingProforma->id;
+
+    } catch (\Exception $e) {
+        \Log::error("Error in findOrCreateByPiva: " . $e->getMessage());
+        \Log::error("Stack trace: " . $e->getTraceAsString());
+        throw $e; // Re-throw to maintain the same behavior
     }
+}
+
+public function getProformanomeAttribute()
+{
+    return $this->emailsubject . ' #' . $this->id;
+}
 }
