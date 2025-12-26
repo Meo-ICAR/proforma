@@ -63,6 +63,7 @@ class Provvigione extends Model
         'cf',
         'annullato',
         'coordinamento',
+        'iscliente',
         'stato',
         'proforma_id',
         'legacy_id',

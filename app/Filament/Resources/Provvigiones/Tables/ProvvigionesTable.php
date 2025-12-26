@@ -84,7 +84,7 @@ class ProvvigionesTable
                             })
                   ->sortable()
                     ->searchable(),
-                TextColumn::make('segnalatore')
+                TextColumn::make('denominazione_riferimento')
                   ->label('Produttore')
                   ->sortable()
                     ->searchable(),
@@ -219,7 +219,7 @@ SelectFilter::make('status_compenso')
                 ->label('Stato Pratica')
                 ->collapsible(), // SOSTITUISCE le vecchie impostazioni di groupingSettings
 
-                 Group::make('segnalatore')
+                 Group::make('denominazione_riferimento')
                 ->label('Produttore')
                 ->collapsible(), // SOSTITUISCE le vecchie impostazioni di groupingSettings
            ])

@@ -26,19 +26,7 @@ class Venasarcotot extends Model
      * @var array
      */
     protected $fillable = [
-        'segnalatore',
-        'montante',
-        'minima',
-        'massima',
-        'X',
-        'competenza',
-        'enasarco',
-        'minimo',
-        'massimo',
-        'minimale',
-        'massimale',
-        'aliquota_soc',
-        'aliquota_agente',
+        'produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'
     ];
 
     /**
@@ -48,15 +36,10 @@ class Venasarcotot extends Model
      */
     protected $casts = [
         'montante' => 'decimal:2',
-        'minima' => 'decimal:2',
-        'massima' => 'decimal:2',
+        'contributo' => 'decimal:2',
+        'imposta' => 'decimal:2',
         'competenza' => 'integer',
-        'minimo' => 'decimal:2',
-        'massimo' => 'decimal:2',
-        'minimale' => 'decimal:2',
-        'massimale' => 'decimal:2',
-        'aliquota_soc' => 'decimal:2',
-        'aliquota_agente' => 'decimal:2',
+        'firr' => 'decimal:2',
     ];
 
     /**
@@ -93,24 +76,5 @@ class Venasarcotot extends Model
     public function scopeOfEnasarcoType($query, $type)
     {
         return $query->where('enasarco', $type);
-    }
-
-    /**
-     * Calculate the contribution amount.
-     *
-     * @return float
-     */
-    public function calculateContribution()
-    {
-        if ($this->montante <= $this->minimo) {
-            return $this->minimale;
-        }
-
-        if ($this->montante >= $this->massimo) {
-            return $this->massimale;
-        }
-
-        $contribution = $this->montante * ($this->aliquota_soc + $this->aliquota_agente) / 100;
-        return min(max($contribution, $this->minimale), $this->massimale);
     }
 }

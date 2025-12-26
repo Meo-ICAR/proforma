@@ -3,14 +3,14 @@
 namespace App\Filament\Resources\Fornitores\Pages;
 
 use App\Filament\Resources\Fornitores\FornitoreResource;
-use App\Filament\Resources\Proformas\ProformaResource;
 use App\Filament\Resources\Proformas\Schemas\ProformaEditSchema;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\Proformas\ProformaResource;
+use App\Models\Proforma;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use App\Models\Proforma;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
 class ViewFornitore extends ViewRecord
 {
@@ -19,13 +19,12 @@ class ViewFornitore extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-
             Action::make('erogaAnticipo')
                 ->label('Eroga Anticipo')
                 ->color('success')
                 ->form([
                     ...ProformaEditSchema::configure(
-                        Form::make()
+                        Schema::make()
                     )->getComponents(),
                 ])
                 ->action(function (array $data) {
@@ -48,7 +47,7 @@ class ViewFornitore extends ViewRecord
                             ->to(ProformaResource::getUrl('edit', ['record' => $proforma]));
                     });
                 }),
-                 EditAction::make(),
-            ];
-           }
+            EditAction::make(),
+        ];
+    }
 }

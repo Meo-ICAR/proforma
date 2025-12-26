@@ -26,6 +26,7 @@ class Fornitore extends Model
             }
         });
     }
+
     protected $fillable = [
         'codice',
         'coge',
@@ -55,8 +56,9 @@ class Fornitore extends Model
         'isdipendente',
         'regione',
         'citta',
-        'company_id'
-
+        'company_id',
+        'contributoperiodicita',
+        'contributodalmese'
     ];
 
     protected $casts = [

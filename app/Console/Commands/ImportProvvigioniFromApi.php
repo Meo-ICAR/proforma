@@ -19,9 +19,8 @@ class ImportProvvigioniFromApi extends Command
     public function handle()
     {
         /*
-        ID Compenso	Data Inserimento	Descrizione	Tipo	Importo	Importo Effettivo	Stato	Data Pagamento	N. Fattura	Data Fattura	Data Status	Status Compenso	Denominazione Riferimento	Entrata Uscita	ID Pratica	Agente	Istituto finanziario	Partita IVA Agente	Codice Fiscale Agente
-
-        */
+         * ID Compenso	Data Inserimento	Descrizione	Tipo	Importo	Importo Effettivo	Stato	Data Pagamento	N. Fattura	Data Fattura	Data Status	Status Compenso	Denominazione Riferimento	Entrata Uscita	ID Pratica	Agente	Istituto finanziario	Partita IVA Agente	Codice Fiscale Agente
+         */
         $endDate = $this->option('end-date') ? Carbon::parse($this->option('end-date')) : now();
         $startDate = $this->option('start-date')
             ? Carbon::parse($this->option('start-date'))
@@ -41,18 +40,18 @@ class ImportProvvigioniFromApi extends Command
                 'User-Agent' => 'ProForma Import/1.0',
                 'X-Api-Key' => env('MEDIAFACILE_HEADER_KEY'),
             ])
-            ->timeout(60) // 60 seconds timeout
-            ->connectTimeout(10) // 10 seconds to establish connection
-            ->withOptions([
-                'http_errors' => false,
-                'verify' => false, // Only if you need to bypass SSL verification
-            ])
-            ->retry(3, 1000, function ($exception) {
-                // Retry on connection timeouts or server errors
-                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
-                       ($exception->getCode() >= 500);
-            })
-            ->get($apiUrl, $queryParams);
+                ->timeout(60)  // 60 seconds timeout
+                ->connectTimeout(10)  // 10 seconds to establish connection
+                ->withOptions([
+                    'http_errors' => false,
+                    'verify' => false,  // Only if you need to bypass SSL verification
+                ])
+                ->retry(3, 1000, function ($exception) {
+                    // Retry on connection timeouts or server errors
+                    return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
+                        ($exception->getCode() >= 500);
+                })
+                ->get($apiUrl, $queryParams);
 
             // Log the request and response for debugging
             \Log::info('Provvigioni API Request', [
@@ -78,19 +77,17 @@ class ImportProvvigioniFromApi extends Command
                 return 1;
             }
 
-
-
             // Process lines
             $lines = explode("\n", $responseBody);
-            $lines = array_filter($lines, function($line) {
+            $lines = array_filter($lines, function ($line) {
                 return trim($line) !== '';
             });
             $lines = array_values($lines);
 
             // Remove empty lines (already done above)
-            $lines = array_values($lines); // Reindex array
+            $lines = array_values($lines);  // Reindex array
 
-            if (count($lines) < 2) { // Need at least header row + 1 data row
+            if (count($lines) < 2) {  // Need at least header row + 1 data row
                 $this->info('No data rows found in API response');
                 return 0;
             }
@@ -122,7 +119,7 @@ class ImportProvvigioniFromApi extends Command
                 'Partita IVA Agente',
                 'Codice Fiscale Agente',
                 'ANNULLATA'
-               ];
+            ];
 
             // Check if all required headers are present in the response
             $missingHeaders = array_diff($requiredHeaders, $headers);
@@ -191,7 +188,6 @@ class ImportProvvigioniFromApi extends Command
                 }
             }
 
-
             if (empty($data)) {
                 $this->info('No records found in the specified date range');
                 $this->info('API Response Status: ' . $response->status());
@@ -203,26 +199,26 @@ class ImportProvvigioniFromApi extends Command
             if (!empty($data)) {
                 $firstItem = $data[0];
                 $expectedHeaders = [
-                'ID Compenso',
-                'Data Inserimento',
-                'Descrizione',
-                'Tipo',
-                'Importo',
-                'Importo Effettivo',
-                'Stato',
-                'Data Pagamento',
-                'N. Fattura',
-                'Data Fattura',
-                'Data Status',
-                'Status Compenso',
-                'Denominazione Riferimento',
-                'Entrata Uscita',
-                'ID Pratica',
-                'Agente',
-                'Istituto finanziario',
-                'Partita IVA Agente',
-                'Codice Fiscale Agente',
-                   'ANNULLATA'
+                    'ID Compenso',
+                    'Data Inserimento',
+                    'Descrizione',
+                    'Tipo',
+                    'Importo',
+                    'Importo Effettivo',
+                    'Stato',
+                    'Data Pagamento',
+                    'N. Fattura',
+                    'Data Fattura',
+                    'Data Status',
+                    'Status Compenso',
+                    'Denominazione Riferimento',
+                    'Entrata Uscita',
+                    'ID Pratica',
+                    'Agente',
+                    'Istituto finanziario',
+                    'Partita IVA Agente',
+                    'Codice Fiscale Agente',
+                    'ANNULLATA'
                 ];
 
                 $actualHeaders = array_keys($firstItem);
@@ -254,51 +250,49 @@ class ImportProvvigioniFromApi extends Command
                     }
 
                     // Ensure we have the ID Compenso in our data
-          //          $provvigioneData['id'] = $item['ID Compenso'];
+                    //          $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
                     if ($existing) {
                         // Check if any of the timestamp fields are already set
-                        if (empty($existing->sended_at) ) {
+                        if (empty($existing->stato)) {
                             $existing->update($provvigioneData);
                             $updated++;
-                           // $this->info("Updated provvigione: {$provvigioneData['id']}");
+                            // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
-
                             $skipped++;
                         }
                     } else {
-                      //  $provvigioneData->stato='Inserito';
+                        //  $provvigioneData->stato='Inserito';
                         Provvigione::create($provvigioneData);
                         $imported++;
-
-                       // $this->info("Imported new provvigione: {$provvigioneData['id']}");
+                        // $this->info("Imported new provvigione: {$provvigioneData['id']}");
                     }
                 } catch (\Exception $e) {
-                    $this->error("Error processing item: " . $e->getMessage());
+                    $this->error('Error processing item: ' . $e->getMessage());
                     $errors++;
                 }
             }
-                $updatedCount = \DB::update(
-                    "UPDATE provvigioni p
+            $updatedCount = \DB::update(
+                "UPDATE provvigioni p
 
                     SET  p.stato = 'Inserito', p.deleted_at = NULL
-                    WHERE p.stato IS  NULL and (p.status_compenso = 'Pratica perfezionata' or p.status_pratica = 'IN AMMORTAMENTO')"
-                );
-                $this->info("Updated {$updatedCount} records to stato inserito from pratiche.");
-                /*
-                --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese
-                --- guardando updated_at
-                ---
-                $updatedCount = \DB::update(
-                    "UPDATE provvigioni p
-                    INNER JOIN vwprovvcoordinamento  v on v.id_pratica = p.id_pratica and p.importo = v.minimo
-                    set p.stato = 'Coordinamento'
-                    where p.stato = 'Inserito'"
-                );
-                $this->info("Updated {$updatedCount} records with provv. stato = coordinamento");
-                */
+                    WHERE p.stato IS  NULL and (p.status_compenso = 'Pratica perfezionata')"
+            );
+            $this->info("Updated {$updatedCount} records to stato inserito from pratiche.");
 
+            /*
+             * --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese
+             * --- guardando updated_at
+             * ---
+             * $updatedCount = \DB::update(
+             *     "UPDATE provvigioni p
+             *     INNER JOIN vwprovvcoordinamento  v on v.id_pratica = p.id_pratica and p.importo = v.minimo
+             *     set p.stato = 'Coordinamento'
+             *     where p.stato = 'Inserito'"
+             * );
+             * $this->info("Updated {$updatedCount} records with provv. stato = coordinamento");
+             */
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
@@ -309,7 +303,7 @@ class ImportProvvigioniFromApi extends Command
                 'code' => $e->getCode(),
                 'response' => $e->response ? [
                     'status' => $e->response->status(),
-                    'body' => substr((string)$e->response->body(), 0, 1000)
+                    'body' => substr((string) $e->response->body(), 0, 1000)
                 ] : null
             ]);
             return 1;
@@ -334,16 +328,17 @@ class ImportProvvigioniFromApi extends Command
         }
 
         // Clean up each part
-        return array_map(function($part) {
-            return trim($part, " \t\n\r\0\x0B\"'`");
+        return array_map(function ($part) {
+            return trim($part, " \t\n\r\0\v\"'`");
         }, $parts);
     }
 
     protected function mapApiToModel(array $apiData): array
     {
         // Helper function to parse dates from API
-        $parseDate = function($dateValue) {
-            if (empty($dateValue)) return null;
+        $parseDate = function ($dateValue) {
+            if (empty($dateValue))
+                return null;
 
             try {
                 // Handle DD/MM/YYYY format
@@ -360,38 +355,34 @@ class ImportProvvigioniFromApi extends Command
             return null;
         };
 
-
-
         $requiredFields = [
-                'ID Compenso',
-                'Data Inserimento',
-                'Descrizione',
-                'Tipo',
-                'Importo',
-                'Importo Effettivo',
-                'Stato',
-                'Data Pagamento',
-                'N. Fattura',
-                'Data Fattura',
-                'Data Status',
-                'Status Compenso',
-                'Denominazione Riferimento',
-                'Entrata Uscita',
-                'ID Pratica',
-                'Agente',
-                'Istituto finanziario',
-                'Partita IVA Agente',
-                'Codice Fiscale Agente',
-                'ANNULLATA'
-              ];
-
+            'ID Compenso',
+            'Data Inserimento',
+            'Descrizione',
+            'Tipo',
+            'Importo',
+            'Importo Effettivo',
+            'Stato',
+            'Data Pagamento',
+            'N. Fattura',
+            'Data Fattura',
+            'Data Status',
+            'Status Compenso',
+            'Denominazione Riferimento',
+            'Entrata Uscita',
+            'ID Pratica',
+            'Agente',
+            'Istituto finanziario',
+            'Partita IVA Agente',
+            'Codice Fiscale Agente',
+            'ANNULLATA'
+        ];
 
         // Parse all date fields
         $dataInserimento = $parseDate($apiData['Data Inserimento'] ?? null);
         $dataPagamento = $parseDate($apiData['Data Pagamento'] ?? null);
         $dataFattura = $parseDate($apiData['Data Fattura'] ?? null);
         $dataStatus = $parseDate($apiData['Data Status'] ?? null);
-
 
         return [
             'id' => $apiData['ID Compenso'] ?? null,
@@ -413,8 +404,10 @@ class ImportProvvigioniFromApi extends Command
             'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
             'piva' => $apiData['Partita IVA Agente'] ?? null,
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
-               'annullato' => $apiData['ANNULLATA'] ?? null,
-            'fonte' => 'api',
+            'annullato' => $apiData['ANNULLATA'] ?? null,
+            'fonte' => 'mediafacile',
+            'coordinamento' => $apiData['segnalatore'] <> $apiData['Denominazione Riferimento'],
+            'iscliente' => pos('liente ', $apiData['Descrizione']) <> 0,
         ];
     }
 }

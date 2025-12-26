@@ -13,14 +13,14 @@ class EnasarcoForm
         return $schema
             ->components([
                 TextInput::make('competenza')
-                    ->default('2025'),
+                    ->default(now()->format('Y')),
                 Select::make('enasarco')
                     ->options([
-            'monomandatario' => 'Monomandatario',
-            'plurimandatario' => 'Plurimandatario',
-            'societa' => 'Societa',
-            'no' => 'No',
-        ]),
+                        'monomandatario' => 'Monomandatario',
+                        'plurimandatario' => 'Plurimandatario',
+                        'societa' => 'Societa',
+                        'no' => 'No',
+                    ]),
                 TextInput::make('minimo')
                     ->numeric(),
                 TextInput::make('massimo')

@@ -10,17 +10,24 @@ use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototForm;
 use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototInfolist;
 use App\Filament\Resources\Venasarcotots\Tables\VenasarcototsTable;
 use App\Models\Venasarcotot;
-use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use BackedEnum;
+use UnitEnum;
 
 class VenasarcototResource extends Resource
 {
     protected static ?string $model = Venasarcotot::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static UnitEnum|string|null $navigationGroup = null;  // Or set to false to hide completely
+
+    protected static ?int $navigationSort = null;  // Optional: remove from sort order
+
+    protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
     protected static ?string $recordTitleAttribute = 'Enasarco Massimali';
 
@@ -50,9 +57,9 @@ class VenasarcototResource extends Resource
     {
         return [
             'index' => ListVenasarcotots::route('/'),
-//'create' => CreateVenasarcotot::route('/create'),
-         //   'view' => ViewVenasarcotot::route('/{record}'),
-          //  'edit' => EditVenasarcotot::route('/{record}/edit'),
+            // 'create' => CreateVenasarcotot::route('/create'),
+            //   'view' => ViewVenasarcotot::route('/{record}'),
+            //  'edit' => EditVenasarcotot::route('/{record}/edit'),
         ];
     }
 }

@@ -19,16 +19,24 @@ class EnasarcosTable
                 TextColumn::make('enasarco')
                     ->badge(),
                 TextColumn::make('minimo')
-                    ->numeric()
+                    ->label('Da importo')
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('massimo')
-                    ->numeric()
+                    ->label('A importo')
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('minimale')
-                    ->numeric()
+                    ->label('Contributo minimo')
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('massimale')
-                    ->numeric()
+                    ->label('Contributo massimo')
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('aliquota_soc')
                     ->numeric()

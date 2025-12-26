@@ -3,16 +3,16 @@
 namespace App\Filament\Resources\Praticas\RelationManagers;
 
 use Filament\Actions\EditAction;
-//use Filament\Actions\Action;
+// use Filament\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Actions\Action;
-use Filament\Notifications\Notification;
 
 class ProvvigioniRelationManager extends RelationManager
 {
@@ -22,10 +22,10 @@ class ProvvigioniRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('segnalatore'),
+                TextInput::make('denominazione_riferimento'),
                 TextInput::make('importo'),
-              //  ->money('EUR')
-               // ->alignEnd()
+                //  ->money('EUR')
+                // ->alignEnd()
                 TextInput::make('descrizione')
                     ->required()
                     ->maxLength(255),
@@ -39,8 +39,8 @@ class ProvvigioniRelationManager extends RelationManager
                 TextEntry::make('entrata_uscita'),
                 TextEntry::make('segnalatore'),
                 TextEntry::make('importo')
-                ->money('EUR')
-                ->alignEnd(),
+                    ->money('EUR')
+                    ->alignEnd(),
                 TextEntry::make('descrizione'),
             ]);
     }
@@ -50,47 +50,53 @@ class ProvvigioniRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('Provvigioni associate alla pratica')
             ->columns([
-                 TextColumn::make('entrata_uscita'),
-                  TextColumn::make('segnalatore'),
-                        TextColumn::make('importo')
-                        ->money('EUR')
-                        ->alignEnd(),
+                TextColumn::make('entrata_uscita')
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Entrata' => 'success',
+                        'Uscita' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('denominazione_riferimento')
+                    ->label('Produttore'),
+                TextColumn::make('importo')
+                    ->money('EUR')
+                    ->alignEnd(),
                 TextColumn::make('descrizione'),
-                 TextColumn::make('quota')
-                 ->label('Storno')
-                 ->money('EUR')
-                 ->alignEnd(),
-                  //  ->searchable(),
+                TextColumn::make('quota')
+                    ->label('Storno')
+                    ->money('EUR')
+                    ->alignEnd(),
+                //  ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-              //  CreateAction::make(),
-              //   AssociateAction::make(),
+                //  CreateAction::make(),
+                //   AssociateAction::make(),
             ])
             ->recordActions([
-             //   ViewAction::make(),
+                //   ViewAction::make(),
                 Action::make('storna')
                     ->label('Storna')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
-                    ->visible(fn (\App\Models\Provvigione $record): bool =>
+                    ->visible(fn(\App\Models\Provvigione $record): bool =>
                         $record->entrata_uscita === 'Entrata' &&
-                        (!isset($record->quota) )
-                    )
+                        (!isset($record->quota)))
                     ->form([
                         TextInput::make('quota')
                             ->label('Importo Storno')
                             ->numeric()
                             ->required()
-                            ->maxValue(fn ($record) => $record->importo)
+                            ->maxValue(fn($record) => $record->importo)
                             ->step(0.01)
                             ->prefix('€')
                     ])
                     ->action(function (array $data, \App\Models\Provvigione $record): void {
                         $provvigioneattiva = $record->importo;
-                        $quotaPercent = - $data['quota'] / $provvigioneattiva;
+                        $quotaPercent = -$data['quota'] / $provvigioneattiva;
 
                         // Update the current record
                         $record->update([
@@ -106,14 +112,14 @@ class ProvvigioniRelationManager extends RelationManager
                         // Update each related 'Uscita' record
                         foreach ($relatedUscite as $uscita) {
                             $newRecord = $uscita->replicate();
-        $newRecord->id = $record->id.'-';
-        // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
-        $newRecord->status_compenso = 'Pratica stornata';
-        $newRecord->importo = $uscita->importo * $quotaPercent;
-        $newRecord->decrizione = 'Storno provvigione ' . $record->id;
+                            $newRecord->id = $record->id . '-';
+                            // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
+                            $newRecord->status_compenso = 'Pratica stornata';
+                            $newRecord->importo = $uscita->importo * $quotaPercent;
+                            $newRecord->decrizione = 'Storno provvigione ' . $record->id;
 
-        // 3. Salva il nuovo record nel database
-        $newRecord->save();
+                            // 3. Salva il nuovo record nel database
+                            $newRecord->save();
                             $uscita->update([
                                 'quota' => $uscita->importo * $quotaPercent,
                             ]);
@@ -125,10 +131,9 @@ class ProvvigioniRelationManager extends RelationManager
                             ->success()
                             ->send();
                     }),
-              //  EditAction::make(),
-              //  DissociateAction::make(),
-               // DeleteAction::make(),
-            ])
-           ;
+                //  EditAction::make(),
+                //  DissociateAction::make(),
+                // DeleteAction::make(),
+            ]);
     }
 }
