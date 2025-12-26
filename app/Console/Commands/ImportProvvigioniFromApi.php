@@ -402,12 +402,14 @@ class ImportProvvigioniFromApi extends Command
             'id_pratica' => $apiData['ID Pratica'] ?? null,
             'segnalatore' => $apiData['Agente'] ?? null,
             'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
-            'piva' => $apiData['Partita IVA Agente'] ?? null,
+            'piva' => !empty($apiData['Partita IVA Agente'])
+                ? $apiData['Partita IVA Agente']
+                : (!empty($apiData['Codice Fiscale Agente']) ? $apiData['Codice Fiscale Agente'] : null),
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
-            'annullato' => $apiData['ANNULLATA'] ?? null,
+            'annullato' => isset($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
             'fonte' => 'mediafacile',
-            'coordinamento' => $apiData['segnalatore'] <> $apiData['Denominazione Riferimento'],
-            'iscliente' => pos('liente ', $apiData['Descrizione']) <> 0,
+            'coordinamento' => $apiData['Agente'] <> $apiData['Denominazione Riferimento'],
+            'iscliente' => (isset($apiData['Descrizione']) && str_contains($apiData['Descrizione'], 'liente')),
         ];
     }
 }

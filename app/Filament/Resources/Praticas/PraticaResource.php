@@ -23,11 +23,11 @@ class PraticaResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Pratica';
+    protected static ?string $navigationLabel = 'Pratiche';
 
     protected static ?string $modelLabel = 'Pratica';
 
-    protected static ?string $pluralModelLabel = 'Pratica';
+    protected static ?string $pluralModelLabel = 'Pratiche';
 
     protected static UnitEnum|string|null $navigationGroup = 'Archivi';
 

@@ -21,6 +21,16 @@ class FirrResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationLabel = 'Aliquote FIRR';
+
+    protected static ?string $modelLabel = 'Aliquote FIRR';
+
+    protected static ?string $pluralModelLabel = 'Aliquote FIRR';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $recordTitleAttribute = 'FIRR';
 
     public static function form(Schema $schema): Schema

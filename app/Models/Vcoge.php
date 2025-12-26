@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class VCoge extends Model
 {
@@ -18,7 +19,8 @@ class VCoge extends Model
      * Since this is a view, it doesn't have a primary key
      */
 
-    //protected $keyType = 'string';
+    // protected $keyType = 'string';
+
     /**
      * Indicates if the model should be timestamped.
      *
@@ -68,5 +70,24 @@ class VCoge extends Model
         return $this->entrata - $this->uscita;
     }
 
+    /**
+     * Get the saldo (entrata - uscita)
+     */
+    public function getAnnoAttribute()
+    {
+        return year($this->mese);
+    }
 
+    public static function getDistinctMonths()
+    {
+        return static::query()
+            ->select('mese')
+            ->whereNotNull('mese')
+            ->orderBy('mese', 'desc')
+            ->pluck('mese', 'mese')
+            ->map(function ($date) {
+                return $date;
+            })
+            ->toArray();
+    }
 }

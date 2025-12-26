@@ -3,12 +3,13 @@
 namespace App\Filament\Resources\Venasarcotots\Pages;
 
 use App\Filament\Resources\Venasarcotots\VenasarcototResource;
+use App\Models\Firr;
+use App\Models\Venasarcotot;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\DB;
-use Models\Firr;
 
 class ListVenasarcotots extends ListRecords
 {
@@ -24,19 +25,17 @@ class ListVenasarcotots extends ListRecords
                 //   ->requiresConfirmation()
                 ->action(function () {
                     try {
-                        DB::beginTransaction();
-
                         // Delete existing records
-                        DB::statement('DELETE FROM venasarcotot');
+                        Venasarcotot::truncate();
 
                         // Insert new records from view
-                        DB::statement('INSERT INTO venasarcotot (produttore, montante, contributo, X, imposta, firr, competenza, enasarco)
-                                     SELECT *   FROM vwenasarcotot');
+                        DB::table('venasarcotot')->insertUsing(
+                            ['produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'],
+                            DB::table('vwenasarcotot')
+                        );
 
-                        DB::commit();
-
-                        $record = Venasarcotot::all();
-                        foreach ($record as $record) {
+                        $records = Venasarcotot::getModel()::get();  // where('status', 'active')->
+                        foreach ($records as $record) {
                             $totalAmount = $record->montante;
                             $enasarco = $record->enasarco;
                             $competenza = $record->competenza;

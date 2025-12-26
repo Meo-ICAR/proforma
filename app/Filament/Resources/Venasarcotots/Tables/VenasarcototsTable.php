@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Venasarcotots\Tables;
 
+use App\Models\Venasarcotot;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -47,7 +48,7 @@ class VenasarcototsTable
                     ->label('Anno Competenza')
                     ->options(function () {
                         // Get unique years from the competenza column
-                        return \App\Models\Venasarcotot::query()
+                        return Venasarcotot::query()
                             ->select('competenza')
                             ->distinct()
                             ->orderBy('competenza', 'desc')

@@ -20,8 +20,7 @@ class ListEnasarcos extends ListRecords
                 ->label('Visualizza Contributi')
                 ->color('info')
                 ->icon('heroicon-o-table-cells')
-                ->url(VenasarcototResource::getUrl('index'))
-                ->openUrlInNewTab(),
+                ->url(VenasarcototResource::getUrl('index')),
             CreateAction::make(),
         ];
     }

@@ -1,0 +1,11 @@
+<x-filament-panels::page>
+    <form wire:submit.prevent="import">
+        {{ $this->form }}
+
+        <div class="flex items-center justify-end gap-4 mt-6">
+            @foreach ($this->getFormActions() as $action)
+                {{ $action }}
+            @endforeach
+        </div>
+    </form>
+</x-filament-panels::page>

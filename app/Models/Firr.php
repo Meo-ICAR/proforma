@@ -52,35 +52,31 @@ class Firr extends Model
     /**
      * Calcola il contributo totale basato sugli scaglioni definiti nel DB.
      */
-    public static function contributo(float $totalAmount, string $enasarco, int $competenza): float
+    public static function calculateContributo(float $totalAmount, string $enasarco, int $competenza): float
     {
         // Recuperiamo gli scaglioni ordinati per importo minimo
-        $brackets = DB::table('firrs')
+        $brackets = static::query()
             ->where('competenza', $competenza)
             ->where('enasarco', $enasarco)
             ->orderBy('minimo', 'asc')
             ->get();
         $totalContribution = 0;
-        if (!empty($brackets)) {
-            $remainingAmount = $totalAmount;
-            $minimo = 0;
-            foreach ($brackets as $bracket) {
-                if ($remainingAmount <= 0)
-                    break;
-                $massimo = $bracket->massimo;
-                // Determiniamo quanto del totale cade in questo scaglione
-                $maxInBracket = $massimo
-                    ? ($massimo - $minimo)
-                    : $remainingAmount;
+        $remainingAmount = $totalAmount;
+        $previousMax = 0;
+        foreach ($brackets as $bracket) {
+            if ($remainingAmount <= 0) {
+                break;
+            }
+            // Calculate the bracket range
+            $bracketMin = (float) $bracket->minimo;
+            $bracketMax = $bracket->massimo ? (float) $bracket->massimo : PHP_FLOAT_MAX;
 
-                $taxableInThisBracket = min($remainingAmount, $maxInBracket);
+            // Calculate the amount in this bracket
+            $amountInBracket = min($remainingAmount, $bracketMax - $bracketMin);
 
-                // Calcolo del contributo per questo scaglione
-                $totalContribution += ($taxableInThisBracket * ($bracket->aliquota / 100));
-
-                // Sottraiamo la parte già tassata
-                $remainingAmount -= $taxableInThisBracket;
-                $minimo = $massimo;
+            if ($amountInBracket > 0) {
+                $totalContribution += $amountInBracket * ($bracket->aliquota / 100);
+                $remainingAmount -= $amountInBracket;
             }
         }
         return round($totalContribution, 2);

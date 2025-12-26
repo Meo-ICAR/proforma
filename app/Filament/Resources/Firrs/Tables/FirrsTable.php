@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\Firrs\Tables;
 
-use Filament\Actions\EditAction;
-use Filament\Tables\Actions\BulkAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 
 class FirrsTable
 {
@@ -53,38 +54,30 @@ class FirrsTable
                     ])
                     ->searchable(),
             ])
-            ->bulkActions([
+            ->headerActions([
                 BulkAction::make('clone_next_year')
                     ->label('Duplica per anno successivo')
                     ->icon('heroicon-o-document-duplicate')
+                    ->accessSelectedRecords()
                     ->action(function (Collection $records) {
-                        try {
-                            DB::beginTransaction();
+                        // Process each record with a visible loop
+                        $clonedCount = 0;
+                        $nextYear = null;
+                        $records->each(function ($record) {
+                            $newRecord = $record->replicate();
+                            $nextYear = $record->competenza + 1;
+                            $newRecord->competenza = $nextYear;
+                            $newRecord->save();
+                            $clonedCount++;
+                        });
 
-                            $clonedCount = 0;
-                            $nextYear = null;
-
-                            foreach ($records as $record) {
-                                $newRecord = $record->replicate();
-                                $nextYear = $record->competenza + 1;
-                                $newRecord->competenza = $nextYear;
-                                $newRecord->save();
-                                $clonedCount++;
-                            }
-
-                            DB::commit();
-
-                            if ($nextYear) {
-                                $livewire->tableFilters['competenza'] = $nextYear;
-                            }
-                            Notification::make()
-                                ->title("Clonati {$clonedCount} record per l'anno " . ($nextYear ?? ''))
-                                ->success()
-                                ->send();
-                        } catch (\Exception $e) {
-                            DB::rollBack();
-                            throw $e;
+                        if ($nextYear) {
+                            $livewire->tableFilters['competenza'] = $nextYear;
                         }
+                        Notification::make()
+                            ->title("Clonati {$clonedCount} record per l'anno " . ($nextYear ?? ''))
+                            ->success()
+                            ->send();
                     })
                     ->deselectRecordsAfterCompletion()
             ])
