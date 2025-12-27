@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\InvoiceIns;
 
-use App\Filament\Resources\InvoiceIns\Pages\CreateInvoiceIn;
 use App\Filament\Resources\InvoiceIns\Pages\EditInvoiceIn;
 use App\Filament\Resources\InvoiceIns\Pages\ListInvoiceIns;
 use App\Filament\Resources\InvoiceIns\Schemas\InvoiceInForm;
 use App\Filament\Resources\InvoiceIns\Tables\InvoiceInsTable;
 use App\Models\InvoiceIn;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -21,7 +21,7 @@ class InvoiceInResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Fatture';
+    protected static ?string $navigationLabel = 'Fatture passive';
 
     protected static ?string $modelLabel = 'Fatture';
 
@@ -54,10 +54,6 @@ class InvoiceInResource extends Resource
     {
         return [
             // ... other items
-            NavigationItem::make('Import')
-                ->url(static::getUrl('import'))  // Make sure 'import' matches the route name above
-                ->icon('heroicon-o-arrow-up-tray')
-                ->group('Operations'),
         ];
     }
 
@@ -65,9 +61,8 @@ class InvoiceInResource extends Resource
     {
         return [
             'index' => ListInvoiceIns::route('/'),
-            'create' => CreateInvoiceIn::route('/create'),
+            //   'create' => CreateInvoiceIn::route('/create'),
             'edit' => EditInvoiceIn::route('/{record}/edit'),
-            'import' => Pages\ImportInvoiceins::route('/import'),  // Add this line
         ];
     }
 }

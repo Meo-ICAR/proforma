@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-class VCoge extends Model
+class Vcoge extends Model
 {
     /**
      * The table associated with the model.

@@ -15,13 +15,37 @@ class InvoiceInsTable
     {
         return $table
             ->columns([
-                TextColumn::make('tipo_di_documento')
+                TextColumn::make('nome_fornitore')
                     ->searchable(),
+                TextColumn::make('data_documento_fornitore')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('imponibile_iva')
+                    ->money('EUR')
+                    ->alignRight()
+                    ->label('Imponibile')
+                    ->sortable(),
+                TextColumn::make('importo_iva')
+                    ->label('IVA')
+                    ->money('EUR')
+                    ->alignRight()
+                    ->sortable(),
+                TextColumn::make('importo_totale_fornitore')
+                    ->money('EUR')
+                    ->alignRight()
+                    ->label('Totale')
+                    ->sortable(),
                 TextColumn::make('nr_documento')
                     ->searchable(),
                 TextColumn::make('nr_fatt_acq_registrata')
                     ->searchable(),
                 TextColumn::make('nr_nota_cr_acq_registrata')
+                    ->searchable(),
+                TextColumn::make('nr_documento_fornitore')
+                    ->searchable(),
+                TextColumn::make('allegato')
+                    ->searchable(),
+                TextColumn::make('tipo_di_documento')
                     ->searchable(),
                 TextColumn::make('data_ricezione_fatt')
                     ->date()
@@ -30,28 +54,12 @@ class InvoiceInsTable
                     ->searchable(),
                 TextColumn::make('nr_cliente_fornitore')
                     ->searchable(),
-                TextColumn::make('nome_fornitore')
-                    ->searchable(),
                 TextColumn::make('partita_iva')
-                    ->searchable(),
-                TextColumn::make('nr_documento_fornitore')
                     ->searchable(),
                 TextColumn::make('allegato')
                     ->searchable(),
-                TextColumn::make('data_documento_fornitore')
-                    ->date()
-                    ->sortable(),
                 TextColumn::make('data_primo_pagamento_prev')
                     ->date()
-                    ->sortable(),
-                TextColumn::make('imponibile_iva')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('importo_iva')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('importo_totale_fornitore')
-                    ->numeric()
                     ->sortable(),
                 TextColumn::make('importo_totale_collegato')
                     ->numeric()
@@ -77,14 +85,6 @@ class InvoiceInsTable
                     ->searchable(),
                 IconColumn::make('allegato_in_file_xml')
                     ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
