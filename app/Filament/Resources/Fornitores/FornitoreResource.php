@@ -31,9 +31,9 @@ class FornitoreResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Produttori';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Archivi';
+    // protected static UnitEnum|string|null $navigationGroup = 'Archivi';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 6;
 
     protected static ?string $recordTitleAttribute = 'Agenti';
 

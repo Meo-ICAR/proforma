@@ -24,7 +24,7 @@ class FornitoreForm
                             ->schema([
                                 TextInput::make('name'),
                                 TextInput::make('email')
-                                    ->label('Email address')
+                                    ->label('Email')
                                     ->email(),
                                 Select::make('enasarco')
                                     ->options([
@@ -33,26 +33,33 @@ class FornitoreForm
                                         'plurimandatario' => 'Plurimandatario',
                                         'societa' => 'Societa',
                                     ]),
-                                TextInput::make('piva'),
-                                TextInput::make('cf'),
+                                TextInput::make('piva')
+                                    ->label('Partita IVA'),
+                                TextInput::make('cf')
+                                    ->label('Codice Fiscale'),
                             ])
                             ->columns(3),
                         Tab::make('Anticipazioni e Contributi')
                             ->schema([
                                 TextInput::make('contributo_description')
+                                    ->label('Descrizione contributo')
                                     ->default('Contributo spese'),
                                 TextInput::make('contributo')
                                     ->numeric(),
-                                TextInput::make('contributoperiodicita'),
-                                TextInput::make('contributodalmese'),
+                                Select::make('contributoperiodicita')
+                                    ->label('Periodicita erogazione contributo')
+                                    ->options([1 => 'Mese', 3 => 'Trimestre', 6 => 'Semestre', 12 => 'Annuale']),
+                                TextInput::make('contributodalmese')
+                                    ->label('Da quando erogare contributo'),
                                 TextInput::make('anticipo_residuo')
                                     ->label('Montante anticipo da restituire')
                                     ->numeric(),
-                                TextInput::make('anticipo_description')
-                                    ->default('Rimborso mensile anticipo'),
                                 TextInput::make('anticipo')
                                     ->label('Rimborso mensile anticipo ( 0 = unica volta)')
                                     ->numeric(),
+                                TextInput::make('anticipo_description')
+                                    ->label('Descrizione anticipo')
+                                    ->default('Rimborso mensile anticipo'),
                             ])
                             ->columns(2),
                         Tab::make('Dati Gestionali')
