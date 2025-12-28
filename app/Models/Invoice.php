@@ -30,13 +30,8 @@ class Invoice extends Model
         'cliente',
         'invoice_number',
         'invoice_date',
-        'total_amount',
-        'delta',
         'sended_at',
         'sended2_at',
-        'tax_amount',
-        'importo_iva',
-        'importo_totale_fornitore',
         'currency',
         'payment_method',
         'status',
@@ -45,6 +40,13 @@ class Invoice extends Model
         'is_notenasarco',
         'xml_data',
         'coge',
+        'nr_documento',
+        'delta',
+        'total_amount',
+        'tax_amount',
+        'importo_iva',
+        'importo_totale_fornitore',
+        'imponibile_iva'
     ];
 
     /**
@@ -57,14 +59,15 @@ class Invoice extends Model
         'sended_at' => 'datetime',
         'sended2_at' => 'datetime',
         'paid_at' => 'date',
-        'total_amount' => 'decimal:2',
-        'delta' => 'decimal:2',
-        'tax_amount' => 'decimal:2',
-        'importo_iva' => 'decimal:2',
-        'importo_totale_fornitore' => 'decimal:2',
-        'isreconiled' => 'boolean',
         'is_notenasarco' => 'boolean',
         'competenza' => 'string',
+        'delta' => 'decimal:2',
+        'total_amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'importo_totale_fornitore' => 'decimal:2',
+        'imponibile_iva' => 'decimal:2',
+        'importo_iva' => 'decimal:2',
+        'isreconiled' => 'boolean',
     ];
 
     /**
@@ -112,18 +115,19 @@ class Invoice extends Model
      * - invoice->invoice_date is on or after proforma->sended_at
      * - proforma->paid_at is null
      */
-public function relatedProformas()
-{
-    return $this->hasManyThrough(
-        Proforma::class,
-        Fornitore::class,
-        'piva', // Foreign key on fornitore table
-        'fornitori_id', // Foreign key on proformas table
-        'fornitore_piva', // Local key on invoices table
-        'id' // Local key on fornitore table
-    )
-    ->whereDate('proformas.sended_at', '<=', $this->invoice_date)
-    ->whereNull('proformas.paid_at')
-    ->with('fornitore');
-}
+    public function relatedProformas()
+    {
+        return $this
+            ->hasManyThrough(
+                Proforma::class,
+                Fornitore::class,
+                'piva',  // Foreign key on fornitore table
+                'fornitori_id',  // Foreign key on proformas table
+                'fornitore_piva',  // Local key on invoices table
+                'id'  // Local key on fornitore table
+            )
+            ->whereDate('proformas.sended_at', '<=', $this->invoice_date)
+            ->whereNull('proformas.paid_at')
+            ->with('fornitore');
+    }
 }

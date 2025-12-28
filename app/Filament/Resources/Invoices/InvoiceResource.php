@@ -69,24 +69,10 @@ class InvoiceResource extends Resource
     {
         return [
             'index' => ListInvoices::route('/'),
-            'import' => Pages\ImportInvoices::route('/import'),
             'create' => CreateInvoice::route('/create'),
             'view' => ViewInvoice::route('/{record}'),
             // Edit page is intentionally disabled
             // 'edit' => EditInvoice::route('/{record}/edit'),
-        ];
-    }
-
-    public static function getNavigationItems(): array
-    {
-        return [
-            NavigationItem::make()
-                ->label('Importa Fatture')
-                ->url(static::getUrl('import'))
-                ->icon('heroicon-o-arrow-up-tray')
-                //   ->group('Fatturazione')
-                ->sort(3),
-            ...parent::getNavigationItems(),
         ];
     }
 
