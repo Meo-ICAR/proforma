@@ -64,9 +64,11 @@ class AdminPanelProvider extends PanelProvider
                         Provider::make('microsoft')
                             ->label('Microsoft')
                             //       ->icon('fab-microsoft') // Assicurati di avere un set di icone installato
-                            ->color('info'),
+                            ->color('info')
+                            ->scopes(['openid', 'email', 'profile']),
                     ])
-                    ->registration(false)  // Permette la creazione automatica dell'utente se non esiste
-            ]);;
+                    //     ->setRedirectUrl(fn() => route('filament.admin.auth.login'))  // Set the correct redirect URL
+                    ->registration(true)  // Permette la creazione automatica dell'utente se non esiste
+            ]);
     }
 }
