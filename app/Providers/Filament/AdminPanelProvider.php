@@ -67,8 +67,11 @@ class AdminPanelProvider extends PanelProvider
                             ->color('info')
                             ->scopes(['openid', 'email', 'profile']),
                     ])
-                    //     ->setRedirectUrl(fn() => route('filament.admin.auth.login'))  // Set the correct redirect URL
-                    ->registration(true)  // Permette la creazione automatica dell'utente se non esiste
+                    ->registration()  // Abilita la registrazione
+                    ->registrationFields([  // Campi aggiuntivi (opzionali)
+                        'name' => 'name',
+                        'email' => 'email',
+                    ])
             ]);
     }
 }
