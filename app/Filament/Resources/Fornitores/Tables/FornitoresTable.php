@@ -4,9 +4,9 @@ namespace App\Filament\Resources\Fornitores\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -18,7 +18,8 @@ class FornitoresTable
     {
         return $table
             ->columns([
-               TextColumn::make('name')
+                TextColumn::make('name')
+                    ->label('Produttore')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('anticipo_residuo')
@@ -30,35 +31,29 @@ class FornitoresTable
                 TextColumn::make('enasarco')
                     ->badge()
                     ->sortable(),
-                 TextColumn::make('coordinatore')
+                TextColumn::make('coordinatore')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('piva'),
-                                
+                TextColumn::make('piva')
+                    ->searchable()
+                    ->sortable(),
                 TextColumn::make('email')
                     ->label('Email address'),
-                  
-           
                 TextColumn::make('regione')
                     ->searchable()
- ->sortable(),
+                    ->sortable(),
                 TextColumn::make('citta')
                     ->searchable()
-                     ->sortable(),
-                      TextColumn::make('tel')
+                    ->sortable(),
+                TextColumn::make('tel')
                     ->searchable(),
-               
             ])
             ->filters([
                 TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
-           
             ])
-            ->toolbarActions([
-               
-                
-            ]);
+            ->toolbarActions([]);
     }
 }

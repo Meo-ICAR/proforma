@@ -10,23 +10,29 @@ use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoForm;
 use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoInfolist;
 use App\Filament\Resources\ProvvigioniStatos\Tables\ProvvigioniStatosTable;
 use App\Models\ProvvigioniStato;
-use BackedEnum;
-use UnitEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use BackedEnum;
+use UnitEnum;
 
 class ProvvigioniStatoResource extends Resource
 {
     protected static ?string $model = ProvvigioniStato::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-     protected static ?string $navigationLabel = 'Provvigioni Stato';
+
+    protected static ?string $navigationLabel = 'Provvigioni Stato';
+
     protected static ?string $modelLabel = 'Provvigioni Stato';
+
     protected static ?string $pluralModelLabel = 'Provvigioni Stato';
-    protected static UnitEnum|string|null $navigationGroup = 'Settings';
-    protected static ?int $navigationSort = 4;
+
+    // protected static UnitEnum|string|null $navigationGroup = 'Settings';
+
+    //  protected static ?int $navigationSort = 4;
+    protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
     protected static ?string $recordTitleAttribute = 'provvigioni_stato';
 
@@ -57,7 +63,7 @@ class ProvvigioniStatoResource extends Resource
         return [
             'index' => ListProvvigioniStatos::route('/'),
             'create' => CreateProvvigioniStato::route('/create'),
-            'view' => ViewProvvigioniStato::route('/{record}'),
+            //  'view' => ViewProvvigioniStato::route('/{record}'),
             'edit' => EditProvvigioniStato::route('/{record}/edit'),
         ];
     }

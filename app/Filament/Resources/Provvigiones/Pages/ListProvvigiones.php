@@ -23,6 +23,6 @@ class ListProvvigiones extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return "Selezionare le provvigioni di cui si vuole emettere proforma. Per sospendere al mese prossimo una provvigione cliccare sul simbolo prima di 'Inserito'";
+        return "Seleziondo le provvigioni di cui si vuole emettere proforma comparira il tasto EMETTI PROFORMA. Premendo il tasto verranno creati i  proforma relativi alle provvigioni selezionate . Per sospendere al mese prossimo una provvigione cliccare sul simbolo prima di 'Inserito'";
     }
 }

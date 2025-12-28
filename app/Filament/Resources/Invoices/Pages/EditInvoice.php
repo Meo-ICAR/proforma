@@ -10,6 +10,11 @@ class EditInvoice extends EditRecord
 {
     protected static string $resource = InvoiceResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Riconcilia Fattura';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

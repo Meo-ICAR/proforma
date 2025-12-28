@@ -11,10 +11,19 @@ use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 // use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
+use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
 
 class ListInvoices extends ListRecords
 {
     protected static string $resource = InvoiceResource::class;
+
+    // Aggiunge il sottotitolo
+    public function getSubheading(): string|Htmlable|null
+    {
+        // $record = $this->getRecord();
+
+        return 'Cliccare sulla riga della fattura da riconciliare. Per escludere una fattura dalla riconciliazione perche non contiene provvigioni o anticipi cliccare su Non Enasarco';
+    }
 
     protected function getHeaderActions(): array
     {

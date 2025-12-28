@@ -37,8 +37,10 @@ class InvoicesImport implements ToModel, WithHeadingRow
         }
 
         $uno = 1;
+        $noenasarco = false;
         if ($row['tipo_di_documento'] == 'Nota credito') {
             $uno = -1;
+            $noenasarco = true;
         }
 
         // Create the invoice data array
@@ -54,6 +56,7 @@ class InvoicesImport implements ToModel, WithHeadingRow
             'tax_amount' => $uno * $this->transformDecimal($row['imponibile_iva']),
             'importo_iva' => $uno * $this->transformDecimal($row['importo_iva']),
             'importo_totale_fornitore' => $uno * $this->transformDecimal($row['importo_totale_fornitore']),
+            'is_notenasarco' => $noenasarco,
         ];
 
         // Create the invoice model

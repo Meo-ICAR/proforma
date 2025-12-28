@@ -7,11 +7,13 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
 
 class ProformasTable
 {
@@ -24,6 +26,7 @@ class ProformasTable
           ->sortable()
           ->searchable(),
         TextColumn::make('stato')
+          ->badge()
           ->sortable()
           ->searchable(),
         TextColumn::make('compenso')
@@ -67,7 +70,7 @@ class ProformasTable
           ])
           ->multiple()
           ->placeholder('Tutti gli stati')
-          ->default('Inserito'),
+          ->default(['Inserito']),
       ])
       ->recordActions([
         EditAction::make()->label(false),
@@ -92,7 +95,7 @@ class ProformasTable
           }),
         // ->iconButton()
         BulkAction::make('test')
-          ->label('Test invio email')
+          ->label('Test invio email a se stessi')
           ->color('blue')
           ->requiresConfirmation()
           ->accessSelectedRecords()
@@ -109,7 +112,7 @@ class ProformasTable
               ->send();
           }),
         BulkAction::make('forza')
-          ->label('Forza data invio email')
+          ->label('Forza data invio email senza inviarla')
           ->color('success')
           ->requiresConfirmation()
           ->accessSelectedRecords()

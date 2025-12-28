@@ -3,22 +3,22 @@
 namespace App\Filament\Resources\Invoices\RelationManagers;
 
 use App\Models\Proforma;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
-use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Filament\Schemas\Schema; // Add this import
+use Filament\Actions\Action;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\RepeatableEntry;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextEntry;
-use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;  // Add this import
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
+use Filament\Forms;
+use Filament\Tables;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class ProformasRelationManager extends RelationManager
 {
@@ -26,16 +26,16 @@ class ProformasRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'id';
 
-    protected static ?string $title = 'Proforme Collegate';
+    protected static ?string $title = 'Proforma inviati al produttore da riconciliare';
 
-   public function form(Schema $schema): Schema // Update type hints to Schema
+    public function form(Schema $schema): Schema  // Update type hints to Schema
     {
         return $schema
             ->components([
-            TextInput::make('id')
-                ->required()
-                ->maxLength(255),
-        ]);
+                TextInput::make('id')
+                    ->required()
+                    ->maxLength(255),
+            ]);
     }
 
     public function table(Table $table): Table
@@ -47,26 +47,22 @@ class ProformasRelationManager extends RelationManager
                     ->label('ID Proforma')
                     ->searchable()
                     ->sortable(),
-
                 TextColumn::make('fornitore.name')
                     ->label('Fornitore')
                     ->searchable()
                     ->sortable(),
-
                 TextColumn::make('sended_at')
                     ->label('Data Invio')
                     ->dateTime()
                     ->sortable(),
-
                 TextColumn::make('anticipo')
                     ->label('Anticipo')
                     ->money('EUR')
                     ->sortable(),
-
                 TextColumn::make('stato')
                     ->label('Stato')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'Inviata' => 'success',
                         'Inserito' => 'info',
                         'Pagata' => 'success',
@@ -78,8 +74,8 @@ class ProformasRelationManager extends RelationManager
                 SelectFilter::make('stato')
                     ->options([
                         'Inserito' => 'Inserito',
-                        'Inviata' => 'Inviata',
-                        'Pagata' => 'Pagata',
+                        'Inviato' => 'Inviato',
+                        'Pagato' => 'Pagato',
                     ])
                     ->label('Stato'),
             ])
@@ -87,10 +83,10 @@ class ProformasRelationManager extends RelationManager
                 // Add any header actions if needed
             ])
             ->actions([
-               Action::make('view')
+                Action::make('view')
                     ->label('')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (Proforma $record): string => route('filament.admin.resources.proformas.edit', $record)),
+                    ->url(fn(Proforma $record): string => route('filament.admin.resources.proformas.edit', $record)),
             ])
             ->bulkActions([
                 // Add any bulk actions if needed
@@ -99,16 +95,16 @@ class ProformasRelationManager extends RelationManager
 
     protected function canCreate(): bool
     {
-        return false; // Disable creation from this relation manager
+        return false;  // Disable creation from this relation manager
     }
 
     protected function canEdit(Model $record): bool
     {
-        return false; // Disable editing from this relation manager
+        return false;  // Disable editing from this relation manager
     }
 
     protected function canDelete(Model $record): bool
     {
-        return false; // Disable deletion from this relation manager
+        return false;  // Disable deletion from this relation manager
     }
 }

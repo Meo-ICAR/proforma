@@ -28,6 +28,7 @@ class FirrsTable
                     ->sortable(),
                 TextColumn::make('aliquota')
                     ->numeric()
+                    ->alignRight()
                     ->sortable(),
                 TextColumn::make('enasarco')
                     ->badge(),

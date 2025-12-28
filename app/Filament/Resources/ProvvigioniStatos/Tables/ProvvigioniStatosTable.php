@@ -22,8 +22,6 @@ class ProvvigioniStatosTable
                 //
             ])
             ->recordActions([
-                ViewAction::make()
-                    ->url(fn (Model $record): string => static::getResource()::getUrl('view', ['record' => $record])),
                 EditAction::make(),
             ])
             ->toolbarActions([

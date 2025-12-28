@@ -21,9 +21,9 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-check';  // Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Riconciliazione Fatture';
+    protected static ?string $navigationLabel = 'Fatture';
 
     protected static ?string $modelLabel = 'Riconciliazione Fatture';
 

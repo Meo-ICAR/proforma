@@ -17,7 +17,7 @@ class EditProforma extends EditRecord
     {
         // $record = $this->getRecord();
 
-        return 'Per escludere una provvigione da questo proformacliccare sul simbolo rosso del bidone';
+        return 'Per escludere una provvigione da questo proforma cliccare sul simbolo rosso del bidone';
     }
 
     protected function getHeaderActions(): array

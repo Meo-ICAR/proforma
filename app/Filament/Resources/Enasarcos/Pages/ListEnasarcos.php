@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Enasarcos\Pages;
 
 use App\Filament\Resources\Enasarcos\EnasarcoResource;
+use App\Filament\Resources\Firrs\FirrResource;
 use App\Filament\Resources\Venasarcotots\VenasarcototResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -21,6 +22,11 @@ class ListEnasarcos extends ListRecords
                 ->color('info')
                 ->icon('heroicon-o-table-cells')
                 ->url(VenasarcototResource::getUrl('index')),
+            Action::make('firr')
+                ->label('Scaglioni FIRR')
+                ->color('warning')
+                ->icon('heroicon-o-adjustments-vertical')
+                ->url(FirrResource::getUrl('index')),
             CreateAction::make(),
         ];
     }

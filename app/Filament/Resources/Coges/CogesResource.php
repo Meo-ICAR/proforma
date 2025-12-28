@@ -21,7 +21,7 @@ class CogesResource extends Resource
 {
     protected static ?string $model = Coges::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-list-bullet';  // Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Contabilita';
 

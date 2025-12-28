@@ -3,34 +3,46 @@
 namespace App\Filament\Resources\Invoices\Pages;
 
 use App\Filament\Resources\Invoices\InvoiceResource;
-use Filament\Actions;
 use Filament\Actions\EditAction;
-
-use Filament\Resources\Pages\ViewRecord;
-use Filament\Schemas\Infolist;
-
-use Filament\Schemas\Components\Grid;
-use Filament\Infolists\Components\RepeatableEntry; // ADD THIS
-use Filament\Schemas\Schema; // Add this import
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry; // ADD THIS
+use Filament\Infolists\Components\RepeatableEntry;  // ADD THIS
+use Filament\Infolists\Components\TextEntry;  // ADD THIS
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Infolist;
+use Filament\Schemas\Schema;  // Add this import
+use Filament\Actions;
+use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
 
 class ViewInvoice extends ViewRecord
 {
     protected static string $resource = InvoiceResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Riconcilia Fattura';
+    }
+
     protected function getHeaderActions(): array
     {
         return [
-          //  EditAction::make(),
+            //  EditAction::make(),
         ];
     }
 
-   public function infolist(Schema $schema): Schema // Update types here
-{
-    return $schema
-        ->schema([
+    // Aggiunge il sottotitolo
+    public function getSubheading(): string|Htmlable|null
+    {
+        // $record = $this->getRecord();
+
+        return 'Cliccare sui proforma da abbinare alla fattura';
+    }
+
+    public function infolist(Schema $schema): Schema  // Update types here
+    {
+        return $schema
+            ->schema([
                 Section::make('Dettagli Fattura')
                     ->schema([
                         Grid::make(3)
@@ -50,10 +62,9 @@ class ViewInvoice extends ViewRecord
                                     ->label('Stato'),
                                 TextEntry::make('isreconiled')
                                     ->label('Riconciliata')
-                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Sì' : 'No'),
+                                    ->formatStateUsing(fn(bool $state): string => $state ? 'Sì' : 'No'),
                             ]),
                     ]),
-
                 Section::make('Proforme Collegate')
                     ->schema([
                         RepeatableEntry::make('relatedProformas')
@@ -63,7 +74,7 @@ class ViewInvoice extends ViewRecord
                                     ->schema([
                                         TextEntry::make('id')
                                             ->label('ID Proforma')
-                                            ->url(fn ($record) => route('filament.admin.resources.proformas.edit', $record)),
+                                            ->url(fn($record) => route('filament.admin.resources.proformas.edit', $record)),
                                         TextEntry::make('fornitore.name')
                                             ->label('Fornitore'),
                                         TextEntry::make('sended_at')
@@ -78,8 +89,8 @@ class ViewInvoice extends ViewRecord
                             ->columns(1)
                             ->columnSpanFull()
                             ->placeholder('Nessuna proforma da riconciliare trovato')
-                          //  ->emptyStateHeading('Nessuna proforma collegata trovata')
-                           // ->emptyStateDescription('Non sono state trovate proforme che soddisfano i criteri di ricerca.')
+                        //  ->emptyStateHeading('Nessuna proforma collegata trovata')
+                        // ->emptyStateDescription('Non sono state trovate proforme che soddisfano i criteri di ricerca.')
                     ])
                     ->collapsible()
                     ->collapsed(false)
