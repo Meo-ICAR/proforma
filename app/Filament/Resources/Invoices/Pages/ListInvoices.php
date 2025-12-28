@@ -37,16 +37,16 @@ class ListInvoices extends ListRecords
                 // ->slideOver()
                 ->sampleFileExcel(
                     url: url('FATTURE PASSIVE DAL.xlsx'),
-                    sampleButtonLabel: 'Scarica esempio di file excel',
+                    sampleButtonLabel: 'Scarica esempio del tipo di file excel richiesto',
                 )
                 ->use(InvoicesImport::class)
                 ->validateUsing([
                     'partita_iva' => 'required',
                     'nr_documento' => 'required',
                     'data_documento_fornitore' => 'required',
+                    'importo_totale_fornitore' => 'required',
                     'imponibile_iva' => 'required',
                     'importo_iva' => 'required',
-                    'importo_totale_fornitore' => 'required',
                 ])
 
             /*
@@ -153,16 +153,9 @@ class ListInvoices extends ListRecords
              *     }
              * })
              */
-
-            /*
-             * ->afterImport(function ($data, $livewire) {
-             *     // Perform actions after import
-             *     Notification::make()
-             *         ->title('Importazione completata!')
-             *         ->success()
-             *         ->send();
-             * })
-             */
+            // ->afterImport(function ($data, $livewire) {
+            // Perform actions after import
+            //   })
             //     ->form([
             //         // Your form fields here
             //    ]),

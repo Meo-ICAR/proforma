@@ -46,7 +46,7 @@ class Invoice extends Model
         'tax_amount',
         'importo_iva',
         'importo_totale_fornitore',
-        'imponibile_iva'
+        'imponibile_iva',
     ];
 
     /**

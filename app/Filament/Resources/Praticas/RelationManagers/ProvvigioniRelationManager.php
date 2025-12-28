@@ -78,6 +78,19 @@ class ProvvigioniRelationManager extends RelationManager
             ])
             ->recordActions([
                 //   ViewAction::make(),
+                Action::make('annulla')
+                    ->label('Annulla')
+                    ->icon('heroicon-o-arrow-uturn-left')
+                    ->color('danger')
+                    ->visible(fn(\App\Models\Provvigione $record): bool =>
+                        $record->entrata_uscita === 'Uscita' &&
+                        isset($record->quota) &&
+                        !isset($record->proforma_id))
+                    ->action(function (\App\Models\Provvigione $record): void {
+                        $record->update([
+                            'quota' => 0,
+                        ]);
+                    }),
                 Action::make('storna')
                     ->label('Storna')
                     ->icon('heroicon-o-arrow-uturn-left')
@@ -107,6 +120,7 @@ class ProvvigioniRelationManager extends RelationManager
                         $relatedUscite = \App\Models\Provvigione::where('id_pratica', $record->id_pratica)
                             ->where('entrata_uscita', 'Uscita')
                             ->where('stato', '!=', 'Annullato')
+                            ->where('iscliente', '!=', true)
                             ->get();
 
                         // Update each related 'Uscita' record

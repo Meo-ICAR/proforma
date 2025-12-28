@@ -92,6 +92,7 @@ class Provvigione extends Model
      *
      * @var array
      */
+
     /**
      * Get the pratica that owns the provvigione.
      */
@@ -147,14 +148,13 @@ class Provvigione extends Model
         return $this->belongsTo(Proforma::class);
     }
 
-   /**
+    /**
      * Get the proforma associated with the provvigione.
      */
     public function compenso()
     {
         return $this->belongsTo(Compenso::class);
     }
-
 
     /**
      * Get the stato record associated with the provvigione.
@@ -164,7 +164,7 @@ class Provvigione extends Model
         return $this->belongsTo(ProvvigioniStato::class, 'stato', 'stato');
     }
 
-      /**
+    /**
      * Get the stato record associated with the provvigione.
      */
     public function compensoRecord()

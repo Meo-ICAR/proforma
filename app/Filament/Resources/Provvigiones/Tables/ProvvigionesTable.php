@@ -157,7 +157,7 @@ class ProvvigionesTable
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
-                SelectFilter::make('stati')
+                SelectFilter::make('stato')
                     ->label('Stato')
                     ->options([
                         'Inserito' => 'Inserito',

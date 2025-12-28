@@ -44,10 +44,11 @@ class InvoicesImport implements ToModel, WithHeadingRow
         // Create the invoice data array
 
         $invoiceData = [
+            'nr_documento' => $nrDoc,
             'competenza' => $competenza,
             'fornitore_piva' => $piva,
             'fornitore' => $row['nome_fornitore'] ?? null,
-            'invoice_number' => $row['nr_documento'] ?? null,
+            'invoice_number' => $row['nr_documento_fornitore'] ?? null,
             'invoice_date' => $datadocx,
             'total_amount' => $uno * $this->transformDecimal($row['importo_totale_fornitore']),
             'tax_amount' => $uno * $this->transformDecimal($row['imponibile_iva']),
