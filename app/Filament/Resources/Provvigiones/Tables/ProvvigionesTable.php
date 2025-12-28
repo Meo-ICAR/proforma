@@ -34,7 +34,9 @@ class ProvvigionesTable
     {
         return $table
             ->query(Provvigione::query()
-                ->where('entrata_uscita', 'Uscita'))
+                ->where('entrata_uscita', 'Uscita')
+            //  ->whereNot('annullato', 1))
+            )
             ->reorderableColumns()
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
@@ -53,6 +55,25 @@ class ProvvigionesTable
                             $record->update([
                                 'stato' => 'Proforma',
                                 'proforma_id' => $proformaId
+                            ]);
+                        });
+
+                        // Show success notification with count
+                        Notification::make()
+                            ->title(count($records) . ' provvigioni abbinate a proforma')
+                            ->success()
+                            ->send();
+                    }),
+                BulkAction::make('forza')
+                    ->label('Annulla Provvigioni')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->accessSelectedRecords()
+                    ->action(function (Collection $records) {
+                        // Process each record with a visible loop
+                        $records->each(function ($record) {
+                            $record->update([
+                                'stato' => 'Annullato',
                             ]);
                         });
 
@@ -85,6 +106,7 @@ class ProvvigionesTable
                     ->sortable(),
                 IconColumn::make('coordinamento')
                     ->boolean()
+                    ->sortable()
                     ->trueIcon('heroicon-o-check-circle')
                     ->trueColor('success')  // Verde
                     ->falseIcon(null)  // Nasconde icona se false
@@ -103,72 +125,61 @@ class ProvvigionesTable
                 TextColumn::make('id_pratica')
                     ->searchable(),
                 TextColumn::make('descrizione'),
+                TextColumn::make('status_compenso'),
                 TextColumn::make('piva'),
             ])
             ->filters([
-                Filter::make('data_status')
-                    ->form([
-                        DatePicker::make('data_limite')
-                            ->label('Provvigioni maturate fino al')
-                            ->default(now()->subMonth()->endOfMonth()),
+                /*
+                 * Filter::make('data_status')
+                 *     ->form([
+                 *         DatePicker::make('data_status')
+                 *             ->label('Provvigioni maturate fino al')
+                 *         //  ->default(now()->subMonth()->endOfMonth()),
+                 *     ]),
+                 */
+                SelectFilter::make('stato')
+                    ->options([
+                        'Inserito' => 'Inserito',
+                        'Sospeso' => 'Sospeso',
+                        'Proforma' => 'Proforma',
+                        'Pagato' => 'Pagato',
+                        'Annullato' => 'Annullato',
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['data_limite'],
-                                fn(Builder $query, $date): Builder => $query->whereDate('data_status', '<=', $date),
-                            );
-                    }),
-                Filter::make('coordinamento')
-                    ->form([
-                        Select::make('coordinamento')
-                            ->label('Coordinamento')
-                            ->options([
-                                'Sì' => 'Sì',
-                                'No' => 'No',
-                            ])
-                            ->placeholder('Tutti'),
+                    ->multiple()
+                    ->default(['Inserito', 'Sospeso'])
+                    ->placeholder('Tutti gli stati'),
+                SelectFilter::make('coordinamento')
+                    ->options([
+                        1 => 'Si',
+                        0 => 'No',
                     ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['coordinamento'],
-                                fn(Builder $query, $coordinamento): Builder => $query->where('coordinamento', $coordinamento),
-                            );
-                    }),
-                Filter::make('stato')
-                    ->form([
-                        Select::make('stato')
-                            ->label('Stato')
-                            ->options([
-                                'Inserito' => 'Inserito',
-                                'Sospeso' => 'Sospeso',
-                            ])
-                            ->placeholder('Tutti gli stati'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['stato'],
-                                fn(Builder $query, $stato): Builder => $query->where('stato', $stato),
-                            );
-                    }),
+                    ->placeholder('Tutti'),
                 SelectFilter::make('status_compenso')
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
-                SelectFilter::make('stato')
-                    ->label('Stato')
+                SelectFilter::make('annullato')
+                    ->label('Annullati')
                     ->options([
-                        'Inserito' => 'Inserito',
-                        'Spedito' => 'Spedito',
-                        'Pagato' => 'Pagato',
-                        'Annullato' => 'Annullato',
-                        // Add other statuses as needed
+                        1 => 'Si',
+                        0 => 'No',
                     ])
-                    ->multiple()
-                    ->placeholder('Tutti gli stati')
-                    ->default(['Inserito', 'Sospeso']),
+                    ->placeholder('Tutti'),
+                Filter::make('mese_riferimento')
+                    ->form([
+                        DatePicker::make('mese')
+                            ->label('Seleziona Mese')
+                            ->native(false)
+                            ->displayFormat('m/Y'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['mese'],
+                            fn(Builder $query, $date): Builder => $query
+                                ->whereMonth('data_status', \Carbon\Carbon::parse($date)->month)
+                                ->whereYear('data_status', \Carbon\Carbon::parse($date)->year),
+                        );
+                    })
             ])
             ->recordActions([
                 Action::make('toggleStatus')
@@ -201,19 +212,21 @@ class ProvvigionesTable
                     ->label('Produttore')
                     ->collapsible(),  // SOSTITUISCE le vecchie impostazioni di groupingSettings
             ])
-            /*
-             * ->recordGroupActions([
-             * Action::make('create_proforma')
-             * ->label('Emetti proforma')
-             * ->icon('heroicon-o-arrow-down-tray')
-             * ->action(function (Group $livewire, array $data, $groupKey) {
-             *     // $groupKey contiene il valore del raggruppamento
-             *     // Esporta solo record di questo gruppo
-             * }),
-             *  ])
-             */
-            // Se vuoi che sia raggruppato di default:
-            ->defaultGroup('segnalatore');
+            ->defaultGroup('denominazione_riferimento');
+
+        /*
+         * ->recordGroupActions([
+         * Action::make('create_proforma')
+         * ->label('Emetti proforma')
+         * ->icon('heroicon-o-arrow-down-tray')
+         * ->action(function (Group $livewire, array $data, $groupKey) {
+         *     // $groupKey contiene il valore del raggruppamento
+         *     // Esporta solo record di questo gruppo
+         * }),
+         *  ])
+         */
+        // Se vuoi che sia raggruppato di default:
+        // ->defaultGroup('denominazione_riferimento');
     }
 
     protected function getTableListeners(): array

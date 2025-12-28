@@ -85,6 +85,7 @@ class ProvvigioniRelationManager extends RelationManager
                     ->visible(fn(\App\Models\Provvigione $record): bool =>
                         $record->entrata_uscita === 'Uscita' &&
                         isset($record->quota) &&
+                        $record->quota > 0 &&
                         !isset($record->proforma_id))
                     ->action(function (\App\Models\Provvigione $record): void {
                         $record->update([

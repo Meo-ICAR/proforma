@@ -96,7 +96,6 @@ class ImportProvvigioniFromApi extends Command
             $headers = $this->parseLine($lines[0]);
             $data = [];
             $headerCount = count($headers);
-
             // Define required headers in the exact expected order
             $requiredHeaders = [
                 'ID Compenso',
@@ -279,7 +278,14 @@ class ImportProvvigioniFromApi extends Command
                     SET  p.stato = 'Inserito', p.deleted_at = NULL
                     WHERE p.stato IS  NULL and (p.status_compenso = 'Pratica perfezionata')"
             );
-            $this->info("Updated {$updatedCount} records to stato inserito from pratiche.");
+            $this->info("Updated {$updatedCount} records to stato Inserito from pratiche.");
+            $updatedCount = \DB::update(
+                "UPDATE provvigioni p
+
+                    SET  p.stato = 'Pagato', p.deleted_at = NULL
+                    WHERE  p.data_fattura is not null"
+            );
+            $this->info("Updated {$updatedCount} records to stato Pagato from pratiche.");
 
             /*
              * --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese
@@ -406,7 +412,8 @@ class ImportProvvigioniFromApi extends Command
                 ? $apiData['Partita IVA Agente']
                 : (!empty($apiData['Codice Fiscale Agente']) ? $apiData['Codice Fiscale Agente'] : null),
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
-            'annullato' => isset($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
+            'annullato' => !empty($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
+            'invoice_number' => $apiData['ANNULLATA'] ?? null,
             'fonte' => 'mediafacile',
             'coordinamento' => $apiData['Agente'] <> $apiData['Denominazione Riferimento'],
             'iscliente' => (isset($apiData['Descrizione']) && str_contains($apiData['Descrizione'], 'liente')),

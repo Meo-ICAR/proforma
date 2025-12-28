@@ -6,6 +6,7 @@ use App\Filament\Resources\Provvigiones\ProvvigioneResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
+use Illuminate\Support\HtmlString;
 
 class ListProvvigiones extends ListRecords
 {
@@ -23,6 +24,6 @@ class ListProvvigiones extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return "Seleziondo le provvigioni di cui si vuole emettere proforma comparira il tasto EMETTI PROFORMA. Premendo il tasto verranno creati i  proforma relativi alle provvigioni selezionate . Per sospendere al mese prossimo una provvigione cliccare sul simbolo prima di 'Inserito'";
+        return new HtmlString("Seleziando le provvigioni di cui si vuole emettere proforma comparira il tasto EMETTI PROFORMA.<br> Premendo il tasto verranno creati i  proforma relativi alle provvigioni selezionate . Per sospendere al mese prossimo una provvigione cliccare sul simbolo prima di 'Inserito'");
     }
 }
