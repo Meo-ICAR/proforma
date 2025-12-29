@@ -35,6 +35,7 @@ class ProvvigionesTable
         return $table
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Uscita')
+                ->whereNot('importo', 0)
             //  ->whereNot('annullato', 1))
             )
             ->reorderableColumns()
