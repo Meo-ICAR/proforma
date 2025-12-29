@@ -18,6 +18,7 @@ class EnasarcosTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->reorderableColumns()
             ->columns([
                 TextColumn::make('competenza'),
                 TextColumn::make('enasarco')
@@ -37,23 +38,23 @@ class EnasarcosTable
                     ->money('EUR')
                     ->alignEnd()
                     ->sortable(),
-                TextColumn::make('massimale')
-                    ->label('Contributo massimo')
-                    ->money('EUR')
-                    ->alignEnd()
-                    ->sortable(),
                 TextColumn::make('aliquota_soc')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('aliquota_agente')
                     ->numeric()
                     ->sortable(),
+                TextColumn::make('massimale')
+                    ->label('Contributo massimo')
+                    ->money('EUR')
+                    ->alignEnd()
+                    ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
+                // ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

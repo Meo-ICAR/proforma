@@ -17,6 +17,7 @@ class FornitoresTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->reorderableColumns()
             ->columns([
                 TextColumn::make('name')
                     ->label('Produttore')
