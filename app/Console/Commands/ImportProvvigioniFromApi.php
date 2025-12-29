@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Fornitore;
 use App\Models\Provvigione;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -263,6 +264,10 @@ class ImportProvvigioniFromApi extends Command
                         }
                     } else {
                         //  $provvigioneData->stato='Inserito';
+                        $fornitore = Fornitore::firstOrCreate(
+                            ['name' => $provvigioneData['denominazione_riferimento']],
+                            ['piva' => $provvigioneData['piva']]
+                        );
                         Provvigione::create($provvigioneData);
                         $imported++;
                         // $this->info("Imported new provvigione: {$provvigioneData['id']}");
@@ -412,8 +417,8 @@ class ImportProvvigioniFromApi extends Command
                 ? $apiData['Partita IVA Agente']
                 : (!empty($apiData['Codice Fiscale Agente']) ? $apiData['Codice Fiscale Agente'] : null),
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
-            'annullato' => !empty($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
-            'invoice_number' => $apiData['ANNULLATA'] ?? null,
+            // 'annullato' => !empty($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
+            //  'invoice_number' => $apiData['ANNULLATA'] ?? null,
             'fonte' => 'mediafacile',
             'coordinamento' => $apiData['Agente'] <> $apiData['Denominazione Riferimento'],
             'iscliente' => (isset($apiData['Descrizione']) && str_contains($apiData['Descrizione'], 'liente')),
