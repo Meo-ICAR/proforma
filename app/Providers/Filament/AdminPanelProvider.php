@@ -31,6 +31,11 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->registration()
+            ->passwordReset()
+            //   ->emailVerification()
+            //     ->emailChangeVerification()
+            ->profile()
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -67,8 +72,6 @@ class AdminPanelProvider extends PanelProvider
                             ->color('info')
                             ->scopes(['openid', 'email', 'profile']),
                     ])
-                    ->registration()  // Abilita la registrazione
-                    ->passwordreset()
             ]);
     }
 }
