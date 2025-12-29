@@ -13,6 +13,7 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
@@ -52,11 +53,20 @@ class ProvvigionesTable
                     ->action(function (Collection $records) {
                         // Process each record with a visible loop
                         $records->each(function ($record) {
-                            $proformaId = Proforma::findOrCreateByPiva($record->piva, $record->importo);
-                            $record->update([
-                                'stato' => 'Proforma',
-                                'proforma_id' => $proformaId
-                            ]);
+                            $piva = $record->piva;
+                            if (($piva > '0')) {
+                                $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo);
+                                $record->update([
+                                    'stato' => 'Proforma',
+                                    'proforma_id' => $proformaId
+                                ]);
+                            } else {
+                                Notification::make()
+                                    ->title('ATTENZIONE Provvigione senza partita IVA' . $record->id . ' ' . $record->denominazione_riferimento
+                                        . ' ' . $record->pratica->cognome_cliente . ' ' . $record->pratica->nome_cliente . ' ' . $record->pratica->id_pratica . ' proforma non emesso')
+                                    ->danger()
+                                    ->send();
+                            }
                         });
 
                         // Show success notification with count
@@ -108,9 +118,9 @@ class ProvvigionesTable
                 IconColumn::make('coordinamento')
                     ->boolean()
                     ->sortable()
-                    ->trueIcon('heroicon-o-check-circle')
-                    ->trueColor('success')  // Verde
-                    ->falseIcon(null)  // Nasconde icona se false
+                    ->trueIcon(Heroicon::OutlinedCheckBadge)
+                    ->falseIcon(Heroicon::OutlinedMinus)
+                    ->falseColor('white')
                     ->label('Coord'),
                 TextColumn::make('data_status')
                     ->date()

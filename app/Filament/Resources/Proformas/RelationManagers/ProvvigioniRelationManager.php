@@ -15,6 +15,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -62,6 +63,13 @@ class ProvvigioniRelationManager extends RelationManager
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->sortable(),
+                IconColumn::make('coordinamento')
+                    ->boolean()
+                    ->sortable()
+                    ->trueIcon(Heroicon::OutlinedCheckBadge)
+                    ->falseIcon(Heroicon::OutlinedMinus)
+                    ->falseColor('white')
+                    ->label('Coord'),
                 TextColumn::make('data_status')
                     ->date()
                     ->sortable(),
@@ -100,7 +108,7 @@ class ProvvigioniRelationManager extends RelationManager
                         } else {
                             Notification::make()
                                 ->title('ATTENZIONE Rimuovere direttamente il proforma')
-                                ->alert()
+                                ->danger()
                                 ->send();
                         }
                     })
