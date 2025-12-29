@@ -26,12 +26,13 @@
         <div class="content">
             @if($preview)
             <div style="background-color: #fff3cd; color: #856404; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
-                <strong>ANTEPRIMA</strong> - Questa email verrà inviata a: {{ $proforma->fornitore->email }}
+                <strong>ANTEPRIMA</strong> - Questa email verrà inviata a: {{ $proforma->fornitore-> }}
             </div>
             @endif
 
             <p>Gentile {{ $proforma->fornitore->name }},</p>
-            <p>Di seguito il proforma #{{ $proforma->id }} con i seguenti dettagli dei compensi riconosciuti:</p>
+            <p>Di seguito il proforma #{{ $proforma->id }} con i seguenti dettagli dei compensi riconosciuti.</p>
+            <p>Per velocizzare l erogazione delle somme La preghiamo di inserire nella causale della sua fattura il seguente riferimento: {{ $proforma->emailsubject }}</p>
 
             <table>
                 @if($proforma->compenso > 0)
@@ -84,13 +85,12 @@
             </div>
             @endif
 
-            <p>Cordiali saluti,<br>
-            {{ config('app.name') }}</p>
+            <p>Cordiali saluti</p>
         </div>
 
         <div class="footer">
-            <p>Questa email è stata generata automaticamente, si prega di non rispondere.</p>
-            <p>Se hai ricevuto questa email per errore, ti preghiamo di contattarci.</p>
+            <p>Questa email è stata generata automaticamente, si prega di non rispondere.
+             Se hai ricevuto questa email per errore, ti preghiamo di contattarci.</p>
         </div>
     </div>
 </body>
