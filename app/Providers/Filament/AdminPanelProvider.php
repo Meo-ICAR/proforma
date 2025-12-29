@@ -34,6 +34,8 @@ class AdminPanelProvider extends PanelProvider
             //  ->registration()
             ->passwordReset()
             //   ->emailVerification()
+            ->authGuard('web')  // Make sure this is set to 'web'
+            ->authPasswordBroker('users')  // Make sure this is set to 'users'
             ->emailChangeVerification()
             ->profile()
             ->colors([

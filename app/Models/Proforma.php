@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
+use App\Mail\ProformaMail;
 use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Mail;
-// use App\Mail\ProformaEmail;
-use App\Mail\ProformaMail;
 
 class Proforma extends Model
 {
@@ -211,6 +210,157 @@ class Proforma extends Model
 
     /**
      * Send the proforma via email
+     *
+     * @return bool
+     * @throws \Exception
+     */
+    public function inviaEmail($preview = false)
+    {
+        try {
+            $proforma = $this->load(['provvigioni.pratica']);
+            $ccEmail = null;
+            $bccEmail = null;
+            $cr = "\n";
+            $somma = 0;
+            $debug = $preview;
+            $debug = true;
+            $message = '';
+
+            if (!$preview) {
+                // Get the recipient email from the related fornitore
+                $toEmail = $this->emailto;
+
+                if (empty($toEmail)) {
+                    throw new \Exception('Nessun indirizzo email specificato per il fornitore');
+                }
+                // Get the first company record for CC
+                $company = Company::first();
+                $ccEmail = $company ? $company->email_cc : null;
+                $bccEmail = $company ? $company->email_bcc : null;
+            }
+
+            if ($preview) {
+                // Get the logged-in user's email
+                $loggedInUserEmail = auth()->user()?->email;
+                $toEmail = $loggedInUserEmail ?? 'hassistosrl@gmail.com';
+                $message .= 'Simulazione email da inviarsi a email: ' . $this->emailto . $cr;
+            }
+
+            // Prepare email details
+            $subject = "Proforma #{$this->id} - {$this->fornitore->name}";
+            $message .= "Proforma #{$this->id}";
+
+            if ($this->compenso <> 0) {
+                $n = 0;
+                $message .= $cr . $this->compenso_descrizione . ': €' . number_format($this->compenso, 2);
+                //   $somma += $this->compenso;
+
+                foreach ($this->provvigioni as $provvigione) {
+                    $n++;
+                    $message .= "\n- " . $n
+                        . '.  ' . $provvigione->id_pratica
+                        . ' - ' . $provvigione->id
+                        . ' - ' . (optional($provvigione->pratica)->cognome_cliente ?? 'N/A')
+                        . ' - ' . (optional($provvigione->pratica)->nome_cliente ?? 'N/A')
+                        . ': €' . number_format($provvigione->importo, 2);
+                    $somma += $provvigione->importo;
+                }
+            }
+            if ($this->anticipo <> 0) {
+                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($this->anticipo, 2);
+                $somma += $this->anticipo;
+            }
+
+            if ($this->contributo <> 0) {
+                $message .= $cr . $this->contributo_descrizione . ': €' . number_format($this->contributo, 2);
+                $somma += $this->contributo;
+            }
+
+            $message .= $cr . 'TOTALE LORDO € ' . number_format($somma, 2);
+
+            if (!empty($this->annotation)) {
+                $message .= $cr . 'Note: ' . $this->annotation;
+            }
+
+            $subject = "Proforma #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+
+            // Send the email
+            $mail = Mail::to($toEmail);
+
+            if (!$preview) {
+                if ($ccEmail) {
+                    $mail->cc($ccEmail);
+                }
+                if ($bccEmail) {
+                    $mail->bcc($bccEmail);
+                }
+            }
+            // Replace this line:
+            // $mail->send(new ProformaMail($this, $subject, $message));
+            // With this:
+            // Replace the existing send() call with this:
+
+            /*
+             * if (!$preview) {
+             *     if ($ccEmail) {
+             *         $message->cc($ccEmail);
+             *     }
+             *     if ($bccEmail) {
+             *         $message->bcc($bccEmail);
+             *     }
+             * }
+             * Mail::raw($message, function ($message) use ($toEmail, $subject, $ccEmail, $bccEmail) {
+             *     $message
+             *         ->to($toEmail)
+             *         ->subject($subject);
+             * });
+             */
+            // In Proforma.php, replace the Mail::raw() call with:
+            Mail::send('emails.proforma', [
+                'proforma' => $this,
+                'content' => $message,
+                'somma' => $somma,
+                'preview' => $preview
+            ], function ($message) use ($toEmail, $subject, $ccEmail, $bccEmail, $preview) {
+                $message
+                    ->to($toEmail)
+                    ->subject($subject);
+
+                if (!$preview) {
+                    if ($ccEmail) {
+                        $message->cc($ccEmail);
+                    }
+                    if ($bccEmail) {
+                        $message->bcc($bccEmail);
+                    }
+                }
+            });
+            // Update the proforma status
+            $this->update([
+                'emailsubject' => $subject,
+                'emailto' => $toEmail,
+                'emailbody' => $message,
+                //  'emailfrom' => $ccEmail,
+            ]);
+
+            \Log::info('Updating proforma status after email send for ID: ' . $this->id);
+            if (!$preview) {
+                $this->update([
+                    'sended_at' => now(),
+                    'stato' => 'Inviato',
+                    'data_invio' => now(),
+                ]);
+            }
+
+            return true;
+        } catch (\Exception $e) {
+            \Log::error("Errore durante l'invio del proforma #{$this->id}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Send email
      *
      * @param string $email Recipient email address
      * @param string|null $subject Optional custom subject

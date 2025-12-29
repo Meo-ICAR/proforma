@@ -77,14 +77,14 @@ class ProformasTable
       ])
       ->toolbarActions([
         BulkAction::make('Invia')
-          ->label('Invia email Proforma')
+          ->label('Invia email Proforma (al produttore)')
           ->color('primary')
           ->requiresConfirmation()
           ->accessSelectedRecords()
           ->action(function (Collection $records) {
             // Process each record with a visible loop
             $records->each(function ($record) {
-              $record->sendEmail();
+              $record->inviaEmail(false);
             });
 
             // Show success notification with count
@@ -95,19 +95,19 @@ class ProformasTable
           }),
         // ->iconButton()
         BulkAction::make('test')
-          ->label('Test invio email a se stessi')
-          ->color('blue')
+          ->label('Simulazione invio email (a se stessi)')
+          ->color('info')
           ->requiresConfirmation()
           ->accessSelectedRecords()
           ->action(function (Collection $records) {
             // Process each record with a visible loop
             $records->each(function ($record) {
-              $record->testEmail();
+              $record->inviaEmail(true);
             });
 
             // Show success notification with count
             Notification::make()
-              ->title(count($records) . '  proforma modificati')
+              ->title(count($records) . '  proforma inviati')
               ->success()
               ->send();
           }),

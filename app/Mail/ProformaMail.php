@@ -18,18 +18,19 @@ class ProformaMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public User $user,  // Laravel passa automaticamente le proprietà pubbliche alla view
+        //  public User $user,  // Laravel passa automaticamente le proprietà pubbliche alla view
     ) {}
 
-    /**
-     * Get the message envelope.
+    /** Get the message envelope. */
+
+    /*
+     * public function envelope(): Envelope
+     * {
+     *     return new Envelope(
+     *         subject: 'Proforma Mail',
+     *     );
+     * }
      */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Proforma Mail',
-        );
-    }
 
     /**
      * Get the message content definition.
