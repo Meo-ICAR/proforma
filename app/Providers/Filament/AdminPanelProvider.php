@@ -68,10 +68,7 @@ class AdminPanelProvider extends PanelProvider
                             ->scopes(['openid', 'email', 'profile']),
                     ])
                     ->registration()  // Abilita la registrazione
-                    ->registrationFields([  // Campi aggiuntivi (opzionali)
-                        'name' => 'name',
-                        'email' => 'email',
-                    ])
+                    ->passwordreset()
             ]);
     }
 }
