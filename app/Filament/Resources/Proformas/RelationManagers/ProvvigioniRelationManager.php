@@ -53,10 +53,10 @@ class ProvvigioniRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('descrizione')
             ->columns([
-                TextColumn::make('cognome')
+                TextColumn::make('pratica.cognome_cliente')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('nome'),
+                TextColumn::make('pratica.nome_cliente'),
                 TextColumn::make('importo')
                     ->money('EUR')
                     ->alignEnd()

@@ -264,10 +264,12 @@ class ImportProvvigioniFromApi extends Command
                         }
                     } else {
                         //  $provvigioneData->stato='Inserito';
-                        $fornitore = Fornitore::firstOrCreate(
-                            ['name' => $provvigioneData['denominazione_riferimento']],
-                            ['piva' => $provvigioneData['piva']]
-                        );
+                        if ($provvigioneData['entrata_uscita'] == 'Uscita') {
+                            $fornitore = Fornitore::firstOrCreate(
+                                ['name' => $provvigioneData['denominazione_riferimento']],
+                                ['piva' => $provvigioneData['piva']]
+                            );
+                        }
                         Provvigione::create($provvigioneData);
                         $imported++;
                         // $this->info("Imported new provvigione: {$provvigioneData['id']}");
