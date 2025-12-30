@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Praticas\RelationManagers;
 
 use Filament\Actions\EditAction;
 // use Filament\Actions\Action;
+use App\Models\Provvigione;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
@@ -79,15 +80,15 @@ class ProvvigioniRelationManager extends RelationManager
             ->recordActions([
                 //   ViewAction::make(),
                 Action::make('annulla')
-                    ->label('Annulla')
+                    ->label('Annulla storno')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
-                    ->visible(fn(\App\Models\Provvigione $record): bool =>
+                    ->visible(fn(Provvigione $record): bool =>
                         $record->entrata_uscita === 'Uscita' &&
                         isset($record->quota) &&
                         $record->quota > 0 &&
                         !isset($record->proforma_id))
-                    ->action(function (\App\Models\Provvigione $record): void {
+                    ->action(function (Provvigione $record): void {
                         $record->update([
                             'quota' => 0,
                         ]);
@@ -96,7 +97,7 @@ class ProvvigioniRelationManager extends RelationManager
                     ->label('Storna')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
-                    ->visible(fn(\App\Models\Provvigione $record): bool =>
+                    ->visible(fn(Provvigione $record): bool =>
                         $record->entrata_uscita === 'Entrata' &&
                         (!isset($record->quota)))
                     ->form([
@@ -108,7 +109,7 @@ class ProvvigioniRelationManager extends RelationManager
                             ->step(0.01)
                             ->prefix('€')
                     ])
-                    ->action(function (array $data, \App\Models\Provvigione $record): void {
+                    ->action(function (array $data, Provvigione $record): void {
                         $provvigioneattiva = $record->importo;
                         $quotaPercent = -$data['quota'] / $provvigioneattiva;
 
@@ -118,7 +119,7 @@ class ProvvigioniRelationManager extends RelationManager
                         ]);
 
                         // Get all related 'Uscita' provvigioni for the same pratica that are not 'Annullato'
-                        $relatedUscite = \App\Models\Provvigione::where('id_pratica', $record->id_pratica)
+                        $relatedUscite = Provvigione::where('id_pratica', $record->id_pratica)
                             ->where('entrata_uscita', 'Uscita')
                             ->where('stato', '!=', 'Annullato')
                             ->where('iscliente', '!=', true)
