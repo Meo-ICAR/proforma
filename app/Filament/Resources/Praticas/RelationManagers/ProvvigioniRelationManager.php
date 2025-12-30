@@ -98,7 +98,8 @@ class ProvvigioniRelationManager extends RelationManager
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
                     ->visible(fn(Provvigione $record): bool =>
-                        $record->entrata_uscita === 'Entrata')
+                        ($record->entrata_uscita === 'Entrata') &&
+                        ($record->quota == 0))
                     ->form([
                         TextInput::make('quota')
                             ->label('Importo Storno')
