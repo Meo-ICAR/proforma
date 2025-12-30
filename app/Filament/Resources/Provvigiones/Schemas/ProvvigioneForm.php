@@ -29,16 +29,21 @@ class ProvvigioneForm
                                     ->label('ID Provvigione')
                                     ->disabled(),
                                 TextInput::make('id_pratica')
+                                    ->disabled()
                                     ->required(),
-                                TextInput::make('descrizione'),
-                                Select::make('tipo'),
-                                TextInput::make('segnalatore'),
-                                TextInput::make('istituto_finanziario'),
-                                TextInput::make('piva'),
-                                TextInput::make('cf'),
-                                TextInput::make('fonte'),
-                                TextInput::make('tipo_pratica'),
-                                TextInput::make('prodotto'),
+                                TextInput::make('descrizione')
+                                    ->disabled(),
+                                Select::make('tipo')
+                                    ->disabled(),
+                                TextInput::make('segnalatore')
+                                    ->disabled(),
+                                TextInput::make('istituto_finanziario')
+                                    ->disabled(),
+                                TextInput::make('piva')->disabled(),
+                                TextInput::make('cf')->disabled(),
+                                TextInput::make('fonte')->disabled(),
+                                TextInput::make('tipo_pratica')->disabled(),
+                                TextInput::make('prodotto')->disabled(),
                                 Textarea::make('note')
                                     ->columnSpanFull(),
                             ])
@@ -46,14 +51,9 @@ class ProvvigioneForm
                         Tabs\Tab::make('Importi')
                             ->schema([
                                 TextInput::make('importo')
+                                    ->disabled()
                                     ->numeric()
                                     ->required(),
-                                TextInput::make('importo_effettivo')
-                                    ->numeric(),
-                                TextInput::make('montante')
-                                    ->numeric(),
-                                TextInput::make('importo_erogato')
-                                    ->numeric(),
                                 TextInput::make('quota'),
                             ])
                             ->columns(2),
@@ -61,51 +61,54 @@ class ProvvigioneForm
                             ->schema([
                                 DatePicker::make('data_inserimento_compenso')
                                     ->label('Data Inserimento')
+                                    ->disabled()
                                     ->required(),
                                 DatePicker::make('data_pagamento'),
                                 DatePicker::make('data_status'),
-                                DatePicker::make('data_inserimento_pratica'),
+                                DatePicker::make('data_inserimento_pratica')->disabled(),
                                 DatePicker::make('data_stipula'),
                                 DatePicker::make('data_status_pratica'),
-                                DateTimePicker::make('sended_at'),
-                                DateTimePicker::make('received_at'),
-                                DateTimePicker::make('paided_at'),
                             ])
                             ->columns(2),
                         Tabs\Tab::make('Documenti')
                             ->schema([
                                 TextInput::make('n_fattura')
+                                    ->disabled()
                                     ->label('Numero Fattura'),
-                                DatePicker::make('data_fattura'),
+                                DatePicker::make('data_fattura')->disabled(),
                                 TextInput::make('invoice_number')
-                                    ->label('Numero Fattura Estera'),
+                                    ->disabled()
+                                    ->label('Numero Fattura'),
                             ])
                             ->columns(2),
                         Tabs\Tab::make('Stato')
                             ->schema([
                                 Select::make('stato')
                                     ->options([
+                                        '' => '',
                                         'Inserito' => 'Inserito',
-                                        'Inviato' => 'Inviato',
+                                        'Sospeso' => 'Sospeso',
+                                        'Proforma' => 'Proforma',
+                                        'Annullato' => 'Annullato',
                                         'Pagato' => 'Pagato',
                                     ])
                                     ->required(),
-                                TextInput::make('status_compenso'),
-                                TextInput::make('status_pratica'),
-                                TextInput::make('status_pagamento'),
-                                TextInput::make('macrostatus'),
+                                TextInput::make('status_compenso')->disabled(),
+                                TextInput::make('status_pratica')->disabled(),
+                                TextInput::make('status_pagamento')->disabled(),
+                                TextInput::make('macrostatus')->disabled(),
                                 Toggle::make('annullato'),
                                 Toggle::make('coordinamento'),
                             ])
                             ->columns(2),
                         Tabs\Tab::make('Altro')
                             ->schema([
-                                TextInput::make('legacy_id'),
-                                TextInput::make('cognome'),
-                                TextInput::make('nome'),
-                                TextInput::make('denominazione_riferimento'),
-                                TextInput::make('entrata_uscita'),
+                                TextInput::make('pratica.cognome_cliente')->disabled(),
+                                TextInput::make('pratica.nome_cliente')->disabled(),
+                                TextInput::make('denominazione_riferimento')->disabled(),
+                                TextInput::make('entrata_uscita')->disabled(),
                                 TextInput::make('proforma_id')
+                                    ->disabled()
                                     ->numeric(),
                             ])
                             ->columns(2),

@@ -260,6 +260,13 @@ class ImportProvvigioniFromApi extends Command
                             $updated++;
                             // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
+                            if (empty($existing->n_fattura) && !empty($provvigioneData['n_fattura'])) {
+                                $existing->update([
+                                    'stato' => 'Pagato',
+                                    'n_fattura' => $provvigioneData['n_fattura'] ?? null,
+                                    'data_fattura' => $provvigioneData['data_fattura'] ?? null,
+                                ]);
+                            }
                             $skipped++;
                         }
                     } else {
