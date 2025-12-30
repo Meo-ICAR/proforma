@@ -75,6 +75,7 @@ class AdminPanelProvider extends PanelProvider
                             ->color('info')
                             ->scopes(['openid', 'email', 'profile']),
                     ])
+                    ->registration(true)
             ]);
     }
 }
