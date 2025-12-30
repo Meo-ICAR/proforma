@@ -99,7 +99,6 @@ class ProvvigioniRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn(Provvigione $record): bool =>
                         $record->entrata_uscita === 'Entrata' &&
-                        (!isset($record->quota)) &&
                         ($record->quota <> 0))
                     ->form([
                         TextInput::make('quota')
