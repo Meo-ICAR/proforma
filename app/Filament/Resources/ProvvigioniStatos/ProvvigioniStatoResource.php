@@ -34,7 +34,7 @@ class ProvvigioniStatoResource extends Resource
     //  protected static ?int $navigationSort = 4;
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $recordTitleAttribute = 'provvigioni_stato';
+    protected static ?string $recordTitleAttribute = 'stato';
 
     public static function form(Schema $schema): Schema
     {

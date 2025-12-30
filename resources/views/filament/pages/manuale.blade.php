@@ -6,7 +6,8 @@
             </x-slot>
 
             <div class="prose dark:prose-invert max-w-none">
-                <p>Questo manuale ti aiuterà a navigare tra le funzionalità principali:</p>
+                <p>Questo manuale ti aiuterà a navigare tra le funzionalità principali.</p>
+                <p>Controlla innazitutto che i produttori abbiano la partita IVA, l'email ed il tipo Enasarco compilata ed eventualmente siano valorizzati i contributi mensili ed il recupero mensile anticipazioni</p>
 
                 <h3>1. Emissione Proforma</h3>
                 <p>Per calcolare il contributo, accedi alla sezione <strong>Provvigioni</strong> metti la spunta alla provvigioni desiderate POI e clicca sul pulsante "Emetti proforma".</p>

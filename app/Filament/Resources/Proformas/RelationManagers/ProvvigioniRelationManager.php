@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Proformas\RelationManagers;
 
+use App\Filament\Resources\Praticas\PraticaResource;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -77,7 +78,9 @@ class ProvvigioniRelationManager extends RelationManager
                     ->searchable(),
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
-                    ->searchable(),
+                    ->color('info')
+                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->openUrlInNewTab()
             ])
             ->filters([
                 //

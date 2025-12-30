@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Provvigiones\Tables;
 
+use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Compenso;
 use App\Models\Proforma;
 use App\Models\Provvigione;
@@ -103,8 +104,7 @@ class ProvvigionesTable
                         'Sospeso' => 'danger',
                         default => 'gray',
                     })
-                    ->sortable()
-                    ->searchable(),
+                    ->sortable(),
                 TextColumn::make('denominazione_riferimento')
                     ->label('Produttore')
                     ->sortable()
@@ -134,6 +134,10 @@ class ProvvigionesTable
                 TextColumn::make('istituto_finanziario')
                     ->searchable(),
                 TextColumn::make('id_pratica')
+                    ->label('Pratica')
+                    ->color('info')
+                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->openUrlInNewTab()
                     ->searchable(),
                 TextColumn::make('descrizione'),
                 TextColumn::make('status_compenso'),
@@ -205,6 +209,7 @@ class ProvvigionesTable
                             ->success()
                             ->send();
                     })
+                    ->visible(fn($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
                     ->iconButton()
                     ->color('primary'),
             ], position: RecordActionsPosition::BeforeColumns)

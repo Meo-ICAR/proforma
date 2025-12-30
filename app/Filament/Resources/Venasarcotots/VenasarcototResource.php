@@ -35,7 +35,7 @@ class VenasarcototResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $recordTitleAttribute = 'Enasarco Massimali';
+    protected static ?string $recordTitleAttribute = 'produttore';
 
     public static function form(Schema $schema): Schema
     {

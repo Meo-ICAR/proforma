@@ -28,7 +28,7 @@ class VcogeResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Prospetto provvigionale mensile';
 
-    protected static ?string $recordTitleAttribute = 'Impegnato';
+    protected static ?string $recordTitleAttribute = 'mese';
 
     public static function form(Schema $schema): Schema
     {

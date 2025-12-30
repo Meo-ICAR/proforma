@@ -33,7 +33,7 @@ class PraticaResource extends Resource
 
     protected static ?int $navigationSort = 7;
 
-    protected static ?string $recordTitleAttribute = 'pratica';
+    protected static ?string $recordTitleAttribute = 'cognome_cliente';
 
     public static function form(Schema $schema): Schema
     {

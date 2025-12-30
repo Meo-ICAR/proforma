@@ -32,6 +32,8 @@ class InvoiceResource extends Resource
     //    protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 3;
 
+    protected static ?string $recordTitleAttribute = 'fornitore';
+
     /**
      * Get the navigation badge for the resource.
      */
@@ -45,8 +47,6 @@ class InvoiceResource extends Resource
     {
         return 'danger';
     }
-
-    protected static ?string $recordTitleAttribute = 'Fatture_Passive';
 
     public static function form(Schema $schema): Schema
     {

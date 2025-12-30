@@ -28,10 +28,11 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->favicon(asset('favicon.ico'))
+            // ->search()
             ->id('admin')
             ->path('admin')
             ->login()
-            //  ->registration()
+            ->registration()
             ->passwordReset()
             //   ->emailVerification()
             ->authGuard('web')  // Make sure this is set to 'web'

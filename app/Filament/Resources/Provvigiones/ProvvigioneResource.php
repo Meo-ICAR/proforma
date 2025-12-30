@@ -33,7 +33,7 @@ class ProvvigioneResource extends Resource
     // protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'provvigioni';
+    protected static ?string $recordTitleAttribute = 'denominazione_riferimento';
 
     public static function form(Schema $schema): Schema
     {
@@ -58,6 +58,7 @@ class ProvvigioneResource extends Resource
             'index' => ListProvvigiones::route('/'),
             //  'create' => CreateProvvigione::route('/create'),
             'view' => ViewProvvigione::route('/{record}'),
+            'edit' => Pages\EditProvvigione::route('/{record}/edit'),
         ];
     }
 

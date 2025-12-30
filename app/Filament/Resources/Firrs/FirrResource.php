@@ -33,7 +33,7 @@ class FirrResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $recordTitleAttribute = 'FIRR';
+    protected static ?string $recordTitleAttribute = 'competenza';
 
     public static function form(Schema $schema): Schema
     {

@@ -31,7 +31,7 @@ class InvoiceInResource extends Resource
 
     protected static ?int $navigationSort = 6;
 
-    protected static ?string $recordTitleAttribute = 'fatture';
+    protected static ?string $recordTitleAttribute = 'nome_fornitore';
 
     public static function form(Schema $schema): Schema
     {

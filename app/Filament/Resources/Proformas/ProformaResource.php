@@ -33,7 +33,7 @@ class ProformaResource extends Resource
     //  protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $recordTitleAttribute = 'proforma';
+    protected static ?string $recordTitleAttribute = 'emailsubject';
 
     public static function form(Schema $schema): Schema
     {

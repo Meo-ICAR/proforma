@@ -45,13 +45,8 @@ class ProformasTable
           ->label('Modificato')
           ->date()
           ->sortable(),
-        TextColumn::make('sended_at')
-          ->label('Inviato')
-          ->date()
-          ->sortable(),
-        TextColumn::make('paid_at')
-          ->label('Pagato')
-          ->date()
+        TextColumn::make('emailto')
+          ->label('Email')
           ->sortable(),
         TextColumn::make('delta')
           ->money('EUR')  // Forza Euro e formato italiano
@@ -84,7 +79,14 @@ class ProformasTable
           ->action(function (Collection $records) {
             // Process each record with a visible loop
             $records->each(function ($record) {
-              $record->inviaEmail(false);
+              if (empty($record->emailto)) {
+                Notification::make()
+                  ->title('Email produttore assente su proforma  ' . $record->emailsubject)
+                  ->danger()
+                  ->send();
+              } else {
+                $record->inviaEmail(false);
+              }
             });
 
             // Show success notification with count

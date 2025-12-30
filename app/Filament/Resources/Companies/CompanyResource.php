@@ -35,7 +35,7 @@ class CompanyResource extends Resource
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $recordTitleAttribute = 'Azienda';
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function getNavigationUrl(): string
     {
