@@ -45,6 +45,9 @@ class ProformasTable
           ->label('Modificato')
           ->date()
           ->sortable(),
+        TextColumn::make('fornitore.name')
+          ->label('Produttore')
+          ->sortable(),
         TextColumn::make('emailto')
           ->label('Email')
           ->sortable(),

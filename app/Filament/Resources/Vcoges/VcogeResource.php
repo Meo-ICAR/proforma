@@ -13,6 +13,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use BackedEnum;
+use UnitEnum;
 
 class VcogeResource extends Resource
 {
@@ -20,13 +21,17 @@ class VcogeResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
+    // protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $navigationLabel = 'Prospetto provvigionale mensile';
+    protected static ?string $navigationLabel = 'Provvigioni mese';
 
-    protected static ?string $modelLabel = 'Prospetto provvigionale mensile';
+    protected static ?string $modelLabel = 'Provvigioni mese';
 
     protected static ?string $pluralModelLabel = 'Prospetto provvigionale mensile';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $recordTitleAttribute = 'mese';
 

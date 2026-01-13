@@ -15,9 +15,22 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    public function sendPasswordResetNotification($token)
+    public function sendPasswordResetNotification($token): void
     {
-        $this->notify(new ResetPassword($token));
+        // 1. Generiamo l'URL che punta al pannello Filament
+        // Se il tuo panel ha un ID diverso da 'admin', cambialo qui sotto
+        $url = route('filament.admin.auth.password-reset.reset', [
+            'token' => $token,
+            'email' => $this->getEmailForPasswordReset(),
+        ]);
+
+        // 2. Usiamo la classe di notifica di Laravel, ma passando l'URL creato da noi
+        $notification = new \Illuminate\Auth\Notifications\ResetPassword($token);
+
+        // Questo trucco sovrascrive la generazione automatica dell'URL interna alla notifica
+        $notification->createUrlUsing(fn($user, $token) => $url);
+
+        $this->notify($notification);
     }
 
     public function socialiteAccounts(): HasMany

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Enasarcos\Pages;
 use App\Filament\Resources\Enasarcos\EnasarcoResource;
 use App\Filament\Resources\Firrs\FirrResource;
 use App\Filament\Resources\Venasarcotots\VenasarcototResource;
+use App\Filament\Resources\VenasarcoTrimestres\VenasarcoTrimestreResource;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
@@ -22,6 +23,11 @@ class ListEnasarcos extends ListRecords
                 ->color('info')
                 ->icon('heroicon-o-table-cells')
                 ->url(VenasarcototResource::getUrl('index')),
+            Action::make('view_trimestrale')
+                ->label('Contributi Trimestrali')
+                ->color('info')
+                ->icon('heroicon-o-table-cells')
+                ->url(VenasarcoTrimestreResource::getUrl('index')),
             Action::make('firr')
                 ->label('Scaglioni FIRR')
                 ->color('warning')

@@ -33,6 +33,7 @@ class ViewFornitore extends ViewRecord
                         // Create the proforma
                         $proforma = Proforma::create([
                             'fornitori_id' => $this->record->id,
+                            'email_subject' => 'Anticipo provvigionale #' . $this->record->id,
                             'anticipo_descrizione' => 'Anticipo provvigionale',
                             'stato' => 'Inserito',
                             'anticipo' => $data['anticipo'] ?? 0,
