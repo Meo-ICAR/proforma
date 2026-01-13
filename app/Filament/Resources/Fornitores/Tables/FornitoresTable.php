@@ -24,10 +24,12 @@ class FornitoresTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('anticipo_residuo')
-                    ->numeric()
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('contributo')
-                    ->numeric()
+                    ->money('EUR')
+                    ->alignEnd()
                     ->sortable(),
                 TextColumn::make('enasarco')
                     ->badge()

@@ -64,7 +64,7 @@ class Fornitore extends Model
     protected $casts = [
         'natoil' => 'date',
         'anticipo' => 'decimal:2',
-        'anticipo_residuo' => 'decimal:2',
+        //  'anticipo_residuo' => 'decimal:2',
         'contributo' => 'decimal:2',
         'issubfornitore' => 'boolean',
         'iscollaboratore' => 'boolean',
@@ -84,5 +84,10 @@ class Fornitore extends Model
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id', 'id');
+    }
+
+    public function proforma()
+    {
+        return $this->hasMany(Proforma::class, 'fornitori_id');
     }
 }

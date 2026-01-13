@@ -16,12 +16,9 @@ class ProformaEditSchema
                     ->label('Recupero mensile Anticipo ( 0 = tutto')
                     ->numeric()
                     ->prefix('€'),
-                TextInput::make('fornitore.anticipo_residuo')
-                    ->label('Anticipo Residuo')
-                    ->numeric()
-                    ->disabled()
-                    ->prefix('€'),
-                Textarea::make('commenti')
+                TextInput::make('anticipo_descrizione')
+                    ->maxLength(255),
+                Textarea::make('annotation')
                     ->label('Commenti')
                     ->columnSpanFull(),
             ]);

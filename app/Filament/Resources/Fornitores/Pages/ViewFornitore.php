@@ -28,22 +28,32 @@ class ViewFornitore extends ViewRecord
                     )->getComponents(),
                 ])
                 ->action(function (array $data) {
+                    //   if (isset($data['anticipo']) && is_numeric($data['anticipo']) && $data['anticipo'] > 0) {
+                    $this->record->anticipo_residuo = $this->record->anticipo_residuo + $data['anticipo'];
+                    $this->record->save();
+                    //   } else {
+                    //  Notification::make()
+                    //  ->title('Anticipo non valido')
+                    //    ->danger()
+                    //       ->send();
+                    //     return;
+                    //  }
                     // Use a transaction to ensure data consistency
                     return \DB::transaction(function () use ($data) {
                         // Create the proforma
                         $proforma = Proforma::create([
                             'fornitori_id' => $this->record->id,
-                            'email_subject' => 'Anticipo provvigionale #' . $this->record->id,
+                            'emailsubject' => 'Anticipo provvigionale #',
+                            'emailto' => $this->record->email,
+                            'emailfrom' => $this->record->company->email,
+                            //  'emailcc' => $this->record->company->email_cc,
                             'anticipo_descrizione' => 'Anticipo provvigionale',
                             'stato' => 'Inserito',
-                            'anticipo' => $data['anticipo'] ?? 0,
-                            'commenti' => $data['commenti'] ?? null,
+                            'anticipo' => -$data['anticipo'] ?? 0,
+                            'annotation' => $data['annotation'] ?? null,
                         ]);
-
-                        // Increment the anticipo_residuo in the Fornitore model
-                        if (isset($data['anticipo']) && is_numeric($data['anticipo']) && $data['anticipo'] > 0) {
-                            $this->record->increment('anticipo_residuo', $data['anticipo']);
-                        }
+                        $proforma->emailsubject .= $proforma->id . ' ' . $this->record->name;
+                        $proforma->save();
                         return redirect()
                             ->to(ProformaResource::getUrl('edit', ['record' => $proforma]));
                     });

@@ -6,6 +6,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\View;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -28,21 +29,21 @@ class ProformaForm
                                     ->prefix('€'),
                                 TextInput::make('anticipo_descrizione')
                                     ->maxLength(255),
-                                TextInput::make('fornitore.anticipo_residuo')
-                                    ->numeric()
-                                    ->disabled()
-                                    ->prefix('€'),
                                 TextInput::make('compenso')
                                     ->label('Totale provvigioni')
+                                    ->hidden(fn(callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->disabled()
                                     ->prefix('€'),
                                 Textarea::make('compenso_descrizione')
+                                    ->hidden(fn(callable $get) => $get('anticipo') < 0)
                                     ->columnSpanFull(),
                                 TextInput::make('contributo')
+                                    ->hidden(fn(callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->prefix('€'),
                                 TextInput::make('contributo_descrizione')
+                                    ->hidden(fn(callable $get) => $get('anticipo') < 0)
                                     ->maxLength(255),
                                 Textarea::make('annotation')
                                     ->label('Eventuali ns. note aggiuntve nella email')

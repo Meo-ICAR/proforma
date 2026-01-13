@@ -68,4 +68,10 @@ class ProformaResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    public static function getFormModelQuery(string $model): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getFormModelQuery($model)
+            ->with('fornitore');
+    }
 }
