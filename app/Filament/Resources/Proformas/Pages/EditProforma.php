@@ -15,9 +15,11 @@ class EditProforma extends EditRecord
 
     public function getSubheading(): string|Htmlable|null
     {
-        // $record = $this->getRecord();
+        $record = $this->getRecord();
 
-        return 'Per escludere una provvigione da questo proforma cliccare sul simbolo rosso del bidone';
+        return $record->fornitore
+            ? "Per escludere una provvigione da questo proforma per {$record->fornitore->name}, cliccare sul simbolo rosso del bidone"
+            : 'Per escludere una provvigione da questo proforma cliccare sul simbolo rosso del bidone';
     }
 
     protected function getHeaderActions(): array

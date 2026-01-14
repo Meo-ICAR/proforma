@@ -27,6 +27,14 @@ class VenasarcoTrimestre extends Model
         'contributo'
     ];
 
+    // Un trimestre appartiene a un record annuale specifico
+    public function annuale(): BelongsTo
+    {
+        return $this
+            ->belongsTo(Venasarcotot::class, 'produttore', 'produttore')
+            ->whereColumn('competenza', 'competenza');
+    }
+
     /**
      * The attributes that should be cast.
      *

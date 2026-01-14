@@ -64,7 +64,7 @@ class Fornitore extends Model
     protected $casts = [
         'natoil' => 'date',
         'anticipo' => 'decimal:2',
-        //  'anticipo_residuo' => 'decimal:2',
+        'anticipo_residuo' => 'decimal:2',
         'contributo' => 'decimal:2',
         'issubfornitore' => 'boolean',
         'iscollaboratore' => 'boolean',

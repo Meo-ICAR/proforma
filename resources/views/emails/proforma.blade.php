@@ -26,7 +26,7 @@
         <div class="content">
             @if($preview)
             <div style="background-color: #fff3cd; color: #856404; padding: 10px; margin-bottom: 20px; border-radius: 4px;">
-                <strong>ANTEPRIMA</strong> - Questa email verrà inviata a: {{ $proforma->fornitore-> }}
+          <strong>ANTEPRIMA</strong> - Questa email verrà inviata a: {{ $proforma->fornitore->name }} &lt;{{ $proforma->fornitore->email }}&gt;
             </div>
             @endif
 
@@ -35,7 +35,7 @@
             <p>Per velocizzare l erogazione delle somme La preghiamo di inserire nella causale della sua fattura il seguente riferimento: {{ $proforma->emailsubject }}</p>
 
             <table>
-                @if($proforma->compenso > 0)
+                @if($proforma->compenso <> 0)
                 <thead>
                     <tr>
                         <th>#</th>
@@ -59,13 +59,13 @@
                 </tbody>
                 @endif
                 <tfoot>
-                    @if($proforma->anticipo > 0)
+                    @if($proforma->anticipo <> 0)
                     <tr>
                         <td colspan="3" style="text-align: right;">{{ $proforma->anticipo_descrizione }}:</td>
                         <td>€ {{ number_format($proforma->anticipo, 2, ',', '.') }}</td>
                     </tr>
                     @endif
-                    @if($proforma->contributo > 0)
+                    @if($proforma->contributo <> 0)
                     <tr>
                         <td colspan="3" style="text-align: right;">{{ $proforma->contributo_descrizione }}:</td>
                         <td>€ {{ number_format($proforma->contributo, 2, ',', '.') }}</td>
@@ -90,7 +90,7 @@
 
         <div class="footer">
             <p>Questa email è stata generata automaticamente, si prega di non rispondere.
-             Se hai ricevuto questa email per errore, ti preghiamo di contattarci.</p>
+             Se ha ricevuto questa email per errore,la preghiamo di contattarci.</p>
         </div>
     </div>
 </body>

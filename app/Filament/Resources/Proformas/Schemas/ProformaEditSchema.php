@@ -13,14 +13,20 @@ class ProformaEditSchema
         return $schema
             ->components([
                 TextInput::make('anticipo')
-                    ->label('Recupero mensile Anticipo ( 0 = tutto')
+                    ->label('Anticipo che si intende erogare')
                     ->numeric()
                     ->prefix('€'),
                 TextInput::make('anticipo_descrizione')
+                    ->label('Causale anticipo')
                     ->maxLength(255),
                 Textarea::make('annotation')
                     ->label('Commenti')
                     ->columnSpanFull(),
+                TextInput::make('anticipo_residuo')
+                    ->label('Anticipi finora erogati ancora da rimborsare')
+                    ->numeric()
+                    ->disabled()
+                    ->prefix('€'),
             ]);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
 
 class Venasarcotot extends Model
@@ -50,6 +51,16 @@ class Venasarcotot extends Model
     protected $attributes = [
         'enasarco' => 'no',
     ];
+
+    // Una riga annuale ha molti trimestri correlati
+    public function trimestri(): HasMany
+    {
+        return $this
+            ->hasMany(VenasarcoTrimestre::class, 'produttore', 'produttore')
+            ->whereColumn('competenza', 'competenza')
+            // Aggiungiamo il limite: solo i trimestri 1, 2 e 3
+            ->where('trimestre', '<', 4);
+    }
 
     /**
      * Get the enasarco options.

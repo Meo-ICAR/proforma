@@ -43,6 +43,7 @@ class Proforma extends Model
         'sended_at',
         'paid_at',
         'delta',
+        'anticipo_residuo',
         'delta_annotation',
         'proforma_id',
     ];
@@ -54,6 +55,7 @@ class Proforma extends Model
      */
     protected $casts = [
         'anticipo' => 'decimal:2',
+        'anticipo_residuo' => 'decimal:2',
         'compenso' => 'decimal:2',
         'contributo' => 'decimal:2',
         'delta' => 'decimal:2',
@@ -65,6 +67,16 @@ class Proforma extends Model
     ];
 
     /**
+     * Get the fornitore that owns the proforma.
+     */
+    public function fornitore()
+    {
+        return $this->belongsTo(Fornitore::class, 'fornitori_id');
+    }
+
+    protected $with = ['fornitore'];
+
+    /**
      * The model's default values for attributes.
      *
      * @var array
@@ -72,14 +84,6 @@ class Proforma extends Model
     protected $attributes = [
         'stato' => 'Inserito',
     ];
-
-    /**
-     * Get the fornitore that owns the proforma.
-     */
-    public function fornitore()
-    {
-        return $this->belongsTo(Fornitore::class, 'fornitori_id');
-    }
 
     /**
      * Get the provvigioni for the proforma.
@@ -137,6 +141,7 @@ class Proforma extends Model
             'fornitori_id' => $fornitori_id,
             'anticipo' => $fornitore->anticipo,
             'anticipo_descrizione' => $fornitore->anticipo_description,
+            'anticipo_residuo' => $fornitore->anticipo_residuo,
             'compenso_descrizione' => $fornitore->company->compenso_descrizione ?? 'Compenso',
             'contributo' => $fornitore->contributo,
             'contributo_descrizione' => $fornitore->contributo_description,
@@ -281,8 +286,11 @@ class Proforma extends Model
             if (!empty($this->annotation)) {
                 $message .= $cr . 'Note: ' . $this->annotation;
             }
-
-            $subject = "Proforma #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+            if ($this->anticipo < 0) {
+                $subject = "Anticipo #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+            } else {
+                $subject = "Proforma #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+            }
 
             // Send the email
             $mail = Mail::to($toEmail);
@@ -343,13 +351,25 @@ class Proforma extends Model
                 //  'emailfrom' => $ccEmail,
             ]);
 
-            \Log::info('Updating proforma status after email send for ID: ' . $this->id);
             if (!$preview) {
+                \Log::info('Updating proforma status after email send for ID: ' . $this->id);
                 $this->update([
                     'sended_at' => now(),
                     'stato' => 'Inviato',
                     'data_invio' => now(),
                 ]);
+                // Update fornitore's anticipo_residuo
+                if ($this->fornitore) {
+                    $this->fornitore->increment('anticipo_residuo', -$this->anticipo);
+                    \Log::info('Updated anticipo_residuo for fornitore ID: ' . $this->fornitore->id
+                        . ' by ' . $this->anticipo
+                        . '. New value: ' . $this->fornitore->anticipo_residuo);
+                }
+            }
+            if ($preview) {
+                \Log::info('NOT updated anticipo_residuo for fornitore ID: ' . $this->fornitore->name
+                    . ' by ' . $this->anticipo
+                    . '. New value: ' . $this->fornitore->anticipo_residuo - $this->anticipo);
             }
 
             return true;

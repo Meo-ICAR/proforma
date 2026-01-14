@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VenasarcoTrimestres\Tables;
 
+use App\Models\Venasarcotot;
 use App\Models\VenasarcoTrimestre;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -60,9 +61,6 @@ class VenasarcoTrimestresTable
                     ->label('Trimestre'),
             ])
             ->columns([
-                TextColumn::make('competenza')
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('Trimestre')
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         '1' => '1° Trimestre',
@@ -105,7 +103,10 @@ class VenasarcoTrimestresTable
                     ->state(fn($record): float => $record->contributo / 2)
                     ->money('EUR')
                     ->prefix('€ ')
-                    ->alignRight()
+                    ->alignRight(),
+                TextColumn::make('competenza')
+                    ->sortable()
+                    ->searchable(),
             ])
             ->defaultSort('Trimestre', 'asc');
     }

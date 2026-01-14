@@ -16,10 +16,23 @@ class FornitoreInfoList
             ->components([
                 Tabs::make('Fornitore')
                     ->tabs([
-                        Tab::make('Anagrafica')
+                        Tab::make('Info base')
                             ->schema([
-                                TextEntry::make('nome'),
+                                TextEntry::make('name'),
                                 TextEntry::make('email'),
+                                TextEntry::make('piva'),
+                                TextEntry::make('enasarco'),
+                                TextEntry::make('anticipo_description'),
+                                TextEntry::make('anticipo')
+                                    ->numeric(),
+                                TextEntry::make('anticipo_residuo'),
+                                TextEntry::make('contributo_description'),
+                                TextEntry::make('contributo')
+                            ])
+                            ->columns(3),
+                        Tab::make('Dati Fiscali')
+                            ->schema([
+                                TextEntry::make('cf'),
                                 TextEntry::make('tel'),
                                 TextEntry::make('regione'),
                                 TextEntry::make('prov'),
@@ -29,13 +42,6 @@ class FornitoreInfoList
                                 TextEntry::make('natoil')
                                     ->date(),
                                 TextEntry::make('indirizzo'),
-                            ])
-                            ->columns(3),
-                        Tab::make('Dati Fiscali')
-                            ->schema([
-                                TextEntry::make('piva'),
-                                TextEntry::make('cf'),
-                                TextEntry::make('enasarco'),
                                 TextEntry::make('name'),
                                 TextEntry::make('coge'),
                                 TextEntry::make('nomecoge'),
@@ -46,14 +52,6 @@ class FornitoreInfoList
                         Tab::make('Dati Contrattuali')
                             ->schema([
                                 TextEntry::make('coordinatore'),
-                                TextEntry::make('anticipo_description'),
-                                TextEntry::make('anticipo_residuo')
-                                    ->numeric(),
-                                TextEntry::make('anticipo')
-                                    ->numeric(),
-                                TextEntry::make('contributo_description'),
-                                TextEntry::make('contributo')
-                                    ->numeric(),
                                 TextEntry::make('issubfornitore')
                                     ->numeric(),
                                 TextEntry::make('operatore'),

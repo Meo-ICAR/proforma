@@ -24,11 +24,28 @@ class ProformaForm
                         Tab::make('Compensi')
                             ->schema([
                                 TextInput::make('anticipo')
-                                    ->label('Recupero mensile Anticipo ( 0 = tutto il residuo)')
+                                    ->live()  // Fondamentale: permette alla UI di reagire ai cambiamenti in tempo reale
+                                    ->label(function ($state) {
+                                        // Se lo stato è nullo o uguale a 0
+                                        if (blank($state) || $state == 0) {
+                                            return 'Recupero mensile Anticipo ( 0 = tutto il residuo)';
+                                        }
+
+                                        // Se il valore è positivo o negativo
+                                        return $state > 0
+                                            ? 'Recupero mensile Anticipo ( 0 = tutto il residuo)'
+                                            : 'Anticipo erogato ( il negativo indica erogazione)';
+                                    })
                                     ->numeric()
                                     ->prefix('€'),
                                 TextInput::make('anticipo_descrizione')
                                     ->maxLength(255),
+                                TextInput::make('anticipo_residuo')
+                                    ->label('Montante anticipi finora erogati da rimborsare')
+                                    ->numeric()
+                                    ->disabled()
+                                    ->dehydrated(false)
+                                    ->prefix('€'),
                                 TextInput::make('compenso')
                                     ->label('Totale provvigioni')
                                     ->hidden(fn(callable $get) => $get('anticipo') < 0)

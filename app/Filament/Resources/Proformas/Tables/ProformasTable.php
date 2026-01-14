@@ -127,7 +127,15 @@ class ProformasTable
               $record->update([
                 'stato' => 'Inviato',
                 'sended_at' => now(),
+                'data_invio' => now(),
               ]);
+              // Update fornit ore's anticipo_residuo
+              if ($record->fornitore) {
+                $record->fornitore->increment('anticipo_residuo', -$record->anticipo);
+                \Log::info('Updated anticipo_residuo for fornitore ID: ' . $record->fornitore->id
+                  . ' by ' . $record->anticipo
+                  . '. New value: ' . $record->fornitore->anticipo_residuo);
+              };
             });
 
             // Show success notification with count
