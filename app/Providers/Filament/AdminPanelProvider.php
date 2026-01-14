@@ -19,10 +19,24 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;  // Importante per usare Blade::render
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;  // Già che ci sei, servirà anche questo per Str::random
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use SocialiteProviders\Manager\SocialiteWasCalled;
+use SocialiteProviders\Microsoft\MicrosoftExtendSocialite;
 
 class AdminPanelProvider extends PanelProvider
 {
+    public function boot(): void
+    {
+        Event::listen(SocialiteWasCalled::class, [
+            MicrosoftExtendSocialite::class,
+            'handle',
+        ]);
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -70,12 +84,26 @@ class AdminPanelProvider extends PanelProvider
                 FilamentSocialitePlugin::make()
                     ->providers([
                         Provider::make('microsoft')
+                            ->color('gray')  // or 'gray' for a lighter gray
                             ->label('Microsoft')
-                            //       ->icon('fab-microsoft') // Assicurati di avere un set di icone installato
-                            ->color('info')
-                            ->scopes(['openid', 'email', 'profile']),
                     ])
-                    ->registration(true)
+                    ->registration(true)  // Abilita la registrazione automatica per nuovi utenti
+                    // Questo forza il plugin a mostrare i bottoni in entrambe le pagine
+                    //  ->showNotAssociatedMessage(true)
+                    ->createUserUsing(function (string $provider, $oauthUser, $plugin) {
+                        // Logica personalizzata per creare l'utente
+                        return User::create([
+                            'name' => $oauthUser->getName(),
+                            'email' => $oauthUser->getEmail(),
+                            'password' => null,  // Password nullable obbligatoria per Socialite
+                            'avatar_url' => $oauthUser->getAvatar(),  // Salva l'URL di Google
+                            'email_verified_at' => now(),  // Google certifica l'email, quindi la segniamo come verificata
+                            'password' => Hash::make(Str::random(32)),  // Password casuale sicura
+                        ]);
+                    }),
+            ])
+            ->authMiddleware([
+                Authenticate::class,
             ]);
     }
 }
