@@ -272,8 +272,13 @@ class Proforma extends Model
                 }
             }
             if ($this->anticipo <> 0) {
-                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($this->anticipo, 2);
-                $somma += $this->anticipo;
+                if ($this->anticipo > 0) {
+                    $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($this->anticipo, 2);
+                    $somma += $this->anticipo;
+                } else {
+                    $message .= $cr . $this->anticipo_descrizione . ': €' . -number_format($this->anticipo, 2);
+                    $somma += -$this->anticipo;
+                }
             }
 
             if ($this->contributo <> 0) {
@@ -303,6 +308,14 @@ class Proforma extends Model
                     $mail->bcc($bccEmail);
                 }
             }
+
+            // Update the proforma status
+            $this->update([
+                'emailsubject' => $subject,
+                'emailto' => $toEmail,
+                'emailbody' => $message,
+                //  'emailfrom' => $ccEmail,
+            ]);
             // Replace this line:
             // $mail->send(new ProformaMail($this, $subject, $message));
             // With this:
@@ -343,13 +356,6 @@ class Proforma extends Model
                     }
                 }
             });
-            // Update the proforma status
-            $this->update([
-                'emailsubject' => $subject,
-                'emailto' => $toEmail,
-                'emailbody' => $message,
-                //  'emailfrom' => $ccEmail,
-            ]);
 
             if (!$preview) {
                 \Log::info('Updating proforma status after email send for ID: ' . $this->id);
