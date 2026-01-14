@@ -13,6 +13,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
 
 class ProvvigioniRelationManager extends RelationManager
@@ -49,6 +50,7 @@ class ProvvigioniRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->reorderableColumns()
             ->recordTitleAttribute('Provvigioni associate alla pratica')
             ->columns([
                 TextColumn::make('entrata_uscita')
@@ -69,6 +71,12 @@ class ProvvigioniRelationManager extends RelationManager
                     ->money('EUR')
                     ->alignEnd(),
                 //  ->searchable(),
+                TextColumn::make('descrizione'),
+                TextColumn::make('status_compenso'),
+                TextColumn::make('data_status')
+                    ->date(),
+                TextColumn::make('stato'),
+                TextColumn::make('id'),
             ])
             ->filters([
                 //
@@ -150,6 +158,6 @@ class ProvvigioniRelationManager extends RelationManager
                 //  EditAction::make(),
                 //  DissociateAction::make(),
                 // DeleteAction::make(),
-            ]);
+            ], position: RecordActionsPosition::BeforeColumns);
     }
 }
