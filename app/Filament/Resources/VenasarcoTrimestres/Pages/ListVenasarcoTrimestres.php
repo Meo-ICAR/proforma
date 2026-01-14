@@ -29,12 +29,11 @@ class ListVenasarcoTrimestres extends ListRecords
 
                         // Insert new records from view
                         DB::table('venasarcotrimestre')->insertUsing(
-                            ['produttore', 'montante', 'competenza', 'Trimestre', 'enasarco'],
-                            DB::table('vwenasarcotot')
+                            ['produttore', 'montante', 'competenza', 'Trimestre', 'enasarco', 'contributo'], DB::table('vwenasarcotrimestre')->select('produttore', 'montante', 'competenza', 'Trimestre', 'enasarco', 'contributo')
                         );
 
                         Notification::make()
-                            ->title('Calcolo ENASARCO e FIRR completato con successo')
+                            ->title('Calcolo trimestrale ENASARCO completato con successo')
                             ->success()
                             ->send();
                     } catch (\Exception $e) {
