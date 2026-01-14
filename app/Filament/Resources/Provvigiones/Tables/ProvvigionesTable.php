@@ -159,6 +159,9 @@ class ProvvigionesTable
                         'Proforma' => 'Proforma',
                         'Pagato' => 'Pagato',
                         'Annullato' => 'Annullato',
+                        'Escluso' => 'Escluso',
+                        'Fatturato' => 'Fatturato',
+                        'Stornato' => 'Stornato',
                     ])
                     ->multiple()
                     ->default(['Inserito', 'Sospeso'])
@@ -187,6 +190,7 @@ class ProvvigionesTable
                             ->native(false)
                             ->displayFormat('m/Y'),
                     ])
+                    ->default(now()->subDays(20)->format('Y'))
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['mese'],
