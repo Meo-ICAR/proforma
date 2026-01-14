@@ -33,7 +33,7 @@ class ProvvigioneForm
                                     ->required(),
                                 TextInput::make('descrizione')
                                     ->disabled(),
-                                Select::make('tipo')
+                                TextInput::make('tipo')
                                     ->disabled(),
                                 TextInput::make('segnalatore')
                                     ->disabled(),
@@ -85,12 +85,14 @@ class ProvvigioneForm
                             ->schema([
                                 Select::make('stato')
                                     ->options([
-                                        '' => '',
                                         'Inserito' => 'Inserito',
                                         'Sospeso' => 'Sospeso',
                                         'Proforma' => 'Proforma',
-                                        'Annullato' => 'Annullato',
                                         'Pagato' => 'Pagato',
+                                        'Annullato' => 'Annullato',
+                                        'Escluso' => 'Escluso',
+                                        'Fatturato' => 'Fatturato',
+                                        'Stornato' => 'Stornato',
                                     ])
                                     ->required(),
                                 TextInput::make('status_compenso')->disabled(),

@@ -188,16 +188,17 @@ class ProvvigionesTable
                         DatePicker::make('mese')
                             ->label('Seleziona Mese')
                             ->native(false)
-                            ->displayFormat('m/Y'),
+                            ->displayFormat('m/Y')
+                            ->default(now()->subDays(20))
                     ])
                     ->query(function (Builder $query, array $data): Builder {
-                        $date = $data['mese'] ?? now()->subDays(20);
-                        return $query->when(
-                            $data['mese'],
-                            fn(Builder $query, $date): Builder => $query
-                                ->whereMonth('data_status', \Carbon\Carbon::parse($date)->month)
-                                ->whereYear('data_status', \Carbon\Carbon::parse($date)->year),
-                        );
+                        $date = isset($data['mese'])
+                            ? \Carbon\Carbon::parse($data['mese'])
+                            : now();
+
+                        return $query
+                            ->whereMonth('data_status', $date->month)
+                            ->whereYear('data_status', $date->year);
                     })
             ])
             ->recordActions([
