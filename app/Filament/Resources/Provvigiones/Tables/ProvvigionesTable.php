@@ -190,8 +190,8 @@ class ProvvigionesTable
                             ->native(false)
                             ->displayFormat('m/Y'),
                     ])
-                    ->default(now()->subDays(20)->format('Y'))
                     ->query(function (Builder $query, array $data): Builder {
+                        $date = $data['mese'] ?? now()->subDays(20);
                         return $query->when(
                             $data['mese'],
                             fn(Builder $query, $date): Builder => $query
