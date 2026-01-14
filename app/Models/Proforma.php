@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Mail\ProformaMail;
 use App\Models\Company;
 use App\Models\Fornitore;
+use App\Models\Provvigione;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -91,6 +92,17 @@ class Proforma extends Model
     public function provvigioni()
     {
         return $this->hasMany(Provvigione::class, 'proforma_id');
+    }
+
+    protected static function booted()
+    {
+        static::deleting(function ($proforma) {
+            // Update all related provvigioni
+            $proforma->provvigioni()->update([
+                'stato' => 'Inserito',
+                'proforma_id' => null
+            ]);
+        });
     }
 
     /**
