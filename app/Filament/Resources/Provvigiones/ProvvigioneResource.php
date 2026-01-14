@@ -2,13 +2,15 @@
 
 namespace App\Filament\Resources\Provvigiones;
 
-use App\Filament\Resources\Provvigiones\Pages\CreateProvvigione;
 use App\Filament\Resources\Provvigiones\Pages\EditProvvigione;
 use App\Filament\Resources\Provvigiones\Pages\ListProvvigiones;
+use App\Filament\Resources\Provvigiones\Pages\ListProvvigioniAttive;
 use App\Filament\Resources\Provvigiones\Pages\ViewProvvigione;
 use App\Filament\Resources\Provvigiones\Schemas\ProvvigioneForm;
+use App\Filament\Resources\Provvigiones\Tables\AttiveTable;
 use App\Filament\Resources\Provvigiones\Tables\ProvvigionesTable;
 use App\Models\Provvigione;
+use Filament\Navigation\NavigationItem;  // Add this import at the top
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -45,6 +47,17 @@ class ProvvigioneResource extends Resource
         return ProvvigionesTable::configure($table);
     }
 
+    public static function getNavigationItems(): array
+    {
+        return [
+            ...parent::getNavigationItems(),
+            NavigationItem::make('Provvigioni Attive')
+                ->icon('heroicon-o-check-circle')
+                ->url(static::getUrl('attive'))
+                ->sort(2),
+        ];
+    }
+
     public static function getRelations(): array
     {
         return [
@@ -56,9 +69,9 @@ class ProvvigioneResource extends Resource
     {
         return [
             'index' => ListProvvigiones::route('/'),
-            //  'create' => CreateProvvigione::route('/create'),
+            'attive' => ListProvvigioniAttive::route('/attive'),
             'view' => ViewProvvigione::route('/{record}'),
-            'edit' => Pages\EditProvvigione::route('/{record}/edit'),
+            'edit' => EditProvvigione::route('/{record}/edit'),
         ];
     }
 

@@ -31,7 +31,7 @@ class PraticaResource extends Resource
 
     //  protected static UnitEnum|string|null $navigationGroup = 'Archivi';
 
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'cognome_cliente';
 
