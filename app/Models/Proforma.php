@@ -417,26 +417,28 @@ class Proforma extends Model
      * @param string|null $message Optional custom message
      * @return bool
      */
-    public function testEmail($email, $subject = null, $message = null)
+    public function testEmail($email = null, $subject = null, $message = null)
     {
         try {
-            $subject = $subject ?? "Proforma #{$this->id} - {$this->fornitore->name}";
-            $message = $message ?? "In allegato trovi la proforma #{$this->id}";
-            // Mail::to($user->email)->send(new WelcomeMail($user));
-            Mail::to($email)
-                ->send(new ProformaMail($this, $subject, $message));
-
-            // Update the proforma status
-
-            /*
-             * $this->update([
-             *     'stato' => 'Inviato',
-             *     'sended_at' => now(),
-             * ]);
-             */
+            // Ensure relationships are loaded
+            if (!$this->relationLoaded('fornitore')) {
+                $this->load('fornitore');
+            }
+            $email = 'piergiuseppe.meo@gmail.com';
+            $subject = $subject ?? "Test Proforma #{$this->id}";
+            $message = $message ?? "This is a test email for Proforma #{$this->id}";
+            // Log what we're about to do
+            \Log::info("Sending test email for Proforma #{$this->id} to {$email}");
+            // Simple email without using the view
+            Mail::raw($message, function ($message) use ($email, $subject) {
+                $message
+                    ->to($email)
+                    ->subject($subject);
+            });
+            \Log::info("Test email sent successfully to {$email}");
             return true;
         } catch (\Exception $e) {
-            \Log::error("Errore nell'invio dell'email per la proforma #{$this->id}: " . $e->getMessage());
+            \Log::error('Failed to send test email: ' . $e->getMessage());
             return false;
         }
     }
