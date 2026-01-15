@@ -47,7 +47,7 @@ class AttiveTable
             )
             ->headerActions([
                 BulkAction::make('emetti')
-                    ->label('Stato = Proforma')
+                    ->label('Associa a Proforma')
                     ->color('primary')
                     ->requiresConfirmation()
                     ->accessSelectedRecords()

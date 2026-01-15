@@ -33,6 +33,8 @@ class ClientiResource extends Resource
 
     protected static ?int $navigationSort = 8;
 
+    protected static UnitEnum|string|null $navigationGroup = 'Anagrafiche';
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

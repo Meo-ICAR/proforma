@@ -25,9 +25,9 @@ class InvoiceResource extends Resource
 
     protected static ?string $navigationLabel = 'Fatture';
 
-    protected static ?string $modelLabel = 'Riconciliazione Fatture';
+    protected static ?string $modelLabel = 'Riconciliazione Fatture passive';
 
-    protected static ?string $pluralModelLabel = 'Riconciliazione Fatture';
+    protected static ?string $pluralModelLabel = 'Riconciliazione Fatture passive';
 
     //    protected static UnitEnum|string|null $navigationGroup = 'Archivi';
     protected static ?int $navigationSort = 3;

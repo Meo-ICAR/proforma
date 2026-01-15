@@ -43,6 +43,11 @@ class FatturaResource extends Resource
         return FatturasTable::configure($table);
     }
 
+    public static function canViewAny(): bool
+    {
+        return false;
+    }
+
     public static function getRelations(): array
     {
         return [

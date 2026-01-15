@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
@@ -18,6 +19,7 @@ class ClientisTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')
                     ->sortable()
@@ -31,9 +33,9 @@ class ClientisTable
                 TextColumn::make('coge')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('codice')
-                    ->sortable()
-                    ->searchable(),
+                ToggleColumn::make('is_active')
+                    ->label('Attiva')
+                    ->sortable(),
             ])
             ->filters([
                 TrashedFilter::make(),

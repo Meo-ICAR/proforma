@@ -42,6 +42,9 @@ class Clienti extends Model
      */
     protected $primaryKey = 'id';
 
+    protected $orderBy = 'name';
+    protected $orderDirection = 'asc';
+
     /**
      * The "type" of the primary key ID.
      *
@@ -72,6 +75,7 @@ class Clienti extends Model
         'regione',
         'citta',
         'company_id',
+        'is_active',
     ];
 
     /**
