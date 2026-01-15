@@ -16,4 +16,13 @@ class ListClientis extends ListRecords
             CreateAction::make(),
         ];
     }
+
+    // Aggiunge il sottotitolo
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        // $record = $this->getRecord();
+
+        return new HtmlString('Istituti finanziari. ATTENNZIONE: Poiche MediaFacile non riporta la partita IVA dell istituto per riconciliare le provvigioni, inserire manualmente la denominazione che appare sulle fatture e la partita IVA dell istituto, senno le fatture attive saranno scartate');
+    }
 }
