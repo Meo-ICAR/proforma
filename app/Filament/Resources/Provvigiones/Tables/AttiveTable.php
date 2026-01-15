@@ -6,6 +6,7 @@ use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Compenso;
 use App\Models\Proforma;
 use App\Models\Provvigione;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -38,8 +39,7 @@ class AttiveTable
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Entrata')
                 ->whereNot('importo', 0)
-            //  ->whereNot('annullato', 1))
-            )
+                ->where('descrizione', 'not like', '%liente%'))
             ->reorderableColumns()
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
@@ -47,27 +47,18 @@ class AttiveTable
             )
             ->headerActions([
                 BulkAction::make('emetti')
-                    ->label('Emetti Proforma')
-                    ->color('success')
+                    ->label('Stato = Proforma')
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->accessSelectedRecords()
                     ->requiresConfirmation()
                     ->accessSelectedRecords()
                     ->action(function (Collection $records) {
                         // Process each record with a visible loop
                         $records->each(function ($record) {
-                            $piva = $record->piva;
-                            if (($piva > '0')) {
-                                $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo);
-                                $record->update([
-                                    'stato' => 'Proforma',
-                                    'proforma_id' => $proformaId
-                                ]);
-                            } else {
-                                Notification::make()
-                                    ->title('ATTENZIONE Provvigione senza partita IVA' . $record->id . ' ' . $record->denominazione_riferimento
-                                        . ' ' . $record->pratica->cognome_cliente . ' ' . $record->pratica->nome_cliente . ' ' . $record->pratica->id_pratica . ' proforma non emesso')
-                                    ->danger()
-                                    ->send();
-                            }
+                            $record->update([
+                                'stato' => 'Proforma',
+                            ]);
                         });
 
                         // Show success notification with count
@@ -94,7 +85,7 @@ class AttiveTable
                             ->title(count($records) . ' provvigioni abbinate a proforma')
                             ->success()
                             ->send();
-                    })
+                    }),
             ])
             ->columns([
                 TextColumn::make('stato')
@@ -142,6 +133,12 @@ class AttiveTable
                  *         //  ->default(now()->subMonth()->endOfMonth()),
                  *     ]),
                  */
+                SelectFilter::make('cliente_id')
+                    ->label('Filtra per Istituto')
+                    ->relationship('cliente', 'name')  // 'cliente' è il nome del metodo nel Model, 'nome_societa' la colonna da visualizzare
+                    ->searchable()  // Abilita l'autocomplete (Ajax)
+                    ->preload()  // Opzionale: carica i primi risultati all'apertura (utile se i clienti non sono decine di migliaia)
+                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name}"),  // Opzionale: per personalizzare cosa vedi nel dropdown
                 SelectFilter::make('stato')
                     ->options([
                         'Inserito' => 'Inserito',
@@ -160,22 +157,55 @@ class AttiveTable
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
-                Filter::make('mese_riferimento')
-                    ->form([
-                        DatePicker::make('mese')
-                            ->label('Seleziona Mese')
-                            ->native(false)
-                            ->displayFormat('m/Y')
-                            ->default(now()->subDays(20))
+                SelectFilter::make('mese_status')
+                    ->label('Fino al mese')
+                    ->options([
+                        '01' => 'Gennaio',
+                        '02' => 'Febbraio',
+                        '03' => 'Marzo',
+                        '04' => 'Aprile',
+                        '05' => 'Maggio',
+                        '06' => 'Giugno',
+                        '07' => 'Luglio',
+                        '08' => 'Agosto',
+                        '09' => 'Settembre',
+                        '10' => 'Ottobre',
+                        '11' => 'Novembre',
+                        '12' => 'Dicembre',
                     ])
+                    // Imposta il mese attuale come default (es. "01", "02", ecc.)
+                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
                     ->query(function (Builder $query, array $data): Builder {
-                        $date = isset($data['mese'])
-                            ? \Carbon\Carbon::parse($data['mese'])
-                            : now();
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
 
-                        return $query
-                            ->whereMonth('data_status', $date->month)
-                            ->whereYear('data_status', $date->year);
+                        $meseScelto = (int) $data['value'];
+                        $annoRiferimento = now()->year;
+
+                        // Data al 1° del mese scelto nell'anno corrente
+                        $dataScelta = Carbon::create($annoRiferimento, $meseScelto, 1);
+
+                        // Se la data calcolata è nel futuro, sottraiamo un anno
+                        if ($dataScelta->isFuture()) {
+                            $dataScelta->subYear();
+                        }
+
+                        // Calcoliamo l'inizio del mese successivo
+                        $dataLimite = $dataScelta->copy()->endOfMonth();
+
+                        return $query->where('data_status', '<=', $dataLimite);
+                    })
+                    // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['value']))
+                            return null;
+
+                        $dataScelta = Carbon::create(now()->year, $data['value'], 1);
+                        if ($dataScelta->isFuture())
+                            $dataScelta->subYear();
+
+                        return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
                     })
             ])
             ->recordActions([
@@ -194,6 +224,21 @@ class AttiveTable
                     ->visible(fn($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
                     ->iconButton()
                     ->color('primary'),
+                Action::make('forceStatus')
+                    ->label('')
+                    ->icon('heroicon-o-arrow-uturn-down')
+                    ->action(function ($record) {
+                        $record->update([
+                            'stato' => $record->stato === null ? 'Inserito' : null
+                        ]);
+                        Notification::make()
+                            ->title('Stato forzato con successo')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn($record): bool => in_array($record->stato, ['Inserito', null]))
+                    ->iconButton()
+                    ->color('success'),
             ], position: RecordActionsPosition::BeforeColumns)
             ->toolbarActions([
                 BulkActionGroup::make([

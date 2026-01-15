@@ -18,14 +18,19 @@ class ClientisTable
         return $table
             ->columns([
                 TextColumn::make('name')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('nome')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('piva')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('coge')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('codice')
+                    ->sortable()
                     ->searchable(),
             ])
             ->filters([

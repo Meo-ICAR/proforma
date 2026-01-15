@@ -6,6 +6,7 @@ use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Compenso;
 use App\Models\Proforma;
 use App\Models\Provvigione;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -176,29 +177,55 @@ class ProvvigionesTable
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
-                SelectFilter::make('annullato')
-                    ->label('Annullati')
+                SelectFilter::make('mese_status')
+                    ->label('Fino al mese')
                     ->options([
-                        1 => 'Si',
-                        0 => 'No',
+                        '01' => 'Gennaio',
+                        '02' => 'Febbraio',
+                        '03' => 'Marzo',
+                        '04' => 'Aprile',
+                        '05' => 'Maggio',
+                        '06' => 'Giugno',
+                        '07' => 'Luglio',
+                        '08' => 'Agosto',
+                        '09' => 'Settembre',
+                        '10' => 'Ottobre',
+                        '11' => 'Novembre',
+                        '12' => 'Dicembre',
                     ])
-                    ->placeholder('Tutti'),
-                Filter::make('mese_riferimento')
-                    ->form([
-                        DatePicker::make('mese')
-                            ->label('Seleziona Mese')
-                            ->native(false)
-                            ->displayFormat('m/Y')
-                            ->default(now()->subDays(20))
-                    ])
+                    // Imposta il mese attuale come default (es. "01", "02", ecc.)
+                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
                     ->query(function (Builder $query, array $data): Builder {
-                        $date = isset($data['mese'])
-                            ? \Carbon\Carbon::parse($data['mese'])
-                            : now();
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
 
-                        return $query
-                            ->whereMonth('data_status', $date->month)
-                            ->whereYear('data_status', $date->year);
+                        $meseScelto = (int) $data['value'];
+                        $annoRiferimento = now()->year;
+
+                        // Data al 1° del mese scelto nell'anno corrente
+                        $dataScelta = Carbon::create($annoRiferimento, $meseScelto, 1);
+
+                        // Se la data calcolata è nel futuro, sottraiamo un anno
+                        if ($dataScelta->isFuture()) {
+                            $dataScelta->subYear();
+                        }
+
+                        // Calcoliamo l'inizio del mese successivo
+                        $dataLimite = $dataScelta->copy()->endOfMonth();
+
+                        return $query->where('data_status', '<=', $dataLimite);
+                    })
+                    // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['value']))
+                            return null;
+
+                        $dataScelta = Carbon::create(now()->year, $data['value'], 1);
+                        if ($dataScelta->isFuture())
+                            $dataScelta->subYear();
+
+                        return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
                     })
             ])
             ->recordActions([

@@ -140,6 +140,11 @@ class Provvigione extends Model
         return $this->belongsTo(Fornitori::class, 'piva', 'piva');
     }
 
+    public function cliente()
+    {
+        return $this->belongsTo(Clienti::class, 'istituto_finanziario', 'name');
+    }
+
     /**
      * Get the proforma associated with the provvigione.
      */

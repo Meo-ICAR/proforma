@@ -28,6 +28,6 @@ class ListProvvigioniAttive extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return new HtmlString('Provvigioni attive');
+        return new HtmlString('Provvigioni attive. Una volta ricevuto il proforma selezionare istituto, cercare il cliente e spuntare il quadratino. Possibile anche forzare la maturazione di alcune provvigioni con icona in verde');
     }
 }
