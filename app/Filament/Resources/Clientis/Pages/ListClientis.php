@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Clientis\Pages;
 use App\Filament\Resources\Clientis\ClientiResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
+use Illuminate\Support\HtmlString;
 
 class ListClientis extends ListRecords
 {
