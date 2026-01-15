@@ -77,13 +77,6 @@ class ProformaForm
                                     ->label('A')
                                     ->email()
                                     ->required(),
-                                TextInput::make('emailfrom')
-                                    ->label('Da')
-                                    ->email()
-                                    ->required(),
-                                Textarea::make('emailbody')
-                                    ->label('Corpo Email')
-                                    ->columnSpanFull(),
                             ])
                             ->columns(2),
                     ])

@@ -159,6 +159,7 @@ class Proforma extends Model
             'contributo_descrizione' => $fornitore->contributo_description,
             'emailsubject' => 'Proforma - ' . $fornitore->name,
             'emailto' => $fornitore->email,
+            'emailfrom' => $fornitore->company->emailfrom ?? 'proforma@hassisto.eu',
             'stato' => 'Inserito',
             'compenso' => 0,
             'created_at' => now(),
@@ -189,8 +190,6 @@ class Proforma extends Model
             // Clean up the P.IVA
             $cleanedPiva = str_replace(' ', '', $piva);
 
-            \Log::info('Searching for fornitore with P.IVA: ' . $cleanedPiva);
-
             // Find fornitore by P.IVA (case insensitive and ignoring spaces)
             $fornitore = Fornitore::whereRaw("REPLACE(piva, ' ', '') = ?", [$cleanedPiva])
                 ->firstOrFail();
@@ -201,7 +200,6 @@ class Proforma extends Model
                 ->first();
 
             if (!$existingProforma) {
-                \Log::info('Creating new proforma for fornitore ID: ' . $fornitore->id);
                 $existingProforma = self::createFromFornitore($fornitore->id);
             }
 

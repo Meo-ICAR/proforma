@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\Provvigiones\Tables;
 
 use App\Filament\Resources\Praticas\PraticaResource;
+use App\Models\Cliente;
 use App\Models\Compenso;
-use App\Models\Proforma;
 use App\Models\Provvigione;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -138,6 +138,9 @@ class AttiveTable
                     ->relationship('cliente', 'name')  // 'cliente' è il nome del metodo nel Model, 'nome_societa' la colonna da visualizzare
                     ->searchable()  // Abilita l'autocomplete (Ajax)
                     ->preload()  // Opzionale: carica i primi risultati all'apertura (utile se i clienti non sono decine di migliaia)
+                    ->options(function () {
+                        return Cliente::orderBy('name')->pluck('name', 'id');
+                    })
                     ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name}"),  // Opzionale: per personalizzare cosa vedi nel dropdown
                 SelectFilter::make('stato')
                     ->options([
