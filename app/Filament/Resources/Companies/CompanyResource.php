@@ -31,7 +31,7 @@ class CompanyResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Parametri Azienda';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static UnitEnum|string|null $navigationGroup = 'Anagrafiche';
 
     protected static ?int $navigationSort = 5;
 
