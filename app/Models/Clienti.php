@@ -89,6 +89,13 @@ class Clienti extends Model
         'deleted_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        static::addGlobalScope('order_by_name', function ($builder) {
+            $builder->orderBy('name');
+        });
+    }
+
     /**
      * Get the company that owns the client.
      */
