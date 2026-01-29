@@ -81,6 +81,9 @@ class VcogesTable
                                 'client_secret' => env('COGE_CLIENT_SECRET'),
                             ]);
 
+                            Log::debug("Token Response Status: " . $tokenResponse->status());
+                            Log::debug("Token Response Body: " . $tokenResponse->body());
+
                             if ($tokenResponse->failed()) {
                                 Log::error("Errore ottenimento token: " . $tokenResponse->body());
                                 Notification::make()
@@ -93,6 +96,7 @@ class VcogesTable
 
                             $accessToken = $tokenResponse->json('access_token');
                             Log::info("Token ottenuto con successo.");
+                            Log::debug("Access Token: " . $accessToken);
 
                             // Calculate end of month for PostingDate
                             $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
@@ -149,6 +153,13 @@ class VcogesTable
                             ];
 
                             Log::debug("Payload preparato per l'invio:", $payload);
+
+                            // Log cURL equivalent
+                            $curlCommand = "curl -X POST '" . env('COGE_URL_POST') . "' " .
+                                           "-H 'Authorization: Bearer " . $accessToken . "' " .
+                                           "-H 'Content-Type: application/json' " .
+                                           "-d '" . json_encode($payload) . "'";
+                            Log::debug("Comando cURL equivalente: " . $curlCommand);
 
                             // 3. Send Data
                             Log::info("Invio dati all'API di contabilità...");
