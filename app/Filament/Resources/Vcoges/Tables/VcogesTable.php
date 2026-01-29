@@ -189,43 +189,25 @@ class VcogesTable
 
     private static function getAccessToken(): ?string
     {
-        Log::info("Richiesta token di autenticazione (GET con multipart)...");
+        Log::info("Richiesta token di autenticazione (POST asForm)...");
 
         $url = env('COGE_URL_GET');
-        $headers = [
-            'Cookie' => 'fpc=AibG5DveuGpLlJG24tKl8To-u5M_AQAAAMPBDeEOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd'
-        ];
 
-        $multipart = [
-            [
-                'name' => 'grant_type',
-                'contents' => 'client_credentials'
-            ],
-            [
-                'name' => 'scope',
-                'contents' => 'https://api.businesscentral.dynamics.com/.default'
-            ],
-            [
-                'name' => 'client_id',
-                'contents' => env('COGE_CLIENT_ID')
-            ],
-            [
-                'name' => 'client_secret',
-                'contents' => env('COGE_CLIENT_SECRET')
-            ]
+        $params = [
+            'grant_type' => 'client_credentials',
+            'scope' => 'https://api.businesscentral.dynamics.com/.default',
+            'client_id' => env('COGE_CLIENT_ID'),
+            'client_secret' => env('COGE_CLIENT_SECRET'),
         ];
 
         try {
-            // Log cURL equivalent for multipart GET
-            $tokenCurl = "curl -X GET '{$url}' -H 'Cookie: {$headers['Cookie']}' ";
-            foreach ($multipart as $param) {
-                $tokenCurl .= "-F '{$param['name']}={$param['contents']}' ";
-            }
+            // Log cURL equivalent for POST form
+            $tokenCurl = "curl -X POST '{$url}' " .
+                         "-H 'Content-Type: application/x-www-form-urlencoded' " .
+                         "-d '" . http_build_query($params) . "'";
             Log::debug("Comando cURL token: " . $tokenCurl);
 
-            $response = Http::withHeaders($headers)->send('GET', $url, [
-                'multipart' => $multipart
-            ]);
+            $response = Http::asForm()->post($url, $params);
 
             Log::debug("Token Response Status: " . $response->status());
             Log::debug("Token Response Body: " . $response->body());
