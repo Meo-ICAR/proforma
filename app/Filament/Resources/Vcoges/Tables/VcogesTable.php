@@ -73,43 +73,16 @@ class VcogesTable
                             }
 
                             // 1. Acquire Token
-                            Log::info("Richiesta token di autenticazione (GET con body)...");
+                            $accessToken = self::getAccessToken();
 
-                            $tokenParams = [
-                                'grant_type' => 'client_credentials',
-                                'scope' => 'https://api.businesscentral.dynamics.com/.default',
-                                'client_id' => env('COGE_CLIENT_ID'),
-                                'client_secret' => env('COGE_CLIENT_SECRET'),
-                            ];
-
-                            // Log token request as curl equivalent
-                            $tokenCurl = "curl -X GET '" . env('COGE_URL_GET') . "' " .
-                                           "-H 'Content-Type: application/x-www-form-urlencoded' " .
-                                           "-d '" . http_build_query($tokenParams) . "'";
-                            Log::debug("Comando cURL token: " . $tokenCurl);
-
-                            $tokenResponse = Http::withHeaders([
-                                'Content-Type' => 'application/x-www-form-urlencoded',
-                            ])->send('GET', env('COGE_URL_GET'), [
-                                'body' => http_build_query($tokenParams)
-                            ]);
-
-                            Log::debug("Token Response Status: " . $tokenResponse->status());
-                            Log::debug("Token Response Body: " . $tokenResponse->body());
-
-                            if ($tokenResponse->failed()) {
-                                Log::error("Errore ottenimento token: " . $tokenResponse->body());
+                            if (!$accessToken) {
                                 Notification::make()
                                     ->title('Errore Autenticazione')
-                                    ->body('Impossibile ottenere il token: ' . $tokenResponse->body())
+                                    ->body('Impossibile ottenere il token di accesso. Controlla i log.')
                                     ->danger()
                                     ->send();
                                 return;
                             }
-
-                            $accessToken = $tokenResponse->json('access_token');
-                            Log::info("Token ottenuto con successo.");
-                            Log::debug("Access Token: " . $accessToken);
 
                             // Calculate end of month for PostingDate
                             $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
@@ -212,5 +185,64 @@ class VcogesTable
 
             ])
             ->toolbarActions([]);
+    }
+
+    private static function getAccessToken(): ?string
+    {
+        Log::info("Richiesta token di autenticazione (GET con multipart)...");
+
+        $url = env('COGE_URL_GET');
+        $headers = [
+            'Cookie' => 'fpc=AibG5DveuGpLlJG24tKl8To-u5M_AQAAAMPBDeEOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd'
+        ];
+
+        $multipart = [
+            [
+                'name' => 'grant_type',
+                'contents' => 'client_credentials'
+            ],
+            [
+                'name' => 'scope',
+                'contents' => 'https://api.businesscentral.dynamics.com/.default'
+            ],
+            [
+                'name' => 'client_id',
+                'contents' => env('COGE_CLIENT_ID')
+            ],
+            [
+                'name' => 'client_secret',
+                'contents' => env('COGE_CLIENT_SECRET')
+            ]
+        ];
+
+        try {
+            // Log cURL equivalent for multipart GET
+            $tokenCurl = "curl -X GET '{$url}' -H 'Cookie: {$headers['Cookie']}' ";
+            foreach ($multipart as $param) {
+                $tokenCurl .= "-F '{$param['name']}={$param['contents']}' ";
+            }
+            Log::debug("Comando cURL token: " . $tokenCurl);
+
+            $response = Http::withHeaders($headers)->send('GET', $url, [
+                'multipart' => $multipart
+            ]);
+
+            Log::debug("Token Response Status: " . $response->status());
+            Log::debug("Token Response Body: " . $response->body());
+
+            if ($response->failed()) {
+                Log::error("Errore ottenimento token: " . $response->body());
+                return null;
+            }
+
+            $token = $response->json('access_token');
+            Log::info("Token ottenuto con successo.");
+            Log::debug("Access Token: " . $token);
+
+            return $token;
+        } catch (\Exception $e) {
+            Log::error("Eccezione durante il recupero del token: " . $e->getMessage());
+            return null;
+        }
     }
 }
