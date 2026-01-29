@@ -73,12 +73,25 @@ class VcogesTable
                             }
 
                             // 1. Acquire Token
-                            Log::info("Richiesta token di autenticazione...");
-                            $tokenResponse = Http::get(env('COGE_URL_GET'), [
+                            Log::info("Richiesta token di autenticazione (GET con body)...");
+
+                            $tokenParams = [
                                 'grant_type' => 'client_credentials',
                                 'scope' => 'https://api.businesscentral.dynamics.com/.default',
                                 'client_id' => env('COGE_CLIENT_ID'),
                                 'client_secret' => env('COGE_CLIENT_SECRET'),
+                            ];
+
+                            // Log token request as curl equivalent
+                            $tokenCurl = "curl -X GET '" . env('COGE_URL_GET') . "' " .
+                                           "-H 'Content-Type: application/x-www-form-urlencoded' " .
+                                           "-d '" . http_build_query($tokenParams) . "'";
+                            Log::debug("Comando cURL token: " . $tokenCurl);
+
+                            $tokenResponse = Http::withHeaders([
+                                'Content-Type' => 'application/x-www-form-urlencoded',
+                            ])->send('GET', env('COGE_URL_GET'), [
+                                'body' => http_build_query($tokenParams)
                             ]);
 
                             Log::debug("Token Response Status: " . $tokenResponse->status());
