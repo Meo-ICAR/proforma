@@ -15,6 +15,8 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Carbon;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Log;
+
 
 class VcogesTable
 {
@@ -57,34 +59,46 @@ class VcogesTable
                     ->requiresConfirmation()
                     ->label('Invia in Contabilita la primanota ')
                     ->action(function (Vcoge $record) {
-                        $coge1 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Entrata'])->first();
-                        $coge2 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Uscita'])->first();
+                        Log::info("Inizio invio dati in contabilità per il mese: {$record->mese}");
 
-                        // 1. Acquire Token
-                        $tokenResponse = Http::get(env('COGE_URL_GET'), [
-                            'grant_type' => 'client_credentials',
-                            'scope' => 'https://api.businesscentral.dynamics.com/.default',
-                            'client_id' => env('COGE_CLIENT_ID'),
-                            'client_secret' => env('COGE_CLIENT_SECRET'),
-                        ]);
+                        try {
+                            $coge1 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Entrata'])->first();
+                            $coge2 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Uscita'])->first();
 
-                        if ($tokenResponse->failed()) {
-                            Notification::make()
-                                ->title('Errore Autenticazione')
-                                ->body('Impossibile ottenere il token: ' . $tokenResponse->body())
-                                ->danger()
-                                ->send();
-                            return;
-                        }
+                            if (!$coge1) {
+                                Log::warning("Configurazione Coge per 'Entrata' (fonte mediafacile) non trovata. Uso i valori di default.");
+                            }
+                            if (!$coge2) {
+                                Log::warning("Configurazione Coge per 'Uscita' (fonte mediafacile) non trovata. Uso i valori di default.");
+                            }
 
-                        $accessToken = $tokenResponse->json('access_token');
+                            // 1. Acquire Token
+                            Log::info("Richiesta token di autenticazione...");
+                            $tokenResponse = Http::get(env('COGE_URL_GET'), [
+                                'grant_type' => 'client_credentials',
+                                'scope' => 'https://api.businesscentral.dynamics.com/.default',
+                                'client_id' => env('COGE_CLIENT_ID'),
+                                'client_secret' => env('COGE_CLIENT_SECRET'),
+                            ]);
 
-                        // Calculate end of month for PostingDate
-                        $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
+                            if ($tokenResponse->failed()) {
+                                Log::error("Errore ottenimento token: " . $tokenResponse->body());
+                                Notification::make()
+                                    ->title('Errore Autenticazione')
+                                    ->body('Impossibile ottenere il token: ' . $tokenResponse->body())
+                                    ->danger()
+                                    ->send();
+                                return;
+                            }
 
-                        // 2. Prepare Data
-                        $innerJson = json_encode([
-                            'docs' => [
+                            $accessToken = $tokenResponse->json('access_token');
+                            Log::info("Token ottenuto con successo.");
+
+                            // Calculate end of month for PostingDate
+                            $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
+
+                            // 2. Prepare Data
+                            $innerDocs = [
                                 [
                                     'JournalTemplateName' => 'GENERALE',
                                     'JournalBatchName' => 'COGEWS',
@@ -125,32 +139,53 @@ class VcogesTable
                                     'Description' => $coge2->descrizione_dare ?? 'Consulenze diverse',
                                     'Amount' => -$record->uscita
                                 ]
-                            ]
-                        ]);
+                            ];
 
-                        // The payload wrapped in "docs" property as a string
-                        $payload = [
-                            'docs' => $innerJson
-                        ];
+                            $innerJson = json_encode(['docs' => $innerDocs]);
 
-                        // 3. Send Data
-                        $dataResponse = Http::withToken($accessToken)
-                            ->post(env('COGE_URL_POST'), $payload);
+                            // The payload wrapped in "docs" property as a string
+                            $payload = [
+                                'docs' => $innerJson
+                            ];
 
-                        if ($dataResponse->successful()) {
+                            Log::debug("Payload preparato per l'invio:", $payload);
+
+                            // 3. Send Data
+                            Log::info("Invio dati all'API di contabilità...");
+                            $dataResponse = Http::withToken($accessToken)
+                                ->post(env('COGE_URL_POST'), $payload);
+
+                            Log::info("API Response Status: " . $dataResponse->status());
+                            Log::debug("API Response Body: " . $dataResponse->body());
+
+                            if ($dataResponse->successful()) {
+                                Notification::make()
+                                    ->title('Invio Completato')
+                                    ->body('I dati sono stati inviati correttamente.')
+                                    ->success()
+                                    ->send();
+                            } else {
+                                Log::error("Errore durante l'invio dati: " . $dataResponse->body());
+                                Notification::make()
+                                    ->title('Errore Invio Dati')
+                                    ->body('Errore API: ' . $dataResponse->body())
+                                    ->danger()
+                                    ->send();
+                            }
+                        } catch (\Exception $e) {
+                            Log::error("Eccezione imprevista durante l'invio in contabilità: " . $e->getMessage(), [
+                                'exception' => $e,
+                                'mese' => $record->mese,
+                                'trace' => $e->getTraceAsString()
+                            ]);
                             Notification::make()
-                                ->title('Invio Completato')
-                                ->body('I dati sono stati inviati correttamente.')
-                                ->success()
-                                ->send();
-                        } else {
-                            Notification::make()
-                                ->title('Errore Invio Dati')
-                                ->body('Errore API: ' . $dataResponse->body())
+                                ->title('Errore Inaspettato')
+                                ->body('Si è verificato un errore imprevisto. Controlla i log per i dettagli.')
                                 ->danger()
                                 ->send();
                         }
                     })
+
             ])
             ->toolbarActions([]);
     }
