@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Vcoges\Tables;
 
 use App\Models\Vcoge;  // Make sure this is correctly cased
+use App\Models\Coges as Coge;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -10,6 +11,10 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Filament\Tables\Actions\Action;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Carbon;
 
 class VcogesTable
 {
@@ -45,7 +50,108 @@ class VcogesTable
                 // In Filament 4.x, il valore di default viene applicato automaticamente
                 // se non diversamente specificato.
             ])
-            ->recordActions([])
+            ->recordActions([
+                Action::make('invia')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->label('Invia in Contabilita la primanota ')
+                    ->action(function (Vcoge $record) {
+                        $coge1 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Entrata'])->first();
+                        $coge2 = Coge::where(['fonte' => 'mediafacile', 'entrata_uscita' => 'Uscita'])->first();
+
+                        // 1. Acquire Token
+                        $tokenResponse = Http::get(env('COGE_URL_GET'), [
+                            'grant_type' => 'client_credentials',
+                            'scope' => 'https://api.businesscentral.dynamics.com/.default',
+                            'client_id' => env('COGE_CLIENT_ID'),
+                            'client_secret' => env('COGE_CLIENT_SECRET'),
+                        ]);
+
+                        if ($tokenResponse->failed()) {
+                            Notification::make()
+                                ->title('Errore Autenticazione')
+                                ->body('Impossibile ottenere il token: ' . $tokenResponse->body())
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $accessToken = $tokenResponse->json('access_token');
+
+                        // Calculate end of month for PostingDate
+                        $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
+
+                        // 2. Prepare Data
+                        $innerJson = json_encode([
+                            'docs' => [
+                                [
+                                    'JournalTemplateName' => 'GENERALE',
+                                    'JournalBatchName' => 'COGEWS',
+                                    'LineNo' => '1',
+                                    'AccountNo' => str_replace('.', '', $coge1->conto_dare ?? '0128002'),
+                                    'PostingDate' => $datacoge,
+                                    'DocumentNo' => 'DOCNO',
+                                    'Description' => $coge1->descrizione_dare ?? 'Clienti c/fatture da emettere',
+                                    'Amount' => -$record->entrata
+                                ],
+                                [
+                                    'JournalTemplateName' => 'GENERALE',
+                                    'JournalBatchName' => 'COGEWS',
+                                    'LineNo' => '2',
+                                    'AccountNo' => str_replace('.', '', $coge1->conto_avere ?? '0501001'),
+                                    'PostingDate' => $datacoge,
+                                    'DocumentNo' => 'DOCNO',
+                                    'Description' => $coge1->descrizione_avere ?? 'Ricavi Italia',
+                                    'Amount' => $record->entrata
+                                ],
+                                [
+                                    'JournalTemplateName' => 'GENERALE',
+                                    'JournalBatchName' => 'COGEWS',
+                                    'LineNo' => '1',
+                                    'AccountNo' => str_replace('.', '', $coge2->conto_dare ?? '0221002'),
+                                    'PostingDate' => $datacoge,
+                                    'DocumentNo' => 'DOCNO1',
+                                    'Description' => $coge2->descrizione_avere ?? 'Fornitori c/fatture da ricevere',
+                                    'Amount' => $record->uscita
+                                ],
+                                [
+                                    'JournalTemplateName' => 'GENERALE',
+                                    'JournalBatchName' => 'COGEWS',
+                                    'LineNo' => '2',
+                                    'AccountNo' => str_replace('.', '', $coge2->conto_avere ?? '0405019'),
+                                    'PostingDate' => $datacoge,
+                                    'DocumentNo' => 'DOCNO1',
+                                    'Description' => $coge2->descrizione_dare ?? 'Consulenze diverse',
+                                    'Amount' => -$record->uscita
+                                ]
+                            ]
+                        ]);
+
+                        // The payload wrapped in "docs" property as a string
+                        $payload = [
+                            'docs' => $innerJson
+                        ];
+
+                        // 3. Send Data
+                        $dataResponse = Http::withToken($accessToken)
+                            ->post(env('COGE_URL_POST'), $payload);
+
+                        if ($dataResponse->successful()) {
+                            Notification::make()
+                                ->title('Invio Completato')
+                                ->body('I dati sono stati inviati correttamente.')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Errore Invio Dati')
+                                ->body('Errore API: ' . $dataResponse->body())
+                                ->danger()
+                                ->send();
+                        }
+                    })
+            ])
             ->toolbarActions([]);
     }
 }
