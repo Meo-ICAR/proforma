@@ -191,13 +191,13 @@ class VcogesTable
     {
         Log::info("Richiesta token di autenticazione (POST asForm)...");
 
-        $url = env('COGE_URL_GET');
+        $url = env('COGE_URL_GET_TOKEN');
 
         $params = [
             'grant_type' => 'client_credentials',
             'scope' => 'https://api.businesscentral.dynamics.com/.default',
-            'client_id' => env('COGE_CLIENT_ID'),
-            'client_secret' => env('COGE_CLIENT_SECRET'),
+            'client_id' => env('COGE_CLIENT_ID_TOKEN'),
+            'client_secret' => env('COGE_CLIENT_SECRET_TOKEN'),
         ];
 
         try {
