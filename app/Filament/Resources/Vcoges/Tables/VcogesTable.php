@@ -215,19 +215,31 @@ class VcogesTable
                     'Cookie: fpc=AibG5DveuGpLlJG24tKl8To-u5M_AQAAADhUDuEOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd'
                 ),
             ));
-            Log::debug('Comando cURL: ' . $curl);
+            Log::debug('Comando cURL: ' . json_encode([
+                'url' => $url,
+                'method' => 'GET',
+                'params' => $params
+            ]));
             $response = curl_exec($curl);
 
             curl_close($curl);
-            if ($response->failed()) {
-                Log::error('Errore ottenimento token: ' . $response->body());
-                return null;
-            }
+
             Log::debug('Risposta cURL: ' . $response);
 
-            $token = $response->json('access_token');
+            $responseData = json_decode($response, true);
+            if (!$responseData) {
+                Log::error('Errore parsing JSON risposta: ' . $response);
+                return null;
+            }
+
+            $token = $responseData['access_token'] ?? null;
+            if (!$token) {
+                Log::error('Token non trovato nella risposta: ' . $response);
+                return null;
+            }
+
             Log::info('Token ottenuto con successo.');
-            Log::debug('Access Token: ' . $token);
+            Log::debug('Access Token (primi 20 char): ' . substr($token, 0, 20) . '...');
 
             return $token;
         } catch (\Exception $e) {
