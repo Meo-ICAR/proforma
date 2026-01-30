@@ -125,37 +125,7 @@ class VcogesTable
                                 ]
                             ];
                             Log::debug("Payload preparato per l'invio:",  $innerDocs);
-                               /*
-                            $innerJson = json_encode(['docs' => $innerDocs]);
-
-                            // The payload wrapped in "docs" property as a string
-                            $payload = [
-                                'docs' => $innerJson
-                            ];
-
-                            Log::debug("Payload preparato per l'invio:",  $innerDocs);
-                         
-                            // Log cURL equivalent
-                            $curlCommand = "curl -X POST '" . env('COGE_URL_POST') . "' "
-                                . "-H 'Authorization: Bearer " . $accessToken . "' "
-                                . "-H 'Content-Type: application/json' "
-                                . "-d '" . json_encode($payload) . "'";
-                            Log::debug('Comando cURL equivalente: ' . $curlCommand);
-
-                            // 3. Send Data
-                            Log::info("Invio dati all'API di contabilità...");
-                            $dataResponse = Http::withToken($accessToken)
-                                ->post(env('COGE_URL_POST'), $payload);
-
-                            Log::info('API Response Status: ' . $dataResponse->status());
-                            Log::debug('API Response Body: ' . $dataResponse->body());
-                            */
-/*
-                            $accessToken="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IlBjWDk4R1g0MjBUMVg2c0JEa3poUW1xZ3dNVSIsImtpZCI6IlBjWDk4R1g0MjBUMVg2c0JEa3poUW1xZ3dNVSJ9.eyJhdWQiOiJodHRwczovL2FwaS5idXNpbmVzc2NlbnRyYWwuZHluYW1pY3MuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvODVhMjVlM2ItOTQ1OS00NWViLWI5YzktMWRjMjZjYWYyZWRmLyIsImlhdCI6MTc2OTc3MTkzOSwibmJmIjoxNzY5NzcxOTM5LCJleHAiOjE3Njk3NzU4MzksImFpbyI6ImsyWmdZR0NxdXF2Mk5KZjc3clc5LzZ6Zml2OWRDUUE9IiwiYXBwaWQiOiIwMjgyMDA1ZS00YTc1LTQ1OTQtOWYyYy1lY2EwYTg0OTYxNzIiLCJhcHBpZGFjciI6IjEiLCJpZHAiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84NWEyNWUzYi05NDU5LTQ1ZWItYjljOS0xZGMyNmNhZjJlZGYvIiwiaWR0eXAiOiJhcHAiLCJvaWQiOiJjOTc1Mzk4ZS01YmI1LTRmNjYtOWVkNi02ZmFmZDU0MTQ2YjgiLCJyaCI6IjEuQVNBQU8xNmloVm1VNjBXNXlSM0NiSzh1M3ozdmJabHNzMU5CaGdlbV9Ud0J1SjhBQUFBZ0FBLiIsInJvbGVzIjpbIkF1dG9tYXRpb24uUmVhZFdyaXRlLkFsbCIsImFwcF9hY2Nlc3MiLCJBZG1pbkNlbnRlci5SZWFkV3JpdGUuQWxsIiwiQVBJLlJlYWRXcml0ZS5BbGwiXSwic3ViIjoiYzk3NTM5OGUtNWJiNS00ZjY2LTllZDYtNmZhZmQ1NDE0NmI4IiwidGlkIjoiODVhMjVlM2ItOTQ1OS00NWViLWI5YzktMWRjMjZjYWYyZWRmIiwidXRpIjoiRmJJd0pyQXVXMGEtWERuTjZEUUtBQSIsInZlciI6IjEuMCIsInhtc19hY3RfZmN0IjoiMyA5IiwieG1zX2Z0ZCI6ImJhQlFMcGtpNzR1V0RlZ1p2YTJBb3FvTTQ4VXBTQ2p6R2ZUcVJNRGU0R0FCWlhWeWIzQmxibTl5ZEdndFpITnRjdyIsInhtc19pZHJlbCI6IjEwIDciLCJ4bXNfcmQiOiIwLjQyTGxZQkppVkJBUzRXQVhFckJkUDNFZTU3UHZEdk43eEkyN0FsdWZBa1U1aFFRTXJMcG55OWZlOEdtT1hkX3ZJMmJnRGhUbEFLcDluenN6WjNPd1l4djdzcjgyakR2bUEwVzVoUVNhaWhlNkw3aTZyT1BTTXRZN3M0cW55d01BIiwieG1zX3N1Yl9mY3QiOiIzIDkifQ.XkK6WxFGo1KFjtIci3UukFLauS9FcYgK8MivvxZndT6yUzhdXiLLBrgVI7Isdpt2S1eLGJkl6lSwSiI6DNMuAzIBpLctNckQy2Qk_fe6W5JJ5XovcjHMsy4pHYtSGJiaq11uj0GqcRJJMGTkkZUM2Ymr7mjfqO3HJXocWhODRNKiipVd12hZG5DGWCPofYa2umSMAVBTr3ONe4biygP2PJK-LeJn5_rPe6C4X4bUDtGEsyDsR6nBrU2IXq6qp2WeFrAg7qmGqYzIRwg5FrVNMyTQhKzrZUXi-h3m5w7AZiFelL-MvccklLCNfpO61GyWuEULBFgcokDf-Hs-upkdHw";
-                            $dataResponse = self::postData($accessToken, $payload);
-                            Log::info('API Response Status: ' . $dataResponse->status());
-                            Log::debug('API Response Body: ' . $dataResponse->body());
-                            */
+                            
                             $businessCentralService = new BusinessCentralService();
                             $dataResponse  = $businessCentralService->inviaPrimaNota( $innerDocs);
                            // 
