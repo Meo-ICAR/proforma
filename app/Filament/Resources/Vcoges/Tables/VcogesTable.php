@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Vcoges\Tables;
 
-use App\Models\Vcoge;  // Make sure this is correctly cased
 use App\Models\Coges as Coge;
+use App\Models\Vcoge;  // Make sure this is correctly cased
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -11,12 +13,9 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Carbon;
-use Filament\Actions\Action;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Carbon;
 
 class VcogesTable
 {
@@ -141,19 +140,19 @@ class VcogesTable
                             Log::debug("Payload preparato per l'invio:", $payload);
 
                             // Log cURL equivalent
-                            $curlCommand = "curl -X POST '" . env('COGE_URL_POST') . "' " .
-                                           "-H 'Authorization: Bearer " . $accessToken . "' " .
-                                           "-H 'Content-Type: application/json' " .
-                                           "-d '" . json_encode($payload) . "'";
-                            Log::debug("Comando cURL equivalente: " . $curlCommand);
+                            $curlCommand = "curl -X POST '" . env('COGE_URL_POST') . "' "
+                                . "-H 'Authorization: Bearer " . $accessToken . "' "
+                                . "-H 'Content-Type: application/json' "
+                                . "-d '" . json_encode($payload) . "'";
+                            Log::debug('Comando cURL equivalente: ' . $curlCommand);
 
                             // 3. Send Data
                             Log::info("Invio dati all'API di contabilità...");
                             $dataResponse = Http::withToken($accessToken)
                                 ->post(env('COGE_URL_POST'), $payload);
 
-                            Log::info("API Response Status: " . $dataResponse->status());
-                            Log::debug("API Response Body: " . $dataResponse->body());
+                            Log::info('API Response Status: ' . $dataResponse->status());
+                            Log::debug('API Response Body: ' . $dataResponse->body());
 
                             if ($dataResponse->successful()) {
                                 Notification::make()
@@ -182,14 +181,64 @@ class VcogesTable
                                 ->send();
                         }
                     })
-
             ])
             ->toolbarActions([]);
     }
 
     private static function getAccessToken(): ?string
     {
-        Log::info("Richiesta token di autenticazione (POST asForm)...");
+        Log::info('Richiesta token di autenticazione (POST asForm)...');
+
+        $url = env('COGE_URL_GET_TOKEN');
+
+        $params = [
+            'grant_type' => 'client_credentials',
+            'scope' => 'https://api.businesscentral.dynamics.com/.default',
+            'client_id' => env('COGE_CLIENT_ID_TOKEN'),
+            'client_secret' => env('COGE_CLIENT_SECRET_TOKEN'),
+        ];
+
+        try {
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_POSTFIELDS => $params,
+                CURLOPT_HTTPHEADER => array(
+                    'Cookie: fpc=AibG5DveuGpLlJG24tKl8To-u5M_AQAAADhUDuEOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd'
+                ),
+            ));
+            Log::debug('Comando cURL: ' . $curl);
+            $response = curl_exec($curl);
+
+            curl_close($curl);
+            if ($response->failed()) {
+                Log::error('Errore ottenimento token: ' . $response->body());
+                return null;
+            }
+            Log::debug('Risposta cURL: ' . $response);
+
+            $token = $response->json('access_token');
+            Log::info('Token ottenuto con successo.');
+            Log::debug('Access Token: ' . $token);
+
+            return $token;
+        } catch (\Exception $e) {
+            Log::error('Eccezione durante il recupero del token: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    private static function getAccessTokenNew(): ?string
+    {
+        Log::info('Richiesta token di autenticazione (POST asForm)...');
 
         $url = env('COGE_URL_GET_TOKEN');
 
@@ -202,28 +251,28 @@ class VcogesTable
 
         try {
             // Log cURL equivalent for POST form
-            $tokenCurl = "curl -X POST '{$url}' " .
-                         "-H 'Content-Type: application/x-www-form-urlencoded' " .
-                         "-d '" . http_build_query($params) . "'";
-            Log::debug("Comando cURL token: " . $tokenCurl);
+            $tokenCurl = "curl -X POST '{$url}' "
+                . "-H 'Content-Type: application/x-www-form-urlencoded' "
+                . "-d '" . http_build_query($params) . "'";
+            Log::debug('Comando cURL token: ' . $tokenCurl);
 
             $response = Http::asForm()->post($url, $params);
 
-            Log::debug("Token Response Status: " . $response->status());
-            Log::debug("Token Response Body: " . $response->body());
+            Log::debug('Token Response Status: ' . $response->status());
+            Log::debug('Token Response Body: ' . $response->body());
 
             if ($response->failed()) {
-                Log::error("Errore ottenimento token: " . $response->body());
+                Log::error('Errore ottenimento token: ' . $response->body());
                 return null;
             }
 
             $token = $response->json('access_token');
-            Log::info("Token ottenuto con successo.");
-            Log::debug("Access Token: " . $token);
+            Log::info('Token ottenuto con successo.');
+            Log::debug('Access Token: ' . $token);
 
             return $token;
         } catch (\Exception $e) {
-            Log::error("Eccezione durante il recupero del token: " . $e->getMessage());
+            Log::error('Eccezione durante il recupero del token: ' . $e->getMessage());
             return null;
         }
     }
