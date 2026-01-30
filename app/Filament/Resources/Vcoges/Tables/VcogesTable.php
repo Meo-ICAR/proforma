@@ -16,9 +16,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Carbon;
+use App\Services\BusinessCentralService;
 
 class VcogesTable
 {
+    
     public static function configure(Table $table): Table
     {
         return $table
@@ -71,21 +73,14 @@ class VcogesTable
                                 Log::warning("Configurazione Coge per 'Uscita' (fonte mediafacile) non trovata. Uso i valori di default.");
                             }
 
-                            // 1. Acquire Token
-                            $accessToken = self::getAccessToken();
-
-                            if (!$accessToken) {
-                                Notification::make()
-                                    ->title('Errore Autenticazione')
-                                    ->body('Impossibile ottenere il token di accesso. Controlla i log.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
+                         
 
                             // Calculate end of month for PostingDate
                             $datacoge = Carbon::createFromFormat('Y-m', $record->mese)->endOfMonth()->toDateString();
-
+                            $docnoEntrata = 'ENTRATA-' . $record->mese;
+                            $docnoUscita = 'USCITA-' . $record->mese;
+                            $entrata = $record->entrata;
+                            $uscita = $record->uscita;
                             // 2. Prepare Data
                             $innerDocs = [
                                 [
@@ -94,9 +89,9 @@ class VcogesTable
                                     'LineNo' => '1',
                                     'AccountNo' => str_replace('.', '', $coge1->conto_dare ?? '0128002'),
                                     'PostingDate' => $datacoge,
-                                    'DocumentNo' => 'DOCNO',
+                                    'DocumentNo' =>  $docnoEntrata,
                                     'Description' => $coge1->descrizione_dare ?? 'Clienti c/fatture da emettere',
-                                    'Amount' => -$record->entrata
+                                    'Amount' => -$entrata
                                 ],
                                 [
                                     'JournalTemplateName' => 'GENERALE',
@@ -104,9 +99,9 @@ class VcogesTable
                                     'LineNo' => '2',
                                     'AccountNo' => str_replace('.', '', $coge1->conto_avere ?? '0501001'),
                                     'PostingDate' => $datacoge,
-                                    'DocumentNo' => 'DOCNO',
+                                    'DocumentNo' =>  $docnoEntrata,
                                     'Description' => $coge1->descrizione_avere ?? 'Ricavi Italia',
-                                    'Amount' => $record->entrata
+                                    'Amount' =>  $entrata
                                 ],
                                 [
                                     'JournalTemplateName' => 'GENERALE',
@@ -114,9 +109,9 @@ class VcogesTable
                                     'LineNo' => '1',
                                     'AccountNo' => str_replace('.', '', $coge2->conto_dare ?? '0221002'),
                                     'PostingDate' => $datacoge,
-                                    'DocumentNo' => 'DOCNO1',
+                                    'DocumentNo' => $docnoUscita,
                                     'Description' => $coge2->descrizione_avere ?? 'Fornitori c/fatture da ricevere',
-                                    'Amount' => $record->uscita
+                                    'Amount' => $uscita
                                 ],
                                 [
                                     'JournalTemplateName' => 'GENERALE',
@@ -124,12 +119,13 @@ class VcogesTable
                                     'LineNo' => '2',
                                     'AccountNo' => str_replace('.', '', $coge2->conto_avere ?? '0405019'),
                                     'PostingDate' => $datacoge,
-                                    'DocumentNo' => 'DOCNO1',
+                                    'DocumentNo' => $docnoUscita,
                                     'Description' => $coge2->descrizione_dare ?? 'Consulenze diverse',
-                                    'Amount' => -$record->uscita
+                                    'Amount' => -$uscita
                                 ]
                             ];
-
+                            Log::debug("Payload preparato per l'invio:",  $innerDocs);
+                               /*
                             $innerJson = json_encode(['docs' => $innerDocs]);
 
                             // The payload wrapped in "docs" property as a string
@@ -137,8 +133,8 @@ class VcogesTable
                                 'docs' => $innerJson
                             ];
 
-                            Log::debug("Payload preparato per l'invio:", $payload);
-
+                            Log::debug("Payload preparato per l'invio:",  $innerDocs);
+                         
                             // Log cURL equivalent
                             $curlCommand = "curl -X POST '" . env('COGE_URL_POST') . "' "
                                 . "-H 'Authorization: Bearer " . $accessToken . "' "
@@ -153,7 +149,19 @@ class VcogesTable
 
                             Log::info('API Response Status: ' . $dataResponse->status());
                             Log::debug('API Response Body: ' . $dataResponse->body());
-
+                            */
+/*
+                            $accessToken="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IlBjWDk4R1g0MjBUMVg2c0JEa3poUW1xZ3dNVSIsImtpZCI6IlBjWDk4R1g0MjBUMVg2c0JEa3poUW1xZ3dNVSJ9.eyJhdWQiOiJodHRwczovL2FwaS5idXNpbmVzc2NlbnRyYWwuZHluYW1pY3MuY29tIiwiaXNzIjoiaHR0cHM6Ly9zdHMud2luZG93cy5uZXQvODVhMjVlM2ItOTQ1OS00NWViLWI5YzktMWRjMjZjYWYyZWRmLyIsImlhdCI6MTc2OTc3MTkzOSwibmJmIjoxNzY5NzcxOTM5LCJleHAiOjE3Njk3NzU4MzksImFpbyI6ImsyWmdZR0NxdXF2Mk5KZjc3clc5LzZ6Zml2OWRDUUE9IiwiYXBwaWQiOiIwMjgyMDA1ZS00YTc1LTQ1OTQtOWYyYy1lY2EwYTg0OTYxNzIiLCJhcHBpZGFjciI6IjEiLCJpZHAiOiJodHRwczovL3N0cy53aW5kb3dzLm5ldC84NWEyNWUzYi05NDU5LTQ1ZWItYjljOS0xZGMyNmNhZjJlZGYvIiwiaWR0eXAiOiJhcHAiLCJvaWQiOiJjOTc1Mzk4ZS01YmI1LTRmNjYtOWVkNi02ZmFmZDU0MTQ2YjgiLCJyaCI6IjEuQVNBQU8xNmloVm1VNjBXNXlSM0NiSzh1M3ozdmJabHNzMU5CaGdlbV9Ud0J1SjhBQUFBZ0FBLiIsInJvbGVzIjpbIkF1dG9tYXRpb24uUmVhZFdyaXRlLkFsbCIsImFwcF9hY2Nlc3MiLCJBZG1pbkNlbnRlci5SZWFkV3JpdGUuQWxsIiwiQVBJLlJlYWRXcml0ZS5BbGwiXSwic3ViIjoiYzk3NTM5OGUtNWJiNS00ZjY2LTllZDYtNmZhZmQ1NDE0NmI4IiwidGlkIjoiODVhMjVlM2ItOTQ1OS00NWViLWI5YzktMWRjMjZjYWYyZWRmIiwidXRpIjoiRmJJd0pyQXVXMGEtWERuTjZEUUtBQSIsInZlciI6IjEuMCIsInhtc19hY3RfZmN0IjoiMyA5IiwieG1zX2Z0ZCI6ImJhQlFMcGtpNzR1V0RlZ1p2YTJBb3FvTTQ4VXBTQ2p6R2ZUcVJNRGU0R0FCWlhWeWIzQmxibTl5ZEdndFpITnRjdyIsInhtc19pZHJlbCI6IjEwIDciLCJ4bXNfcmQiOiIwLjQyTGxZQkppVkJBUzRXQVhFckJkUDNFZTU3UHZEdk43eEkyN0FsdWZBa1U1aFFRTXJMcG55OWZlOEdtT1hkX3ZJMmJnRGhUbEFLcDluenN6WjNPd1l4djdzcjgyakR2bUEwVzVoUVNhaWhlNkw3aTZyT1BTTXRZN3M0cW55d01BIiwieG1zX3N1Yl9mY3QiOiIzIDkifQ.XkK6WxFGo1KFjtIci3UukFLauS9FcYgK8MivvxZndT6yUzhdXiLLBrgVI7Isdpt2S1eLGJkl6lSwSiI6DNMuAzIBpLctNckQy2Qk_fe6W5JJ5XovcjHMsy4pHYtSGJiaq11uj0GqcRJJMGTkkZUM2Ymr7mjfqO3HJXocWhODRNKiipVd12hZG5DGWCPofYa2umSMAVBTr3ONe4biygP2PJK-LeJn5_rPe6C4X4bUDtGEsyDsR6nBrU2IXq6qp2WeFrAg7qmGqYzIRwg5FrVNMyTQhKzrZUXi-h3m5w7AZiFelL-MvccklLCNfpO61GyWuEULBFgcokDf-Hs-upkdHw";
+                            $dataResponse = self::postData($accessToken, $payload);
+                            Log::info('API Response Status: ' . $dataResponse->status());
+                            Log::debug('API Response Body: ' . $dataResponse->body());
+                            */
+                            $businessCentralService = new BusinessCentralService();
+                            $dataResponse  = $businessCentralService->inviaPrimaNota( $innerDocs);
+                           // 
+                          //  $dataResponse = $businessCentralService->postData($payload);
+                            Log::info('API Response Status: ' . $dataResponse->status());
+                            Log::debug('API Response Body: ' . $dataResponse->body());
                             if ($dataResponse->successful()) {
                                 Notification::make()
                                     ->title('Invio Completato')
@@ -185,107 +193,4 @@ class VcogesTable
             ->toolbarActions([]);
     }
 
-    private static function getAccessToken(): ?string
-    {
-        Log::info('Richiesta token di autenticazione (POST asForm)...');
-
-        $url = env('COGE_URL_GET_TOKEN');
-
-        $params = [
-            'grant_type' => 'client_credentials',
-            'scope' => 'https://api.businesscentral.dynamics.com/.default',
-            'client_id' => env('COGE_CLIENT_ID_TOKEN'),
-            'client_secret' => env('COGE_CLIENT_SECRET_TOKEN'),
-        ];
-
-        try {
-            $curl = curl_init();
-
-            curl_setopt_array($curl, array(
-                CURLOPT_URL => $url,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_ENCODING => '',
-                CURLOPT_MAXREDIRS => 10,
-                CURLOPT_TIMEOUT => 0,
-                CURLOPT_FOLLOWLOCATION => true,
-                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-                CURLOPT_CUSTOMREQUEST => 'GET',
-                CURLOPT_POSTFIELDS => $params,
-                CURLOPT_HTTPHEADER => array(
-                    'Cookie: fpc=AibG5DveuGpLlJG24tKl8To-u5M_AQAAADhUDuEOAAAA; stsservicecookie=estsfd; x-ms-gateway-slice=estsfd'
-                ),
-            ));
-            Log::debug('Comando cURL: ' . json_encode([
-                'url' => $url,
-                'method' => 'GET',
-                'params' => $params
-            ]));
-            $response = curl_exec($curl);
-
-            curl_close($curl);
-
-            Log::debug('Risposta cURL: ' . $response);
-
-            $responseData = json_decode($response, true);
-            if (!$responseData) {
-                Log::error('Errore parsing JSON risposta: ' . $response);
-                return null;
-            }
-
-            $token = $responseData['access_token'] ?? null;
-            if (!$token) {
-                Log::error('Token non trovato nella risposta: ' . $response);
-                return null;
-            }
-
-            Log::info('Token ottenuto con successo.');
-            Log::debug('Access Token (primi 20 char): ' . substr($token, 0, 20) . '...');
-
-            return $token;
-        } catch (\Exception $e) {
-            Log::error('Eccezione durante il recupero del token: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    private static function getAccessTokenNew(): ?string
-    {
-        Log::info('Richiesta token di autenticazione (POST asForm)...');
-
-        $url = env('COGE_URL_GET_TOKEN');
-
-        $params = [
-            'grant_type' => 'client_credentials',
-            'scope' => 'https://api.businesscentral.dynamics.com/.default',
-            'client_id' => env('COGE_CLIENT_ID_TOKEN'),
-            'client_secret' => env('COGE_CLIENT_SECRET_TOKEN'),
-        ];
-
-        try {
-            // Log cURL equivalent for POST form
-            $tokenCurl = "curl -X POST '{$url}' "
-                . "-H 'Content-Type: application/x-www-form-urlencoded' "
-                . "-d '" . http_build_query($params) . "'";
-            Log::debug('Comando cURL token: ' . $tokenCurl);
-
-            $response = Http::asForm()->post($url, $params);
-
-            Log::debug('Token Response Status: ' . $response->status());
-            Log::debug('Token Response Body: ' . $response->body());
-
-            if ($response->failed()) {
-                Log::error('Errore ottenimento token: ' . $response->body());
-                return null;
-            }
-
-            $token = $response->json('access_token');
-            Log::info('Token ottenuto con successo.');
-            Log::debug('Access Token: ' . $token);
-
-            return $token;
-        } catch (\Exception $e) {
-            Log::error('Eccezione durante il recupero del token: ' . $e->getMessage());
-            return null;
-        }
-    }
-}
+    }    
