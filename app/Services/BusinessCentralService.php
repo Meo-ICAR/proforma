@@ -53,17 +53,32 @@ class BusinessCentralService
 
         $env = env('BC_ENVIRONMENT');
         $companyId = env('BC_COMPANY_ID');
-        
-        $url = "https://api.businesscentral.dynamics.com/v2.0/{$this->tenantId}/{$env}/ODataV4/ANCWS_SendExtCoge";
+
+        $url = env('COGE_URL_POST');
+
+        if (!$url) {
+            $url = "https://api.businesscentral.dynamics.com/v2.0/{$this->tenantId}/{$env}/ODataV4/ANCWS_SendExtCoge";
+
+            $payload = [
+                'docs' => json_encode(['docs' => $documenti])
+            ];
+
+            Log::debug("Payload inviato (URL costruito):", $payload);
+
+            return Http::withToken($token)
+                ->withQueryParameters(['Company' => $companyId])
+                ->post($url, $payload);
+        }
 
         // Costruiamo il body esattamente come nel tuo file JSON
-        // Nota: Business Central spesso richiede i documenti come stringa JSON nidificata
         $payload = [
             'docs' => json_encode(['docs' => $documenti])
         ];
-        Log::debug("Payload inviato:", $payload);
+
+        Log::debug("Payload inviato (URL diretto):", $payload);
+
+        // Use the URL as is from .env (already contains parameters)
         return Http::withToken($token)
-            ->withQueryParameters(['Company' => $companyId])
             ->post($url, $payload);
     }
 }
