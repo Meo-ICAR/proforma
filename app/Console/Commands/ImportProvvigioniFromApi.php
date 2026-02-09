@@ -250,6 +250,7 @@ class ImportProvvigioniFromApi extends Command
                     }
 
                     // Ensure we have the ID Compenso in our data
+                    // debug
                     //          $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
