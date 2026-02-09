@@ -25,3 +25,5 @@ Thumbs.db
 composer.lock
 /public/css
 /public/js
+.env.save
+*.deb
