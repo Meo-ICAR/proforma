@@ -55,13 +55,15 @@ class ImportProvvigioniFromApi extends Command
                 ->get($apiUrl, $queryParams);
 
             // Log the request and response for debugging
-            \Log::info('Provvigioni API Request', [
-                'url' => $apiUrl,
-                'params' => $queryParams,
-                'status' => $response->status(),
-                'response_size' => strlen($response->body()),
-            ]);
 
+            /*
+             * \Log::info('Provvigioni API Request', [
+             *     'url' => $apiUrl,
+             *     'params' => $queryParams,
+             *     'status' => $response->status(),
+             *     'response_size' => strlen($response->body()),
+             * ]);
+             */
             if (!$response->successful()) {
                 \Log::error('Provvigioni API Error', [
                     'status' => $response->status(),
@@ -152,7 +154,7 @@ class ImportProvvigioniFromApi extends Command
             }
 
             // Debug: Log the headers
-            \Log::debug('Headers:', ['headers' => $headers, 'count' => $headerCount]);
+            //   \Log::debug('Headers:', ['headers' => $headers, 'count' => $headerCount]);
 
             // Process data lines
             for ($i = 1; $i < count($lines); $i++) {
@@ -250,7 +252,7 @@ class ImportProvvigioniFromApi extends Command
                     }
 
                     // Ensure we have the ID Compenso in our data
-                    // debug
+                    // debug 3
                     //          $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
