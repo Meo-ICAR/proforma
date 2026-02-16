@@ -28,14 +28,14 @@ class BusinessCentralService
         $url = "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/token";
 
         $response = Http::asForm()->post($url, [
-            'grant_type'    => 'client_credentials',
-            'client_id'     => $this->clientId,
+            'grant_type' => 'client_credentials',
+            'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
-            'scope'         => $this->scope,
+            'scope' => $this->scope,
         ]);
 
         if ($response->failed()) {
-            Log::error("Errore recupero Token BC: " . $response->body());
+            Log::error('Errore recupero Token BC: ' . $response->body());
             return null;
         }
 
@@ -49,7 +49,8 @@ class BusinessCentralService
     {
         $token = $this->getToken();
 
-        if (!$token) return false;
+        if (!$token)
+            return false;
 
         $env = env('BC_ENVIRONMENT');
         $companyId = env('BC_COMPANY_ID');
@@ -63,7 +64,7 @@ class BusinessCentralService
                 'docs' => json_encode(['docs' => $documenti])
             ];
 
-            Log::debug("Payload inviato (URL costruito):", $payload);
+            Log::debug('Payload inviato (URL costruito):', $payload);
 
             return Http::withToken($token)
                 ->withQueryParameters(['Company' => $companyId])
@@ -75,7 +76,7 @@ class BusinessCentralService
             'docs' => json_encode(['docs' => $documenti])
         ];
 
-        Log::debug("Payload inviato (URL diretto):", $payload);
+        Log::debug('Payload inviato (URL diretto):', $payload);
 
         // Use the URL as is from .env (already contains parameters)
         return Http::withToken($token)

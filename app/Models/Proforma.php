@@ -284,7 +284,7 @@ class Proforma extends Model
             if ($this->anticipo <> 0) {
                 if ($this->anticipo > 0) {
                     $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($this->anticipo, 2);
-                    $somma += $this->anticipo;
+                    $somma -= $this->anticipo;
                 } else {
                     $message .= $cr . $this->anticipo_descrizione . ': €' . -number_format($this->anticipo, 2);
                     $somma += -$this->anticipo;

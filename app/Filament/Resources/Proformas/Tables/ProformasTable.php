@@ -8,6 +8,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -22,7 +23,7 @@ class ProformasTable
     return $table
       ->columns([
         TextColumn::make('emailsubject')
-          ->label('Proforma')
+          ->label('Proform')
           ->sortable()
           ->searchable(),
         TextColumn::make('stato')
@@ -30,15 +31,15 @@ class ProformasTable
           ->sortable()
           ->searchable(),
         TextColumn::make('compenso')
-          ->money('EUR')  // Forza Euro e formato italiano
+          ->summarize(Sum::make()->money('EUR')->label(''))
           ->alignEnd()
           ->sortable(),
         TextColumn::make('contributo')
-          ->money('EUR')  // Forza Euro e formato italiano
+          ->summarize(Sum::make()->money('EUR')->label(''))
           ->alignEnd()
           ->sortable(),
         TextColumn::make('anticipo')
-          ->money('EUR')  // Forza Euro e formato italiano
+          ->summarize(Sum::make()->money('EUR')->label(''))
           ->alignEnd()
           ->sortable(),
         TextColumn::make('updated_at')
@@ -52,7 +53,7 @@ class ProformasTable
           ->label('Email')
           ->sortable(),
         TextColumn::make('delta')
-          ->money('EUR')  // Forza Euro e formato italiano
+          ->summarize(Sum::make()->money('EUR')->label(''))
           ->alignEnd()
           ->sortable(),
       ])
