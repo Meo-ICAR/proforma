@@ -145,7 +145,7 @@ class Proforma extends Model
      * @param string $fornitori_id
      * @return \App\Models\Proforma
      */
-    public static function createFromFornitore(string $fornitori_id): Proforma
+    public static function createFromFornitore(string $fornitori_id, bool $coordinamento): Proforma
     {
         $fornitore = Fornitore::with('company')->findOrFail($fornitori_id);
 
@@ -166,6 +166,10 @@ class Proforma extends Model
             'updated_at' => now(),
         ];
 
+        if ($coordinamento) {
+            $proformaData['contributo'] = 0;
+        }
+
         if ($fornitore->company) {
             $proformaData['company_id'] = $fornitore->company->id;
             // Use company's email subject if available
@@ -184,7 +188,7 @@ class Proforma extends Model
      * @return string The ID of the found or created proforma
      * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no fornitore is found with the given P.IVA
      */
-    public static function findOrCreateByPiva(string $piva, float $importo): string
+    public static function findOrCreateByPiva(string $piva, float $importo, bool $coordinamento): string
     {
         try {
             // Clean up the P.IVA
@@ -200,7 +204,7 @@ class Proforma extends Model
                 ->first();
 
             if (!$existingProforma) {
-                $existingProforma = self::createFromFornitore($fornitore->id);
+                $existingProforma = self::createFromFornitore($fornitore->id, $coordinamento);
             }
 
             // Update the compenso
@@ -282,13 +286,8 @@ class Proforma extends Model
                 }
             }
             if ($this->anticipo <> 0) {
-                if ($this->anticipo > 0) {
-                    $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($this->anticipo, 2);
-                    $somma -= $this->anticipo;
-                } else {
-                    $message .= $cr . $this->anticipo_descrizione . ': €' . -number_format($this->anticipo, 2);
-                    $somma += -$this->anticipo;
-                }
+                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format(-$this->anticipo, 2);
+                $somma -= $this->anticipo;
             }
 
             if ($this->contributo <> 0) {

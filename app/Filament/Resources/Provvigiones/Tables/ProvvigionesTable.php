@@ -36,6 +36,7 @@ class ProvvigionesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->paginated([10, 25, 50, 100, 'all'])
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Uscita')
                 ->whereNot('importo', 0)
@@ -57,7 +58,7 @@ class ProvvigionesTable
                         $records->each(function ($record) {
                             $piva = $record->piva;
                             if (($piva > '0')) {
-                                $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo);
+                                $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
                                     'proforma_id' => $proformaId
