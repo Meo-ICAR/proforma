@@ -2,11 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Pratica;
 use App\Models\Fornitore;
+use App\Models\Pratica;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ImportPraticheFromApi extends Command
@@ -39,20 +40,18 @@ class ImportPraticheFromApi extends Command
                 'User-Agent' => 'ProForma Import/1.0',
                 'X-Api-Key' => env('MEDIAFACILE_HEADER_KEY'),
             ])
-            ->timeout(60) // 60 seconds timeout
-            ->connectTimeout(10) // 10 seconds to establish connection
-            ->withOptions([
-                'http_errors' => false,
-                'verify' => false, // Only if you need to bypass SSL verification
-            ])
-            ->retry(3, 1000, function ($exception) {
-                // Retry on connection timeouts or server errors
-                return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
-                       ($exception->getCode() >= 500);
-            })
-            ->get($apiUrl, $queryParams);
-
-
+                ->timeout(60)  // 60 seconds timeout
+                ->connectTimeout(10)  // 10 seconds to establish connection
+                ->withOptions([
+                    'http_errors' => false,
+                    'verify' => false,  // Only if you need to bypass SSL verification
+                ])
+                ->retry(3, 1000, function ($exception) {
+                    // Retry on connection timeouts or server errors
+                    return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
+                        ($exception->getCode() >= 500);
+                })
+                ->get($apiUrl, $queryParams);
 
             if (!$response->successful()) {
                 \Log::error('Pratiche API Error', [
@@ -65,7 +64,7 @@ class ImportPraticheFromApi extends Command
 
             $responseBody = trim($response->body());
             $lines = explode("\n", $responseBody);
-            $lines = array_filter($lines, function($line) {
+            $lines = array_filter($lines, function ($line) {
                 return trim($line) !== '';
             });
             $lines = array_values($lines);
@@ -75,63 +74,61 @@ class ImportPraticheFromApi extends Command
                 return 1;
             }
 
-
-                // Get headers from first line
-                $headers = $this->parseLine($lines[0]);
-                $data = [];
-
-                // Process data lines
-                for ($i = 1; $i < count($lines); $i++) {
-                    $values = $this->parseLine($lines[$i]);
-                    if (count($values) === count($headers)) {
-                        $data[] = array_combine($headers, $values);
-                    }
+            // Get headers from first line
+            $headers = $this->parseLine($lines[0]);
+            $data = [];
+            //    $this->info('Headers: ' . implode(', ', $headers));
+            // Process data lines
+            for ($i = 1; $i < count($lines); $i++) {
+                $values = $this->parseLine($lines[$i]);
+                if (count($values) === count($headers)) {
+                    $data[] = array_combine($headers, $values);
                 }
+            }
 
-                if (empty($data)) {
-                    $this->info('No records found in the specified date range');
-                    return 0;
-                }
-
-                $imported = 0;
-                $updated = 0;
-                $errors = 0;
-
-                foreach ($data as $item) {
-                    try {
-                        $praticaData = $this->mapApiToModel($item);
-
-                        if (empty($praticaData['id'])) {
-                            $this->warn('Skipping item without id: ' . json_encode($item));
-                            $errors++;
-                            continue;
-                        }
-
-                        $existing = Pratica::where('id', $praticaData['id'])->first();
-
-                        if ($existing) {
-                            $existing->update($praticaData);
-                            $updated++;
-                          //  $this->info("Updated pratica: {$praticaData['id']}");
-                        } else {
-                            // check fornitore esiste
-                            $fornitore = Fornitore::firstOrCreate(
-                                ['name' => $praticaData['denominazione_agente']],
-                                ['piva' => $praticaData['partita_iva_agente']]
-                            );
-                            Pratica::create($praticaData);
-                            $imported++;
-                          //  $this->info("Imported new pratica: {$praticaData['id']}");
-                        }
-                    } catch (\Exception $e) {
-
-                        $this->error("Error processing item: " . $e->getMessage());
-                        $errors++;
-                    }
-                }
-
-                $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
+            if (empty($data)) {
+                $this->info('No records found in the specified date range');
                 return 0;
+            }
+
+            $imported = 0;
+            $updated = 0;
+            $errors = 0;
+
+            foreach ($data as $item) {
+                try {
+                    $praticaData = $this->mapApiToModel($item);
+
+                    if (empty($praticaData['id'])) {
+                        $this->warn('Skipping item without id: ' . json_encode($item));
+                        $errors++;
+                        continue;
+                    }
+
+                    $existing = Pratica::where('id', $praticaData['id'])->first();
+
+                    if ($existing) {
+                        $existing->update($praticaData);
+                        $updated++;
+                        //  $this->info("Updated pratica: {$praticaData['id']}");
+                    } else {
+                        // check fornitore esiste
+                        $fornitore = Fornitore::firstOrCreate(
+                            ['name' => $praticaData['denominazione_agente']],
+                            ['piva' => $praticaData['partita_iva_agente']]
+                        );
+                        Pratica::create($praticaData);
+                        $imported++;
+                        //  $this->info("Imported new pratica: {$praticaData['id']}");
+                    }
+                } catch (\Exception $e) {
+                    $this->error('Error processing item: ' . $e->getMessage());
+                    $errors++;
+                }
+            }
+
+            $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
+            return 0;
         } catch (\Illuminate\Http\Client\RequestException $e) {
             $this->error('HTTP Request Error: ' . $e->getMessage());
             \Log::error('Pratiche API Request Exception', [
@@ -139,7 +136,7 @@ class ImportPraticheFromApi extends Command
                 'code' => $e->getCode(),
                 'response' => $e->response ? [
                     'status' => $e->response->status(),
-                    'body' => substr((string)$e->response->body(), 0, 1000)
+                    'body' => substr((string) $e->response->body(), 0, 1000)
                 ] : null
             ]);
             return 1;
@@ -160,20 +157,16 @@ class ImportPraticheFromApi extends Command
 
     protected function mapApiToModel(array $apiData): array
     {
-        $dataInserimento = null;
-        $dataInserimentoValue = $apiData['Data Inserimento Pratica'];
+        $dataInserimento = $this->parseDate($apiData['Data Inserimento Pratica'] ?? null);
+        //  $this->info($apiData['Data Inserimento Pratica'] . ' Data inserimento: ' . $dataInserimento);
+        $sendedAt = $this->parseDate2($apiData['Data_invio_istruttoria'] ?? null);
+        //   $this->info($apiData['Data_invio_istruttoria'] . ' Sended at: ' . $sendedAt);
+        $approvedAt = $this->parseDate2($apiData['Data_delibera_banca'] ?? null);
+        $erogatedAt = $this->parseDate2($apiData['Data_erogazione'] ?? null);
 
-        if (!empty($dataInserimentoValue)) {
-            try {
-                $dateParts = explode('/', $dataInserimentoValue);
-                if (count($dateParts) === 3) {
-                    $dataInserimento = Carbon::createFromFormat('d/m/Y', $dataInserimentoValue);
-                }
-            } catch (\Exception $e) {
-                // If parsing fails, leave as null
-                $this->warn("Failed to parse date: " . $dataInserimentoValue);
-            }
-        }
+        $amount = $this->parseDecimal($apiData['Montante'] ?? null);
+        $net = $this->parseDecimal($apiData['Importo_Erogazione'] ?? null);
+
         return [
             'id' => $apiData['ID Pratica'] ?? (string) Str::uuid(),
             'codice_pratica' => $apiData['ID Pratica'] ?? null,
@@ -181,14 +174,88 @@ class ImportPraticheFromApi extends Command
             'cognome_cliente' => $apiData['Nome Cliente'] ?? null,
             'codice_fiscale' => $apiData['Codice Fiscale'] ?? null,
             'denominazione_agente' => $apiData['Denominazione Agente'] ?? null,
-       'partita_iva_agente' => (blank($apiData['Partita IVA Agente'] ?? null) || $apiData['Partita IVA Agente'] < '0')
-    ? '---'
-    : $apiData['Partita IVA Agente'],
+            'partita_iva_agente' => (blank($apiData['Partita IVA Agente'] ?? null) || $apiData['Partita IVA Agente'] < '0')
+                ? '---'
+                : $apiData['Partita IVA Agente'],
             'denominazione_banca' => $apiData['Denominazione Banca'] ?? null,
             'tipo_prodotto' => $apiData['Tipo Prodotto'] ?? null,
             'denominazione_prodotto' => $apiData['Descrizione Prodotto'] ?? null,
-            'data_inserimento_pratica' => $dataInserimento  ?? now(),
+            'data_inserimento_pratica' => $dataInserimento ?? now(),
             'stato_pratica' => $apiData['Stato Pratica'] ?? null,
+            'sended_at' => $sendedAt,
+            'approved_at' => $approvedAt,
+            'erogated_at' => $erogatedAt,
+            'amount' => $amount,
+            'net' => $net,
+            'is_notowned' => ($apiData['Pratica_terzi'] ?? '') == 'SI' ? true : false,
         ];
+    }
+
+    private function parseDate($dateValue)
+    {
+        if (empty($dateValue) || trim($dateValue) === '') {
+            return null;
+        }
+
+        try {
+            // Try different date formats
+            $formats = ['d/m/Y', 'Y-m-d', 'd/m/Y H:i:s', 'Y-m-d H:i:s'];
+
+            foreach ($formats as $format) {
+                try {
+                    return Carbon::createFromFormat($format, trim($dateValue));
+                } catch (\Exception $e) {
+                    // Continue to next format
+                }
+            }
+
+            // If no format works, try Carbon's flexible parsing
+            return new Carbon($dateValue);
+        } catch (\Exception $e) {
+            $this->warn('Failed to parse date: ' . $dateValue);
+            return null;
+        }
+    }
+
+    private function parseDate2($dateValue)
+    {
+        if (empty($dateValue) || trim($dateValue) === '') {
+            return null;
+        }
+
+        try {
+            // Try different date formats
+            $formats = ['m/d/Y', 'Y-m-d', 'd/m/Y H:i:s', 'Y-m-d H:i:s'];
+
+            foreach ($formats as $format) {
+                try {
+                    return Carbon::createFromFormat($format, trim($dateValue));
+                } catch (\Exception $e) {
+                    // Continue to next format
+                }
+            }
+
+            // If no format works, try Carbon's flexible parsing
+            return new Carbon($dateValue);
+        } catch (\Exception $e) {
+            $this->warn('Failed to parse date: ' . $dateValue);
+            return null;
+        }
+    }
+
+    private function parseDecimal($decimalValue)
+    {
+        if (empty($decimalValue) || trim($decimalValue) === '') {
+            return null;
+        }
+
+        // Remove dots and commas, then handle decimal separator
+        $cleaned = str_replace(['.', ','], ['', '.'], trim($decimalValue));
+
+        if (is_numeric($cleaned)) {
+            return (float) $cleaned;
+        }
+
+        return null;
     }
 }

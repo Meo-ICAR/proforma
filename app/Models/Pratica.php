@@ -52,6 +52,15 @@ class Pratica extends Model
         'denominazione_prodotto',
         'data_inserimento_pratica',
         'stato_pratica',
+        'rata',
+        'erogato',
+        'nrate',
+        'sended_at',
+        'approved_at',
+        'erogated_at',
+        'amount',
+        'net',
+        'is_notowned',
     ];
 
     /**
@@ -61,6 +70,15 @@ class Pratica extends Model
      */
     protected $casts = [
         'data_inserimento_pratica' => 'date',
+        'rata' => 'decimal:2',
+        'erogato' => 'decimal:2',
+        'nrate' => 'integer',
+        'sended_at' => 'date',
+        'approved_at' => 'date',
+        'erogated_at' => 'date',
+        'amount' => 'decimal:2',
+        'net' => 'decimal:2',
+        'is_notowned' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -78,16 +96,14 @@ class Pratica extends Model
      */
     public function stato()
     {
-
         return $this->belongsTo(PraticheStato::class, 'stato_pratica', 'stato_pratica');
     }
 
-        /**
+    /**
      * Get the agent (fornitore) associated with the pratica.
      */
     public function provvigioni()
     {
         return $this->HasMany(Provvigione::class, 'id_pratica', 'id');
     }
-
 }
