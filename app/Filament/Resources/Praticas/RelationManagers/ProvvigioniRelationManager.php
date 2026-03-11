@@ -76,6 +76,8 @@ class ProvvigioniRelationManager extends RelationManager
                 TextColumn::make('data_status')
                     ->date(),
                 TextColumn::make('stato'),
+                TextColumn::make('data_fattura'),
+                TextColumn::make('n_fattura'),
                 TextColumn::make('id'),
             ])
             ->filters([

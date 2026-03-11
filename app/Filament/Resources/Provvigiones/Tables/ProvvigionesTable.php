@@ -178,6 +178,8 @@ class ProvvigionesTable
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
+                Filter::make('denominazione_riferimento'),
+                Filter::make('istituto_finanziario'),
                 SelectFilter::make('mese_status')
                     ->label('Fino al mese')
                     ->options([
