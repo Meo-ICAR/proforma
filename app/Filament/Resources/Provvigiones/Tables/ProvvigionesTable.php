@@ -14,6 +14,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Actions\ActionGroup;
@@ -178,8 +179,33 @@ class ProvvigionesTable
                     ->label('Stato Compenso')
                     ->multiple()
                     ->options(Compenso::all()->pluck('status_compenso', 'status_compenso')),
-                Filter::make('denominazione_riferimento'),
-                Filter::make('istituto_finanziario'),
+                Filter::make('denominazione_riferimento')
+                    ->form([
+                        TextInput::make('denominazione_riferimento')
+                            ->label('Produttore')
+                            ->placeholder('Cerca per denominazione...')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['denominazione_riferimento'],
+                            fn(Builder $query, string $denominazione): Builder =>
+                                $query->where('denominazione_riferimento', 'like', "{$denominazione}%")
+                        );
+                    }),
+                // test
+                Filter::make('istituto_finanziario')
+                    ->form([
+                        TextInput::make('istituto_finanziario')
+                            ->label('Istituto Finanziario')
+                            ->placeholder('Cerca per istituto...')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['istituto_finanziario'],
+                            fn(Builder $query, string $istituto): Builder =>
+                                $query->where('istituto_finanziario', 'like', "{$istituto}%")
+                        );
+                    }),
                 SelectFilter::make('mese_status')
                     ->label('Fino al mese')
                     ->options([
