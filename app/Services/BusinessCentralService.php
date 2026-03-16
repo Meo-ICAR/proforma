@@ -54,16 +54,16 @@ class BusinessCentralService
 
         $env = env('BC_ENVIRONMENT');
         $companyId = env('BC_COMPANY_ID');
-
-        $url = env('COGE_URL_POST');
-
+        $url = null;
+        // $url = env('COGE_URL_POST');
+        // https://api.businesscentral.dynamics.com/v2.0/85a25e3b-9459-45eb-b9c9-1dc26caf2edf/Production /ODataV4/ANCWS_SendExtCoge?Company=be36b58a-e198-ed11-bff5-000d3ab8edc9
         if (!$url) {
             $url = "https://api.businesscentral.dynamics.com/v2.0/{$this->tenantId}/{$env}/ODataV4/ANCWS_SendExtCoge";
 
             $payload = [
                 'docs' => json_encode(['docs' => $documenti])
             ];
-
+            Log::debug('URL costruito:', ['url' => $url]);
             Log::debug('Payload inviato (URL costruito):', $payload);
 
             return Http::withToken($token)

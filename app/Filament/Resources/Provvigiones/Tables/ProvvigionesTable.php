@@ -37,7 +37,7 @@ class ProvvigionesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->paginated([10, 25, 50, 100, 'all'])
+            ->paginated(['all', 25, 50, 100])
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Uscita')
                 ->whereNot('importo', 0)
@@ -130,17 +130,19 @@ class ProvvigionesTable
                     ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('pratica.nome_cliente')
-                    ->label('Nome')
-                    ->searchable(),
+                    ->label('Nome'),
                 TextColumn::make('istituto_finanziario')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
                     ->color('info')
                     ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
                     ->openUrlInNewTab()
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('descrizione'),
                 TextColumn::make('status_compenso'),
