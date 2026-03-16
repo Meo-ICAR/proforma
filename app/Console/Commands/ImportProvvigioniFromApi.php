@@ -289,6 +289,11 @@ class ImportProvvigioniFromApi extends Command
                     $errors++;
                 }
             }
+
+            // Delete old duplicates
+            $deletedCount = Provvigione::deleteOldDuplicates();
+            $this->info("Deleted {$deletedCount} old duplicates.");
+
             $updatedCount = \DB::update(
                 "UPDATE provvigioni p
 

@@ -234,4 +234,26 @@ class Provvigione extends Model
     {
         return $query->where('stato', $status);
     }
+
+    /**
+     * Delete old duplicate records, keeping only the record with highest ID
+     * for each group of records with same id_pratica, tipo, denominazione_riferimento, and descrizione
+     *
+     * @return int Number of deleted records
+     */
+    public static function deleteOldDuplicates()
+    {
+        $sql = '
+            DELETE p1
+            FROM provvigioni p1
+            INNER JOIN provvigioni p2 ON
+                p1.id_pratica = p2.id_pratica AND
+                p1.tipo = p2.tipo AND
+                p1.denominazione_riferimento = p2.denominazione_riferimento AND
+                p1.descrizione = p2.descrizione
+            WHERE p1.id < p2.id
+        ';
+
+        return \DB::delete($sql);
+    }
 }
