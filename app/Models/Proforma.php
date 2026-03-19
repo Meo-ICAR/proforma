@@ -247,10 +247,10 @@ class Proforma extends Model
 
             if (!$preview) {
                 // Get the recipient email from the related fornitore
-                $toEmail = $this->emailto;
+                $toEmail = $this->fornitore->email;
 
                 if (empty($toEmail)) {
-                    throw new \Exception('Nessun indirizzo email specificato per il fornitore');
+                    throw new \Exception('Indirizzo email assente per il fornitore ' . $this->fornitore->name);
                 }
                 // Get the first company record for CC
                 $company = Company::first();
@@ -325,27 +325,7 @@ class Proforma extends Model
                 'emailbody' => $message,
                 //  'emailfrom' => $ccEmail,
             ]);
-            // Replace this line:
-            // $mail->send(new ProformaMail($this, $subject, $message));
-            // With this:
-            // Replace the existing send() call with this:
 
-            /*
-             * if (!$preview) {
-             *     if ($ccEmail) {
-             *         $message->cc($ccEmail);
-             *     }
-             *     if ($bccEmail) {
-             *         $message->bcc($bccEmail);
-             *     }
-             * }
-             * Mail::raw($message, function ($message) use ($toEmail, $subject, $ccEmail, $bccEmail) {
-             *     $message
-             *         ->to($toEmail)
-             *         ->subject($subject);
-             * });
-             */
-            // In Proforma.php, replace the Mail::raw() call with:
             Mail::send('emails.proforma', [
                 'proforma' => $this,
                 'content' => $message,
@@ -367,7 +347,7 @@ class Proforma extends Model
             });
 
             if (!$preview) {
-                \Log::info('Updating proforma status after email send for ID: ' . $this->id);
+                // \Log::info('Updating proforma status after email send for ID: ' . $this->id);
                 $this->update([
                     'sended_at' => now(),
                     'stato' => 'Inviato',

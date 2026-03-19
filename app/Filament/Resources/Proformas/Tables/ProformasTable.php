@@ -7,10 +7,13 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -24,7 +27,7 @@ class ProformasTable
       ->paginated([10, 25, 50, 100, 'all'])
       ->columns([
         TextColumn::make('emailsubject')
-          ->label('Proform')
+          ->label('Proforma')
           ->sortable()
           ->searchable(),
         TextColumn::make('stato')
@@ -71,6 +74,12 @@ class ProformasTable
           ->multiple()
           ->placeholder('Tutti gli stati')
           ->default(['Inserito']),
+        QueryBuilder::make()
+          ->constraints([
+            DateConstraint::make('updated_at')
+              ->label('Data Invio')
+              ->icon('heroicon-m-calendar'),
+          ])
       ])
       ->recordActions([
         EditAction::make()->label(false),
@@ -84,14 +93,7 @@ class ProformasTable
           ->action(function (Collection $records) {
             // Process each record with a visible loop
             $records->each(function ($record) {
-              if (empty($record->emailto)) {
-                Notification::make()
-                  ->title('Email produttore assente su proforma  ' . $record->emailsubject)
-                  ->danger()
-                  ->send();
-              } else {
-                $record->inviaEmail(false);
-              }
+              $record->inviaEmail(false);
             });
 
             // Show success notification with count
