@@ -99,6 +99,10 @@ class ImportPraticheFromApi extends Command
                 try {
                     $praticaData = $this->mapApiToModel($item);
 
+                    if ($praticaData['is_notowned'] === true) {
+                        continue;
+                    }
+
                     if (empty($praticaData['id'])) {
                         $this->warn('Skipping item without id: ' . json_encode($item));
                         $errors++;
@@ -108,6 +112,10 @@ class ImportPraticheFromApi extends Command
                     $existing = Pratica::where('id', $praticaData['id'])->first();
 
                     if ($existing) {
+                        if ($praticaData['erogated_at'] === null && year($praticaData['data_inserimento_pratica']) < 2025) {
+                            $praticaData['erogated_at'] = '2024-12-31';
+                            // $this->info("Updating pratica: {$praticaData['id']}");
+                        }
                         $existing->update($praticaData);
                         $updated++;
                         //  $this->info("Updated pratica: {$praticaData['id']}");

@@ -7,9 +7,11 @@ use App\Models\TipoProdotto;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PraticasTable
 {
@@ -39,6 +41,11 @@ class PraticasTable
                     ->badge()
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('erogated_at')
+                    ->label('Data Erogazione')
+                    ->date()
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('data_inserimento_pratica')
                     ->date()
                     ->sortable()
@@ -55,8 +62,37 @@ class PraticasTable
                 SelectFilter::make('tipo_prodotto')
                     ->options(TipoProdotto::pluck('tipo_prodotto', 'tipo_prodotto'))
                     ->multiple()
-                    ->label('Tipo Prodotto')
-            ])
+                    ->label('Tipo Prodotto'),
+                Filter::make('data_fattura')
+                    ->form([
+                        Select::make('has_erogated_date')
+                            ->label('Data erogazione')
+                            ->options([
+                                'all' => 'Tutti',
+                                'has_date' => 'Presente',
+                                'no_date' => 'Assente',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $hasPaymentDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasPaymentDate) {
+                            'has_date' => $query->whereNotNull('erogated_at'),
+                            'no_date' => $query->whereNull('erogated_at'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $hasPaymentDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasPaymentDate) {
+                            'has_date' => 'Abbinato a fattura',
+                            'no_date' => 'Non abbinato a fattura',
+                            default => null,
+                        };
+                    }),
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 // ViewAction::make(),
             ]);

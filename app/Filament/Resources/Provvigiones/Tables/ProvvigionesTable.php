@@ -21,9 +21,11 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Filament\Forms;
@@ -128,6 +130,10 @@ class ProvvigionesTable
                 TextColumn::make('data_status')
                     ->date()
                     ->sortable(),
+                TextColumn::make('data_fattura')
+                    ->label('Fattura del')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
                     ->sortable()
@@ -149,14 +155,6 @@ class ProvvigionesTable
                 TextColumn::make('piva'),
             ])
             ->filters([
-                /*
-                 * Filter::make('data_status')
-                 *     ->form([
-                 *         DatePicker::make('data_status')
-                 *             ->label('Provvigioni maturate fino al')
-                 *         //  ->default(now()->subMonth()->endOfMonth()),
-                 *     ]),
-                 */
                 SelectFilter::make('stato')
                     ->options([
                         'Inserito' => 'Inserito',
@@ -177,6 +175,35 @@ class ProvvigionesTable
                         0 => 'No',
                     ])
                     ->placeholder('Tutti'),
+                Filter::make('data_fattura')
+                    ->form([
+                        Select::make('has_invoice_date')
+                            ->label('Abbinato a fattura')
+                            ->options([
+                                'all' => 'Tutti',
+                                'has_date' => 'Si',
+                                'no_date' => 'No',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $hasPaymentDate = $data['has_invoice_date'] ?? 'all';
+
+                        return match ($hasPaymentDate) {
+                            'has_date' => $query->whereNotNull('data_fattura'),
+                            'no_date' => $query->whereNull('data_fattura'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $hasPaymentDate = $data['has_invoice_date'] ?? 'all';
+
+                        return match ($hasPaymentDate) {
+                            'has_date' => 'Abbinato a fattura',
+                            'no_date' => 'Non abbinato a fattura',
+                            default => null,
+                        };
+                    }),
                 SelectFilter::make('status_compenso')
                     ->label('Stato Compenso')
                     ->multiple()
@@ -258,7 +285,7 @@ class ProvvigionesTable
 
                         return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
                     })
-            ])
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 Action::make('toggleStatus')
                     ->label('')
