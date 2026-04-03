@@ -94,11 +94,11 @@ class ImportPraticheFromApi extends Command
             $imported = 0;
             $updated = 0;
             $errors = 0;
-
+            $adesso = now();
             foreach ($data as $item) {
                 try {
                     $praticaData = $this->mapApiToModel($item);
-
+                    $praticaData['upload_at'] = $adesso;
                     if ($praticaData['is_notowned'] === true) {
                         continue;
                     }
@@ -112,7 +112,7 @@ class ImportPraticheFromApi extends Command
                     $existing = Pratica::where('id', $praticaData['id'])->first();
 
                     if ($existing) {
-                        if ($praticaData['erogated_at'] === null && year($praticaData['data_inserimento_pratica']) < 2025) {
+                        if ($praticaData['erogated_at'] === null && Carbon::parse($praticaData['data_inserimento_pratica'])->year < 2025) {
                             $praticaData['erogated_at'] = '2024-12-31';
                             // $this->info("Updating pratica: {$praticaData['id']}");
                         }

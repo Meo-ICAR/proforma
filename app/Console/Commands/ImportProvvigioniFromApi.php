@@ -239,11 +239,12 @@ class ImportProvvigioniFromApi extends Command
             $errors = 0;
             $skipped = 0;
             $updatedCount = 0;
+            $adesso = now();
 
             foreach ($data as $item) {
                 try {
                     $provvigioneData = $this->mapApiToModel($item);
-
+                    $provvigioneData['upload_at'] = $adesso;
                     // Use 'Codice Pratica' as the identifier since that's what's in the API response
                     if (empty($item['ID Compenso'])) {
                         $this->warn('Skipping item without ID Compenso: ' . json_encode($item));

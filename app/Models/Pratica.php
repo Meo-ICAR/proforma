@@ -61,6 +61,7 @@ class Pratica extends Model
         'amount',
         'net',
         'is_notowned',
+        'upload_at',
     ];
 
     /**
@@ -79,6 +80,7 @@ class Pratica extends Model
         'amount' => 'decimal:2',
         'net' => 'decimal:2',
         'is_notowned' => 'boolean',
+        'upload_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

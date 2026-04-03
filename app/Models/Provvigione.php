@@ -85,6 +85,7 @@ class Provvigione extends Model
         'sended_at',
         'received_at',
         'paided_at',
+        'upload_at',
     ];
 
     /**
@@ -121,6 +122,7 @@ class Provvigione extends Model
         'sended_at' => 'datetime',
         'received_at' => 'datetime',
         'paided_at' => 'datetime',
+        'upload_at' => 'datetime',
     ];
 
     /**
