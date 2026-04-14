@@ -64,6 +64,10 @@ class ProformasTable
                     ->alignEnd()
                     ->sortable(),
             ])
+            ->selectable()
+            ->checkIfRecordIsSelectableUsing(
+                fn($record): bool => !empty($record->emailto)
+            )
             ->filters([
                 SelectFilter::make('stato')
                     ->label('Stato')
