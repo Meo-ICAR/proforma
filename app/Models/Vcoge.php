@@ -37,6 +37,8 @@ class Vcoge extends Model
         'mese',
         'entrata',
         'uscita',
+        'storno_entrata',
+        'storno_uscita',
     ];
 
     /**
@@ -47,6 +49,8 @@ class Vcoge extends Model
     protected $casts = [
         'entrata' => 'decimal:2',
         'uscita' => 'decimal:2',
+        'storno_entrata' => 'decimal:2',
+        'storno_uscita' => 'decimal:2',
     ];
 
     /**

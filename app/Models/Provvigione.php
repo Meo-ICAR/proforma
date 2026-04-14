@@ -49,6 +49,8 @@ class Provvigione extends Model
         'tipo',
         'importo',
         'importo_effettivo',
+        'erogated_at',
+        'importo_erogato',
         'status_compenso',
         'data_pagamento',
         'n_fattura',
@@ -105,6 +107,7 @@ class Provvigione extends Model
     protected $casts = [
         'importo' => 'decimal:2',
         'importo_effettivo' => 'decimal:2',
+        'erogated_at' => 'datetime',
         'importo_erogato' => 'decimal:2',
         'montante' => 'decimal:2',
         'annullato' => 'boolean',

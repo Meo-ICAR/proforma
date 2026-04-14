@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vcoges\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
 use App\Models\Vcoge;  // Make sure this is correctly cased
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -10,10 +11,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Log;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class VcogesTable
 {
-
     public static function configure(Table $table): Table
     {
         return $table
@@ -35,6 +37,18 @@ class VcogesTable
                 TextColumn::make('saldo')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
+                    ->sortable(),
+                TextColumn::make('storno_entrata')
+                    ->label('Storno Entrata')
+                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('EUR')->label(''))
+                    ->sortable(),
+                TextColumn::make('storno_uscita')
+                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('EUR')->label(''))
+                    ->label('Storno Uscita')
                     ->sortable(),
             ])
             ->defaultSort('mese', 'desc')
@@ -67,12 +81,12 @@ class VcogesTable
                             } else {
                                 Notification::make()
                                     ->title('Errore Invio Dati')
-                                    ->body('Si è verificato un errore durante l\'invio. Controlla i log per i dettagli.')
+                                    ->body("Si è verificato un errore durante l'invio. Controlla i log per i dettagli.")
                                     ->danger()
                                     ->send();
                             }
                         } catch (\Exception $e) {
-                            Log::error("Eccezione durante il richiamo del comando coge:sync-monthly: " . $e->getMessage());
+                            Log::error('Eccezione durante il richiamo del comando coge:sync-monthly: ' . $e->getMessage());
                             Notification::make()
                                 ->title('Errore Inaspettato')
                                 ->body('Si è verificato un errore imprevisto.')
@@ -81,7 +95,22 @@ class VcogesTable
                         }
                     })
             ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            ->groupBy('mese')  // Campo per il raggruppamento
+                            ->sumColumns([
+                                'entrata',
+                                'uscita',
+                                'saldo',
+                                'storno_entrata',
+                                'storno_uscita',
+                            ]),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
+            ])
             ->toolbarActions([]);
     }
-
-    }
+}
