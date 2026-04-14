@@ -311,12 +311,19 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Updated {$updatedCount} records to stato Pagato from pratiche.");
             $updatedCount = \DB::update(
-                'UPDATE provvigioni p inner join pratiche pr on pr.id = p.id_pratica
+                'UPDATE provvigioni p inner join pratiches pr on pr.id = p.id_pratica
 
                     SET  p.erogated_at = pr.erogated_at, p.importo_erogato= p.importo
                     WHERE  p.erogated_at is null and pr.erogated_at is not null'
             );
-            $this->info("Updated {$updatedCount} records to stato Pagato from pratiche.");
+            $this->info("Updated {$updatedCount} records to stato erogato from pratiche.");
+            $updatedCount = \DB::update(
+                'UPDATE provvigioni p
+                    SET  p.erogated_at = p.data_status, p.importo_erogato= p.importo
+                    WHERE  p.erogated_at is null and p.data_status is not null
+                    and p.status_compenso = "Pratica perfezionata"'
+            );
+            $this->info("Updated {$updatedCount} records to stato perfezionato from pratiche.");
 
             /*
              * --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese

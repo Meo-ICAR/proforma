@@ -30,15 +30,15 @@ class ListVcoges extends ListRecords
                         // Insert new records from view
                         DB::table('vcoge')->insertUsing(
                             ['mese', 'entrata', 'uscita'],
-                            DB::table('vwcoge')
+                            DB::table('vwcoge')->select('mese', 'entrata', 'uscita')
                         );
-                        DB::table('vcoge')
-                            ->join('vwcogestorno', 'vcoge.mese', '=', 'vwcogestorno.mese')
-                            ->update([
-                                'vcoge.storno_entrata' => DB::raw('vwcogestorno.storno_entrata'),
-                                'vcoge.storno_uscita' => DB::raw('vwcogestorno.storno_uscita')
-                            ]);
 
+                        DB::table('vcoge')
+                            ->leftJoin('vwcogestorno', 'vcoge.mese', '=', 'vwcogestorno.mese')
+                            ->update([
+                                'vcoge.storno_entrata' => DB::raw('COALESCE(vwcogestorno.storno_entrata, 0)'),
+                                'vcoge.storno_uscita' => DB::raw('COALESCE(vwcogestorno.storno_uscita, 0)')
+                            ]);
                         Notification::make()
                             ->title('Calcolo provvigioni completato con successo')
                             ->success()
