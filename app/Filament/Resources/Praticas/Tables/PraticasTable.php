@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Praticas\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
 use App\Models\PraticheStato;
 use App\Models\TipoProdotto;
 use Filament\Actions\ViewAction;
@@ -12,6 +13,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class PraticasTable
 {
@@ -93,6 +96,16 @@ class PraticasTable
                         };
                     }),
             ], layout: FiltersLayout::AboveContent)
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            ->groupBy('denominazione_riferimento')  // Campo per il raggruppamento
+                            ->sumColumns(['importo']),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
+            ])
             ->recordActions([
                 // ViewAction::make(),
             ]);

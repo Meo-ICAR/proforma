@@ -98,6 +98,7 @@ class ImportPraticheFromApi extends Command
             foreach ($data as $item) {
                 try {
                     $praticaData = $this->mapApiToModel($item);
+                    //    \Log::info($item);
                     $praticaData['upload_at'] = $adesso;
                     if ($praticaData['is_notowned'] === true) {
                         continue;
@@ -196,6 +197,7 @@ class ImportPraticheFromApi extends Command
             'amount' => $amount,
             'net' => $net,
             'is_notowned' => ($apiData['Pratica_terzi'] ?? '') == 'SI' ? true : false,
+            'uploaded_at' => now(),
         ];
     }
 

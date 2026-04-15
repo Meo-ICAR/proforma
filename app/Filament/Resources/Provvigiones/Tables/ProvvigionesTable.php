@@ -139,6 +139,7 @@ class ProvvigionesTable
                     ->falseColor('white')
                     ->label('Coord'),
                 TextColumn::make('data_status')
+                    ->label('Perfezionata il')
                     ->date()
                     ->sortable(),
                 TextColumn::make('data_fattura')
@@ -216,6 +217,35 @@ class ProvvigionesTable
                         return match ($hasPaymentDate) {
                             'has_date' => 'Abbinato a fattura',
                             'no_date' => 'Non abbinato a fattura',
+                            default => null,
+                        };
+                    }),
+                Filter::make('erogated_at')
+                    ->form([
+                        Select::make('has_erogated_date')
+                            ->label('Erogato')
+                            ->options([
+                                'all' => 'Tutti',
+                                'has_date' => 'Si',
+                                'no_date' => 'No',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasErogatedDate) {
+                            'has_date' => $query->whereNotNull('erogated_at'),
+                            'no_date' => $query->whereNull('erogated_at'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasErogatedDate) {
+                            'has_date' => 'Con data erogazione',
+                            'no_date' => 'Senza data erogazione',
                             default => null,
                         };
                     }),

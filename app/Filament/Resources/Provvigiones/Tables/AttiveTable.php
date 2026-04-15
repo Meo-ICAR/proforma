@@ -117,15 +117,25 @@ class AttiveTable
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label('')->query(fn(Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
-                TextColumn::make('data_status')
-                    ->date()
-                    ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
                     ->searchable(),
                 TextColumn::make('pratica.nome_cliente')
                     ->label('Nome')
                     ->searchable(),
+                TextColumn::make('pratica.erogated_at')
+                    ->label('Erogato il')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('data_status')
+                ->label('Perfezionata il')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('data_fattura')
+                    ->label('Fattura del')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('descrizione'),
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
                     ->color('info')
@@ -220,6 +230,35 @@ class AttiveTable
                             $dataScelta->subYear();
 
                         return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
+                    }),
+                Filter::make('erogated_at')
+                    ->form([
+                        Select::make('has_erogated_date')
+                            ->label('Erogato')
+                            ->options([
+                                'all' => 'Tutti',
+                                'has_date' => 'Si',
+                                'no_date' => 'No',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasErogatedDate) {
+                            'has_date' => $query->whereNotNull('erogated_at'),
+                            'no_date' => $query->whereNull('erogated_at'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
+
+                        return match ($hasErogatedDate) {
+                            'has_date' => 'Con data erogazione',
+                            'no_date' => 'Senza data erogazione',
+                            default => null,
+                        };
                     }),
 
                 /*
