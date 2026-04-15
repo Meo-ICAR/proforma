@@ -2,152 +2,157 @@
 
 namespace App\Filament\Exports;
 
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Events\AfterSheet;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use pxlrbt\FilamentExcel\Columns\Column;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
-class DynamicGroupExport extends ExcelExport
+class DynamicGroupExport extends ExcelExport implements WithStyles
 {
     protected ?string $groupBy = null;
     protected array $sumColumns = [];
 
-    public static function make(?string $name = null): static
+    // L'hook corretto per pxlrbt/filament-excel è setUp(), non __construct o make()
+    public function setUp(): void
     {
-        return parent::make($name ?? 'export')
-            ->fromTable()  // Importante: mantiene i filtri della tabella
+        $this
+            ->fromTable()
             ->withFilename('report_' . now()->format('Y-m-d_H-i'));
-    }
-
-    public function groupBy(string $column): self
-    {
-        $this->groupBy = $column;
-        return $this;
-    }
-
-    public function sumColumns(array $columns): self
-    {
-        $this->sumColumns = $columns;
-        return $this;
-    }
-
-    // Questa è la funzione chiave che manipola i dati prima della stampa
-    public function transform(Collection $rows): Collection
-    {
-        $finalCollection = collect();
-
-        // 1. RECUPERO E STAMPA DEI FILTRI
-        $livewire = $this->getLivewire();
-        $appliedFilters = $livewire->tableFilters ?? [];
-
-        $filterDescription = [];
-        foreach ($appliedFilters as $name => $data) {
-            $value = $data['value'] ?? null;
-            if ($value) {
-                // Pulizia del nome del filtro e valore
-                $filterDescription[] = strtoupper($name) . ': ' . (is_array($value) ? implode(', ', $value) : $value);
-            }
-        }
-
-        $finalCollection->push(['FILTRI APPLICATI:', implode(' | ', $filterDescription) ?: 'Nessuno']);
-        $finalCollection->push([]);  // Riga vuota per separare dai dati
-
-        // 2. LOGICA DI RAGGRUPPAMENTO E TOTALI
-        if ($this->groupBy) {
-            $groups = $rows->groupBy($this->groupBy);
-
-            foreach ($groups as $groupName => $items) {
-                // Aggiungiamo le righe del gruppo
-                foreach ($items as $item) {
-                    $finalCollection->push($item);
-                }
-
-                // Inseriamo la riga del Totale per questo gruppo
-                $summaryRow = [];
-                // Inizializziamo la riga vuota
-                foreach ($rows->first() as $key => $val) {
-                    $summaryRow[$key] = '';
-                }
-
-                // Impostiamo l'etichetta sulla colonna di raggruppamento
-                $summaryRow[$this->groupBy] = 'TOTALE ' . strtoupper($groupName);
-
-                // Calcoliamo le somme per le colonne richieste
-                foreach ($this->sumColumns as $col) {
-                    // Pulizia dei dati (rimozione € e conversione virgola per il calcolo)
-                    $summaryRow[$col] = $items->sum(function ($item) use ($col) {
-                        $val = $item[$col] ?? 0;
-                        if (is_string($val)) {
-                            $val = str_replace(['€', '.', ' '], '', $val);
-                            $val = (float) str_replace(',', '.', $val);
-                        }
-                        return $val;
-                    });
-                }
-
-                $finalCollection->push($summaryRow);
-                $finalCollection->push([]);  // Riga vuota tra gruppi
-            }
-        } else {
-            return $finalCollection->concat($rows);
-        }
-
-        return $finalCollection;
+        //    ->withEvents([
+        //        AfterSheet::class => function (AfterSheet $event) {
+        //            $this->processSheet($event);
+        //      }
+        //  ])
     }
 
     public function styles(Worksheet $sheet)
     {
         return [
-            1 => ['font' => ['bold' => true, 'italic' => true]],  // Riga filtri in grassetto
+            1 => ['font' => ['bold' => true]],  // Style the first row (headings) as bold
+            //   'B2' => ['font' => ['italic' => true]],  // Style a specific cell
+            // cd   'C' => ['font' => ['size' => 16]],  // Style an entire column
         ];
     }
 
-    public function transform_old(Collection $rows): Collection
+    public function groupBy(string $column): static
     {
-        if (!$this->groupBy)
-            return $rows;
-
-        $newRows = collect();
-        // Aggiungiamo i filtri come prima riga informativa
-        $newRows->push($this->getAppliedFiltersHeader());
-        $newRows->push([]);  // Riga vuota
-
-        $grouped = $rows->groupBy($this->groupBy);
-
-        foreach ($grouped as $groupValue => $items) {
-            // Aggiungiamo i dati del gruppo
-            foreach ($items as $item) {
-                $newRows->push($item);
-            }
-
-            // CREIAMO LA RIGA DEI TOTALI PER IL GRUPPO
-            $summaryRow = [];
-            foreach ($this->sumColumns as $col) {
-                $summaryRow[$col] = $items->sum($col);
-            }
-
-            // Etichetta del totale
-            $summaryRow[$this->groupBy] = 'TOTALE: ' . $groupValue;
-
-            $newRows->push($summaryRow);
-            $newRows->push([]);  // Riga vuota di separazione
-        }
-
-        return $newRows;
+        $this->groupBy = $column;
+        return $this;
     }
 
-    protected function getAppliedFiltersHeader(): array
+    public function sumColumns(array $columns): static
     {
-        $filters = request()->input('tableFilters', []);
-        $cleanFilters = [];
+        $this->sumColumns = $columns;
+        return $this;
+    }
 
-        foreach ($filters as $key => $f) {
-            $val = is_array($f) ? implode(', ', array_filter($f)) : $f;
-            if ($val)
-                $cleanFilters[] = "$key: $val";
+    // Tutta la logica spostata in un metodo dedicato per pulizia
+    protected function processSheet(AfterSheet $event): void
+    {
+        $sheet = $event->sheet->getDelegate();
+
+        // 1. GESTIONE FILTRI (Inserimento in cima)
+        $livewire = $this->getLivewire();  // Usiamo $this invece di $event per prendere livewire
+        $appliedFilters = $livewire->tableFilters ?? [];
+
+        $filterStrings = [];
+        foreach ($appliedFilters as $name => $data) {
+            if (!empty($data['value'])) {
+                $val = is_array($data['value']) ? implode(', ', $data['value']) : $data['value'];
+                $filterStrings[] = strtoupper($name) . ': ' . $val;
+            }
+        }
+        $filtersText = 'FILTRI APPLICATI: ' . (empty($filterStrings) ? 'Nessuno' : implode(' | ', $filterStrings));
+
+        // Inseriamo spazio in alto (le intestazioni scivolano alla riga 3)
+        $sheet->insertNewRowBefore(1, 2);
+        $sheet->setCellValue('A1', $filtersText);
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setItalic(true)->getColor()->setARGB('FF555555');
+
+        // Se non c'è raggruppamento, abbiamo finito qui (i dati restano piatti ma coi filtri scritti)
+        if (!$this->groupBy) {
+            return;
         }
 
-        return ['FILTRI APPLICATI: ' . (empty($cleanFilters) ? 'Nessuno' : implode(' | ', $cleanFilters))];
+        // 2. GESTIONE RAGGRUPPAMENTO E SOMME
+        // (Attenzione: le intestazioni ora sono alla riga 3, i dati iniziano alla riga 4)
+        $headerRow = 3;
+        $highestRow = $sheet->getHighestDataRow();
+        $highestColumn = $sheet->getHighestDataColumn();
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
+
+        if ($highestRow <= $headerRow)
+            return;  // Niente dati da raggruppare
+
+        $headings = $sheet->rangeToArray("A{$headerRow}:{$highestColumn}{$headerRow}", null, true, false)[0];
+        $headingsLower = array_map('strtolower', $headings);
+
+        $groupByIndex = array_search(strtolower($this->groupBy), $headingsLower);
+        if ($groupByIndex === false)
+            return;  // Colonna non trovata
+
+        $sumIndices = [];
+        foreach ($this->sumColumns as $col) {
+            $idx = array_search(strtolower($col), $headingsLower);
+            if ($idx !== false) {
+                $sumIndices[] = $idx;
+            }
+        }
+
+        // Leggiamo i dati (dalla riga 4 in poi)
+        $dataStartRow = $headerRow + 1;
+        $rows = $sheet->rangeToArray("A{$dataStartRow}:{$highestColumn}{$highestRow}", null, true, false);
+
+        // Raggruppiamo
+        $groups = [];
+        foreach ($rows as $row) {
+            $groupValue = $row[$groupByIndex] ?? '';
+            $groups[$groupValue][] = $row;
+        }
+
+        // Cancelliamo le righe piatte originali
+        $sheet->removeRow($dataStartRow, $highestRow - $headerRow);
+
+        // Riscriviamo raggruppati con somme
+        $currentRow = $dataStartRow;
+        foreach ($groups as $groupName => $groupRows) {
+            $groupSums = array_fill_keys($sumIndices, 0);
+
+            foreach ($groupRows as $row) {
+                foreach ($row as $colIdx => $value) {
+                    $colLetter = Coordinate::stringFromColumnIndex($colIdx + 1);
+                    $sheet->setCellValue($colLetter . $currentRow, $value);
+                }
+
+                foreach ($sumIndices as $idx) {
+                    $val = $row[$idx] ?? 0;
+                    if (is_string($val)) {
+                        $val = str_replace(['€', '.', ' '], '', $val);
+                        $val = (float) str_replace(',', '.', $val);
+                    }
+                    $groupSums[$idx] += $val;
+                }
+                $currentRow++;
+            }
+
+            // Riga del totale
+            $summaryRow = array_fill(0, $highestColumnIndex, '');
+            $summaryRow[$groupByIndex] = 'TOTALE ' . strtoupper((string) $groupName);
+
+            foreach ($sumIndices as $idx) {
+                $summaryRow[$idx] = $groupSums[$idx];
+            }
+
+            foreach ($summaryRow as $colIdx => $value) {
+                $colLetter = Coordinate::stringFromColumnIndex($colIdx + 1);
+                $cell = $colLetter . $currentRow;
+                $sheet->setCellValue($cell, $value);
+                $sheet->getStyle($cell)->getFont()->setBold(true);
+            }
+            $currentRow++;  // Riga totale
+            $currentRow++;  // Spazio bianco tra un gruppo e l'altro
+        }
     }
 }

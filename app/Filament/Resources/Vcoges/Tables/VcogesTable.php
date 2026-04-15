@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Vcoges\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\Provvigiones\ProvvigioneResource;
 use App\Models\Vcoge;  // Make sure this is correctly cased
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -27,13 +28,17 @@ class VcogesTable
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Entrata')
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(false),
                 TextColumn::make('uscita')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Uscita')
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(false),
                 TextColumn::make('saldo')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
@@ -43,13 +48,17 @@ class VcogesTable
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(false),
                 TextColumn::make('storno_uscita')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Storno Uscita')
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(false),
             ])
             ->defaultSort('mese', 'desc')
             ->filters([

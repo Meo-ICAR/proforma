@@ -8,7 +8,9 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class ListVcoges extends ListRecords
 {
@@ -57,5 +59,14 @@ class ListVcoges extends ListRecords
                 }),
             // CreateAction::make(),
         ];
+    }
+
+    // Aggiunge il sottotitolo
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        // $record = $this->getRecord();
+
+        return new HtmlString('Cliccare sul valore del mese per avere il dettaglio delle provvigioni di quel mese');
     }
 }

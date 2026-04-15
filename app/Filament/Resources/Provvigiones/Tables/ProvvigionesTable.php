@@ -328,63 +328,61 @@ class ProvvigionesTable
                         if ($dataScelta->isFuture())
                             $dataScelta->subYear();
 
-                        return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
+                        return 'Perfezionato fino al ' . $dataScelta->translatedFormat('F Y');
                     }),
+                SelectFilter::make('mese_erogazione')
+                    ->label('Mese erogazione')
+                    ->options([
+                        '01' => 'Gennaio',
+                        '02' => 'Febbraio',
+                        '03' => 'Marzo',
+                        '04' => 'Aprile',
+                        '05' => 'Maggio',
+                        '06' => 'Giugno',
+                        '07' => 'Luglio',
+                        '08' => 'Agosto',
+                        '09' => 'Settembre',
+                        '10' => 'Ottobre',
+                        '11' => 'Novembre',
+                        '12' => 'Dicembre',
+                    ])
+                    // Imposta il mese attuale come default (es. "01", "02", ecc.)
+                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
 
-                /*
-                 * SelectFilter::make('mese_erogazione')
-                 *     ->label('Mese erogazione')
-                 *     ->options([
-                 *         '01' => 'Gennaio',
-                 *         '02' => 'Febbraio',
-                 *         '03' => 'Marzo',
-                 *         '04' => 'Aprile',
-                 *         '05' => 'Maggio',
-                 *         '06' => 'Giugno',
-                 *         '07' => 'Luglio',
-                 *         '08' => 'Agosto',
-                 *         '09' => 'Settembre',
-                 *         '10' => 'Ottobre',
-                 *         '11' => 'Novembre',
-                 *         '12' => 'Dicembre',
-                 *     ])
-                 *     // Imposta il mese attuale come default (es. "01", "02", ecc.)
-                 *     ->default(now()->startOfMonth()->subDay(1)->format('m'))
-                 *     ->query(function (Builder $query, array $data): Builder {
-                 *         if (empty($data['value'])) {
-                 *             return $query;
-                 *         }
-                 *
-                 *         $meseScelto = (int) $data['value'];
-                 *         $annoRiferimento = now()->year;
-                 *
-                 *         // Data al 1° del mese scelto nell'anno corrente
-                 *         $dataScelta = Carbon::create($annoRiferimento, $meseScelto, 1);
-                 *
-                 *         // Se la data calcolata è nel futuro, sottraiamo un anno
-                 *         if ($dataScelta->isFuture()) {
-                 *             $dataScelta->subYear();
-                 *         }
-                 *
-                 *         // Calcoliamo l'inizio del mese successivo
-                 *         $dataLimite = $dataScelta->addMonth();
-                 *
-                 *         return $query
-                 *             ->where('pratica.erogated_at', '>=', $dataScelta)
-                 *             ->where('pratica.erogated_at', '<', $dataLimite);
-                 *     })
-                 *     // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
-                 *     ->indicateUsing(function (array $data): ?string {
-                 *         if (empty($data['value']))
-                 *             return null;
-                 *
-                 *         $dataScelta = Carbon::create(now()->year, $data['value'], 1);
-                 *         if ($dataScelta->isFuture())
-                 *             $dataScelta->subYear();
-                 *
-                 *         return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
-                 *     }),
-                 */
+                        $meseScelto = (int) $data['value'];
+                        $annoRiferimento = now()->year;
+
+                        // Data al 1° del mese scelto nell'anno corrente
+                        $dataScelta = Carbon::create($annoRiferimento, $meseScelto, 1);
+
+                        // Se la data calcolata è nel futuro, sottraiamo un anno
+                        if ($dataScelta->isFuture()) {
+                            $dataScelta->subYear();
+                        }
+
+                        // Calcoliamo l'inizio del mese successivo
+                        $dataLimite = $dataScelta->copy()->endOfMonth();
+
+                        $dataScelta = $dataScelta->startOfMonth();
+                        return $query
+                            ->where('erogated_at', '>=', $dataScelta)
+                            ->where('erogated_at', '<', $dataLimite);
+                    })
+                    // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['value']))
+                            return null;
+
+                        $dataScelta = Carbon::create(now()->year, $data['value'], 1);
+                        if ($dataScelta->isFuture())
+                            $dataScelta->subYear();
+
+                        return 'Erogato nel mese ' . $dataScelta->translatedFormat('F Y');
+                    }),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 Action::make('toggleStatus')
