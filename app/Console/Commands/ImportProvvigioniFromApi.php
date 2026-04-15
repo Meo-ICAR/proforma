@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Fornitore;
+use App\Models\Pratica;
 use App\Models\Provvigione;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -251,6 +252,10 @@ class ImportProvvigioniFromApi extends Command
                         $errors++;
                         continue;
                     }
+                    $existingPratica = Pratica::where('id', $provvigioneData['id_pratica'])->first();
+                    if (!$existingPratica) {
+                        continue;
+                    }
 
                     // Ensure we have the ID Compenso in our data
                     // debug 3
@@ -261,6 +266,10 @@ class ImportProvvigioniFromApi extends Command
                         $existing->update(['upload_at' => $adesso]);
                         // Check if any of the timestamp fields are already set
                         if (empty($existing->stato)) {
+                            if (!empty($existingPratica->erogated_at) && empty($existing->erogated_at)) {
+                                $provvigioneData['erogated_at'] = $existingPratica->erogated_at;
+                                $provvigioneData['importo_erogato'] = $existing->importo;
+                            }
                             $existing->update($provvigioneData);
                             $updated++;
                             // $this->info("Updated provvigione: {$provvigioneData['id']}");

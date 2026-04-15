@@ -98,7 +98,7 @@ class ImportPraticheFromApi extends Command
             foreach ($data as $item) {
                 try {
                     $praticaData = $this->mapApiToModel($item);
-                    //    \Log::info($item);
+
                     $praticaData['upload_at'] = $adesso;
                     if ($praticaData['is_notowned'] === true) {
                         continue;
@@ -110,6 +110,14 @@ class ImportPraticheFromApi extends Command
                         continue;
                     }
 
+                    /*
+                     * if ($praticaData['id'] === 'QT06608') {
+                     *     \Log::info($item);
+                     * }
+                     * if ($praticaData['id'] === 'QT06494') {
+                     *     \Log::info($item);
+                     * }
+                     */
                     $existing = Pratica::where('id', $praticaData['id'])->first();
 
                     if ($existing) {
