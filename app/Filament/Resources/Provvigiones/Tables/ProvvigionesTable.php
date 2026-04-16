@@ -144,10 +144,6 @@ class ProvvigionesTable
                     ->label('Perfezionata il')
                     ->date()
                     ->sortable(),
-                TextColumn::make('data_fattura')
-                    ->label('Fattura del')
-                    ->date()
-                    ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
                     ->sortable()
@@ -159,6 +155,10 @@ class ProvvigionesTable
                     ->searchable(),
                 TextColumn::make('pratica.erogated_at')
                     ->label('Erogato il')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('data_fattura')
+                    ->label('Fattura del')
                     ->date()
                     ->sortable(),
                 TextColumn::make('id_pratica')

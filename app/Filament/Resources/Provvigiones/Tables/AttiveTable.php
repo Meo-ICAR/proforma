@@ -118,6 +118,10 @@ class AttiveTable
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label('')->query(fn(Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
+                TextColumn::make('data_status')
+                    ->label('Perfezionata il')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
                     ->searchable(),
@@ -136,10 +140,6 @@ class AttiveTable
                 TextColumn::make('descrizione'),
                 TextColumn::make('pratica.erogated_at')
                     ->label('Erogato il')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('data_status')
-                    ->label('Perfezionata il')
                     ->date()
                     ->sortable(),
                 TextColumn::make('data_fattura')
