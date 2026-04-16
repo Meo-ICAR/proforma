@@ -73,7 +73,7 @@ class ProvvigionesTable
                         $records->each(function ($record) {
                             $email = $record->email;
                             $piva = $record->piva;
-                            if (($email != null) && (strpos($email, '@') > '0')) {
+                            if (true || ($email != null) && (strpos($email, '@') > '0')) {
                                 $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
