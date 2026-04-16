@@ -32,6 +32,7 @@ class PurchaseInvoicesTable
     {
         return $table
             ->paginated(['all', 10, 25, 50, 100])
+            ->reorderableColumns()
             ->groups([
                 Group::make('supplier')
                     ->label('Fornitore')

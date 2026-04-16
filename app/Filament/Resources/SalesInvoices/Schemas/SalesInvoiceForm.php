@@ -147,7 +147,7 @@ class SalesInvoiceForm
                                     ->label('Collega A')
                                     ->options([
                                         Clienti::class => 'Clienti',
-                                       Client::class => 'Istituti',
+                                        Client::class => 'Istituti',
                                         // Client::class => 'Cliente', // Commentato per sales invoices
                                     ])
                                     ->reactive()
@@ -169,7 +169,7 @@ class SalesInvoiceForm
                                                     ->limit(50)
                                                     ->pluck('name', 'id')
                                                     ->toArray();
-                                            caseClient::class:
+                                            case Client::class:
                                                 returnClient::where('name', 'like', "%{$search}%")
                                                     ->limit(50)
                                                     ->pluck('name', 'id')
@@ -187,7 +187,7 @@ class SalesInvoiceForm
                                         switch ($type) {
                                             case Clienti::class:
                                                 return Clienti::find($id)?->name;
-                                            caseClient::class:
+                                            case Client::class:
                                                 returnClient::find($id)?->name;
                                             default:
                                                 return null;
@@ -209,12 +209,11 @@ class SalesInvoiceForm
                                     ->label('Corretta')
                                     ->default(false),
                                 Toggle::make('is_nopractice')
-                                    ->label('Non Practice')
+                                    ->label('Non relativo ad un finanziamento')
                                     ->default(false)
-                                    ->helperText('Seleziona se questa fattura non è associata a una practice'),
+                                    ->helperText('Seleziona se questa fattura non è associata a una provvigione'),
                             ]),
                     ]),
-                PracticeCommissionsTable::make('practiceCommissions'),
             ]);
     }
 }

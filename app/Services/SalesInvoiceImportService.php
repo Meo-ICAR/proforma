@@ -27,7 +27,7 @@ class SalesInvoiceImportService
 
     public function setCompanyId($companyId): void
     {
-        $this->companyId = $companyId;
+        $this->companyId = Company::first()->id;
     }
 
     public function __construct($filename = null)
@@ -37,7 +37,7 @@ class SalesInvoiceImportService
 
     public function import($filePath, $companyId)
     {
-        $this->companyId = $companyId;
+        $this->companyId = Company::first()->id;
 
         // Extract filename from path if not provided
         if (!$this->filename) {

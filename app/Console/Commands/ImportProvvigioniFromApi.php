@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Client;
+use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\Pratica;
 use App\Models\Provvigione;
@@ -18,6 +20,8 @@ class ImportProvvigioniFromApi extends Command
 
     protected $description = 'Import provvigioni from external API';
 
+    public $companyId = '';
+
     public function handle()
     {
         /*
@@ -32,6 +36,7 @@ class ImportProvvigioniFromApi extends Command
 
         try {
             $apiUrl = env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php');
+
             $queryParams = [
                 'table' => 'compensi',
                 'data_inizio' => $startDate->format('Y-m-d'),
@@ -241,7 +246,7 @@ class ImportProvvigioniFromApi extends Command
             $skipped = 0;
             $updatedCount = 0;
             $adesso = now();
-
+            $companyId = Company::first()->id;
             foreach ($data as $item) {
                 try {
                     $provvigioneData = $this->mapApiToModel($item);
@@ -262,6 +267,18 @@ class ImportProvvigioniFromApi extends Command
                     //          $provvigioneData['id'] = $item['ID Compenso'];
 
                     $existing = Provvigione::where('id', $provvigioneData['id'])->first();
+                    if ($provvigioneData['tipo'] === 'Cliente') {
+                        $client = Client::where('name', $provvigioneData['denominazione_riferimento'])->first();
+                        if (!$client) {
+                            $client = Client::create([
+                                'name' => $provvigioneData['denominazione_riferimento'],
+                                'company_id' => $companyId,
+                                'is_company' => 0,
+                                'is_lead' => 0,
+                                'is_client' => 1
+                            ]);
+                        }
+                    }
                     if ($existing) {
                         $existing->update(['upload_at' => $adesso]);
                         // Check if any of the timestamp fields are already set

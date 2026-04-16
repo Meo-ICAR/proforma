@@ -18,6 +18,7 @@ class EnasarcosTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultSort('competenza', 'desc')
             ->reorderableColumns()
             ->columns([
                 TextColumn::make('competenza'),
