@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
-use App\Filament\Traits\CanExportTable;
 use App\Models\Agent;
 use App\Models\Client;
 use App\Models\Principal;
@@ -30,8 +29,6 @@ use Illuminate\Support\Facades\Auth;
 
 class PurchaseInvoicesTable
 {
-    use CanExportTable;
-
     public static function configure(Table $table): Table
     {
         return $table
