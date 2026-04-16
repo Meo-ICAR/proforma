@@ -216,18 +216,34 @@ class SalesInvoiceMatchingService
      */
     private function matchWithCustomerByName(SalesInvoice $invoice): array
     {
-        $clienti = Client::where('name', $invoice->customer_name)
+        // Normalize whitespace: convert multiple spaces to single space and trim
+        $normalizedName = preg_replace('/\s+/', ' ', trim($invoice->customer_name));
+
+        // Try exact match first
+        $client = Client::where('name', $invoice->customer_name)
             ->first();
 
-        if ($clienti) {
+        // If no exact match, try with normalized whitespace
+        if (!$client) {
+            $client = Client::whereRaw("REGEXP_REPLACE(TRIM(name), '[[:space:]]+', ' ') = ?", [$normalizedName])
+                ->first();
+        }
+
+        // If still no match, try with LIKE for more flexible matching
+        if (!$client) {
+            $client = Client::where('name', 'LIKE', '%' . $normalizedName . '%')
+                ->first();
+        }
+
+        if ($client) {
             return [
                 'matched' => true,
-                'match_type' => 'name_to_clienti',
-                'matched_to' => 'Customer: ' . $clienti->name,
+                'match_type' => 'name_to_client',
+                'matched_to' => 'Customer: ' . $client->name,
                 'confidence' => 1.0,
                 'update_data' => [
-                    'invoiceable_type' => 'App\Models\Clienti',
-                    'invoiceable_id' => $clienti->id
+                    'invoiceable_type' => 'App\Models\Client',
+                    'invoiceable_id' => $client->id
                 ]
             ];
         }
@@ -235,7 +251,7 @@ class SalesInvoiceMatchingService
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No clienti found with name: ' . $invoice->customer_name
+            'reason' => 'No client found with name: ' . $invoice->customer_name
         ];
     }
 

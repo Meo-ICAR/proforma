@@ -25,6 +25,7 @@ use Filament\Tables\Columns\Summarizers\Count;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -75,9 +76,8 @@ class SalesInvoicesTable
                     ->label('Data Registrazione')
                     ->date('d/m/Y')
                     ->sortable(),
-                IconColumn::make('is_nopractice')
-                    ->label('No Provvigioni')
-                    ->boolean(),
+                ToggleColumn::make('is_nopractice')
+                    ->label('No Provvigioni'),
                 TextColumn::make('residual_amount')
                     ->label('Importo Residuo')
                     ->money('EUR')
@@ -124,7 +124,7 @@ class SalesInvoicesTable
                     ->label('Annullate')
                     ->query(fn($query) => $query->where('cancelled', true)),
                 Filter::make('is_nopractice')
-                    ->label('Non Practice')
+                    ->label('Non legato a provvigioni')
                     ->query(fn($query) => $query->where('is_nopractice', true)),
             ])
             ->headerActions([
@@ -235,40 +235,93 @@ class SalesInvoicesTable
                     ->icon('heroicon-o-link')
                     ->color('success')
                     ->form(function ($record) {
-                        if (empty($record->vat_number)) {
+                        if ((empty($record->vat_number) || $record->is_nopractice)) {
                             // No VAT number - show Client options
                             return [
+                                Select::make('action_type')
+                                    ->label('Azione')
+                                    ->options([
+                                        'select_existing' => 'Seleziona Cliente esistente',
+                                        'create_new' => 'Crea nuovo Cliente'
+                                    ])
+                                    ->default('select_existing')
+                                    ->reactive(),
                                 Select::make('client_id')
                                     ->label('Cliente')
-                                    ->options(Client::pluck('name', 'id'))
+                                    ->options(Client::orderBy('name')->pluck('name', 'id'))
                                     ->searchable()
                                     ->required()
+                                    ->visible(fn($get) => $get('action_type') === 'select_existing')
                             ];
                         } else {
                             // Has VAT number - show Clienti options
                             return [
+                                Select::make('action_type')
+                                    ->label('Azione')
+                                    ->options([
+                                        'select_existing' => 'Seleziona Cliente esistente',
+                                        'create_new' => 'Crea nuovo Cliente'
+                                    ])
+                                    ->default('select_existing')
+                                    ->reactive(),
                                 Select::make('clienti_id')
                                     ->label('Cliente')
-                                    ->options(Clienti::pluck('name', 'id'))
+                                    ->options(Clienti::orderBy('name')->pluck('name', 'id'))
                                     ->searchable()
                                     ->required()
+                                    ->visible(fn($get) => $get('action_type') === 'select_existing')
                             ];
                         }
                     })
                     ->action(function ($record, $data) {
                         try {
-                            if (empty($record->vat_number)) {
-                                // Attach to Client
-                                $record->update([
-                                    'invoiceable_type' => 'App\Models\Client',
-                                    'invoiceable_id' => $data['client_id']
-                                ]);
+                            if (empty($record->vat_number) || $record->is_nopractice) {
+                                // No VAT number logic
+                                if ($data['action_type'] === 'create_new') {
+                                    // Create new Client
+                                    $client = Client::create([
+                                        'name' => $record->customer_name,
+                                        'vat_number' => $record->vat_number,
+                                        'is_company' => $record->is_nopractice,
+                                        'is_lead' => 0,
+                                        'is_client' => 1
+                                    ]);
+                                    $record->update([
+                                        'invoiceable_type' => 'App\Models\Client',
+                                        'invoiceable_id' => $client->id
+                                    ]);
+                                } else {
+                                    // Attach to existing Client
+                                    $record->update([
+                                        'invoiceable_type' => 'App\Models\Client',
+                                        'invoiceable_id' => $data['client_id']
+                                    ]);
+                                }
                             } else {
-                                // Attach to Clienti
-                                $record->update([
-                                    'invoiceable_type' => 'App\Models\Clienti',
-                                    'invoiceable_id' => $data['clienti_id']
-                                ]);
+                                // Has VAT number logic
+                                if ($data['action_type'] === 'create_new') {
+                                    // Create new Clienti with VAT number
+                                    $clienti = Clienti::create([
+                                        'name' => $record->customer_name,
+                                        'piva' => $record->vat_number,
+                                        'is_active' => 1
+                                    ]);
+                                    $record->update([
+                                        'invoiceable_type' => 'App\Models\Clienti',
+                                        'invoiceable_id' => $clienti->id
+                                    ]);
+                                } else {
+                                    // Attach to existing Clienti
+                                    $record->update([
+                                        'invoiceable_type' => 'App\Models\Clienti',
+                                        'invoiceable_id' => $data['clienti_id']
+                                    ]);
+                                    Clienti::updateOrCreate([
+                                        'id' => $data['clienti_id']
+                                    ], [
+                                        'piva' => $record->vat_number,
+                                    ]);
+                                }
                             }
 
                             Notification::make()
