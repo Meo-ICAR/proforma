@@ -23,11 +23,11 @@ class CogesResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-list-bullet';  // Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Contabilita';
+    protected static ?string $navigationLabel = 'Primenote';
 
-    protected static ?string $modelLabel = 'Contabilita';
+    protected static ?string $modelLabel = 'Primenote';
 
-    protected static ?string $pluralModelLabel = 'Contabilita';
+    protected static ?string $pluralModelLabel = 'Primenote';
 
     protected static UnitEnum|string|null $navigationGroup = 'Settings';
 

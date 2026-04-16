@@ -23,17 +23,13 @@ class VenasarcototResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static UnitEnum|string|null $navigationGroup = null;  // Or set to false to hide completely
+    protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 
-    protected static ?int $navigationSort = null;  // Optional: remove from sort order
+    protected static ?string $navigationLabel = 'Conguaglio ENASARCO';
 
-    protected static ?string $navigationLabel = 'Contributi ENASARCO';
+    protected static ?string $modelLabel = 'Conguaglio ENASARCO';
 
-    protected static ?string $modelLabel = 'Contributo ENASARCO';
-
-    protected static ?string $pluralModelLabel = 'Contributi ENASARCO e FIRR';
-
-    protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
+    protected static ?string $pluralModelLabel = 'Conguagli ENASARCO e FIRR';
 
     protected static ?string $recordTitleAttribute = 'produttore';
 

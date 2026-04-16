@@ -2,9 +2,8 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
-use App\Models\Agent;
-use App\Models\Client;
-use App\Models\Principal;
+use App\Models\Clienti;
+use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
 use App\Services\PurchaseCreditNoteImportService;
 use App\Services\PurchaseInvoiceImportService;
@@ -97,12 +96,11 @@ class PurchaseInvoicesTable
                     ->label('Attached To')
                     ->options([
                         null => 'Nessuno',
-                        'App\Models\Client' => 'Client',
-                        'App\Models\Agent' => 'Agent',
-                        'App\Models\Principal' => 'Principal',
+                        'App\Models\Clienti' => 'Clienti',
+                        'App\Models\Fornitore' => 'Fornitore',
                     ]),
                 Filter::make('invoiceable_id')
-                    ->label('Non ancora collegato a Cliente / Agente')
+                    ->label('Non ancora collegato a Clienti / Fornitore')
                     ->query(fn($query) => $query->whereNull('invoiceable_id')),
                 Filter::make('open_invoices')
                     ->label('Open Invoices')
@@ -130,11 +128,11 @@ class PurchaseInvoicesTable
                         Select::make('invoiceable_type')
                             ->label('Tipo')
                             ->options([
-                                'App\Models\Client' => 'Consulenti',
-                                'App\Models\Agent' => 'Agenti',
+                                'App\Models\Clienti' => 'Consulenti',
+                                'App\Models\Fornitore' => 'Fornitorei',
                                 //  'App\Models\Principal' => 'Principal',
                             ])
-                            ->default('App\Models\Client')
+                            ->default('App\Models\Clienti')
                             ->required()
                             ->reactive(),
                         TextInput::make('invoiceable_name')
@@ -150,9 +148,9 @@ class PurchaseInvoicesTable
                         // Se è vuoto o null, crea il record
                         if (is_null($searchTerm) || $searchTerm === '') {
                             $newRecord = match ($data['invoiceable_type']) {
-                                'App\Models\Client' => Client::create(['name' => $record->supplier . date('Y-m-d H:i'),
+                                'App\Models\Clienti' => Clienti::create(['name' => $record->supplier . date('Y-m-d H:i'),
                                     'vat_number' => $record->vat_number]),
-                                'App\Models\Agent' => Agent::create(['name' => $record->supplier . date('Y-m-d H:i'),
+                                'App\Models\Fornitore' => Fornitore::create(['name' => $record->supplier . date('Y-m-d H:i'),
                                     'vat_number' => $record->vat_number]),
                                 'App\Models\Principal' => Principal::create(['name' => $record->supplier . date('Y-m-d H:i'),
                                     'vat_number' => $record->vat_number]),
@@ -165,8 +163,8 @@ class PurchaseInvoicesTable
                         } else {
                             // Verifica se esiste un record con questo nome
                             $existingRecord = match ($data['invoiceable_type']) {
-                                'App\Models\Client' => Client::where('name', $searchTerm)->first(),
-                                'App\Models\Agent' => Agent::where('name', $searchTerm)->first(),
+                                'App\Models\Clienti' => Clienti::where('name', $searchTerm)->first(),
+                                'App\Models\Fornitore' => Fornitore::where('name', $searchTerm)->first(),
                                 'App\Models\Principal' => Principal::where('name', $searchTerm)->first(),
                                 default => null
                             };
@@ -176,9 +174,9 @@ class PurchaseInvoicesTable
                             } else {
                                 // Crea nuovo record con il nome cercato
                                 $newRecord = match ($data['invoiceable_type']) {
-                                    'App\Models\Client' => Client::create(['name' => $searchTerm,
+                                    'App\Models\Clienti' => Clienti::create(['name' => $searchTerm,
                                         'vat_number' => $record->vat_number]),
-                                    'App\Models\Agent' => Agent::create(['name' => $searchTerm,
+                                    'App\Models\Fornitore' => Fornitore::create(['name' => $searchTerm,
                                         'vat_number' => $record->vat_number]),
                                     'App\Models\Principal' => Principal::create(['name' => $searchTerm,
                                         'vat_number' => $record->vat_number]),
@@ -297,12 +295,12 @@ class PurchaseInvoicesTable
                             $importService = new PurchaseInvoiceImportService();
 
                             // Esegui solo le funzioni di matching
-                            //  $importService->matchAgentsByVatNumber(Auth::user()->company_id);
-                            $importService->matchClientsByVatNumber(Auth::user()->company_id);
+                            //  $importService->matchFornitoresByVatNumber(Auth::user()->company_id);
+                            $importService->matchClientisByVatNumber(Auth::user()->company_id);
 
                             Notification::make()
                                 ->title('Associazione completata')
-                                ->body('Le fatture sono state associate a agenti e clienti')
+                                ->body('Le fatture sono state associate a Fornitorei e Clientii')
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
@@ -332,7 +330,7 @@ class PurchaseInvoicesTable
                         })
                         ->deselectRecordsAfterCompletion(),
                     Action::make('bulk_attach_to_model')
-                        ->label('Associa Agente/Consulente Selezionato')
+                        ->label('Associa Fornitoree/Consulente Selezionato')
                         ->icon('heroicon-o-link')
                         ->color('success')
                         ->accessSelectedRecords()
@@ -340,11 +338,11 @@ class PurchaseInvoicesTable
                             Select::make('invoiceable_type')
                                 ->label('Tipo')
                                 ->options([
-                                    'App\Models\Client' => 'Consulenti',
-                                    'App\Models\Agent' => 'Agenti',
+                                    'App\Models\Clienti' => 'Consulenti',
+                                    'App\Models\Fornitore' => 'Fornitorei',
                                     // 'App\Models\Principal' => 'Mandanti',
                                 ])
-                                ->default('App\Models\Agent')
+                                ->default('App\Models\Fornitore')
                                 ->required()
                                 ->reactive(),
                             Select::make('invoiceable_id')
@@ -355,8 +353,8 @@ class PurchaseInvoicesTable
                                         return [];
 
                                     return match ($type) {
-                                        'App\Models\Client' => Client::pluck('name', 'id')->where('is_company', true)->sort(),
-                                        'App\Models\Agent' => Agent::pluck('name', 'id')->sort(),
+                                        'App\Models\Clienti' => Clienti::pluck('name', 'id')->where('is_company', true)->sort(),
+                                        'App\Models\Fornitore' => Fornitore::pluck('name', 'id')->sort(),
                                         'App\Models\Principal' => Principal::pluck('name', 'id')->sort(),
                                         default => []
                                     };
@@ -369,8 +367,8 @@ class PurchaseInvoicesTable
                                         return [];
 
                                     return match ($type) {
-                                        'App\Models\Client' => Client::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
-                                        'App\Models\Agent' => Agent::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
+                                        'App\Models\Clienti' => Clienti::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
+                                        'App\Models\Fornitore' => Fornitore::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
                                         'App\Models\Principal' => Principal::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
                                         default => []
                                     };
@@ -383,8 +381,8 @@ class PurchaseInvoicesTable
                             // Se è selezionato "new", crea il record
                             if ($data['invoiceable_id'] === 'new') {
                                 $newRecord = match ($data['invoiceable_type']) {
-                                    'App\Models\Client' => Client::create(['name' => 'Nuovo Client ' . date('Y-m-d H:i')]),
-                                    'App\Models\Agent' => Agent::create(['name' => 'Nuovo Agent ' . date('Y-m-d H:i')]),
+                                    'App\Models\Clienti' => Clienti::create(['name' => 'Nuovo Clienti ' . date('Y-m-d H:i')]),
+                                    'App\Models\Fornitore' => Fornitore::create(['name' => 'Nuovo Fornitore ' . date('Y-m-d H:i')]),
                                     'App\Models\Principal' => Principal::create(['name' => 'Nuovo Principal ' . date('Y-m-d H:i')]),
                                     default => null
                                 };

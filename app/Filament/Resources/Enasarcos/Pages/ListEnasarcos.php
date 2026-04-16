@@ -18,16 +18,6 @@ class ListEnasarcos extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('view_venasarco')
-                ->label('Visualizza Contributi')
-                ->color('info')
-                ->icon('heroicon-o-table-cells')
-                ->url(VenasarcototResource::getUrl('index')),
-            Action::make('view_trimestrale')
-                ->label('Contributi Trimestrali')
-                ->color('info')
-                ->icon('heroicon-o-table-cells')
-                ->url(VenasarcoTrimestreResource::getUrl('index')),
             Action::make('firr')
                 ->label('Scaglioni FIRR')
                 ->color('warning')

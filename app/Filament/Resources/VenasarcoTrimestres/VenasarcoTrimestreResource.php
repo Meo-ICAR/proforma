@@ -20,17 +20,13 @@ class VenasarcoTrimestreResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-chart-bar';
 
-    protected static UnitEnum|string|null $navigationGroup = null;  // Or set to false to hide completely
+    protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 
-    protected static ?int $navigationSort = null;  // Optional: remove from sort order
+    protected static ?string $navigationLabel = 'ENASARCO trimestrali';
 
-    protected static ?string $navigationLabel = 'Contributi trimestrali ENASARCO';
-
-    protected static ?string $modelLabel = 'Trimestrali ENASARCO';
+    protected static ?string $modelLabel = 'Trimestrale ENASARCO';
 
     protected static ?string $pluralModelLabel = 'Trimestrali ENASARCO';
-
-    protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
     protected static ?string $recordTitleAttribute = 'Trimestre';
 

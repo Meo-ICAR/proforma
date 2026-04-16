@@ -23,15 +23,13 @@ class VcogeResource extends Resource
 
     // protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $navigationLabel = 'Provvigioni mese';
+    protected static ?string $navigationLabel = 'Primenote provvigionali';
 
     protected static ?string $modelLabel = 'Provvigioni mese';
 
     protected static ?string $pluralModelLabel = 'Prospetto provvigionale mensile';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Settings';
-
-    protected static ?int $navigationSort = 3;
+    protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 
     protected static ?string $recordTitleAttribute = 'mese';
 
