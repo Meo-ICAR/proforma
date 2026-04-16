@@ -108,13 +108,12 @@ class VcogesTable
                 ExportAction::make()
                     ->exports([
                         DynamicGroupExport::make()
-                            ->groupBy('mese')  // Campo per il raggruppamento
                             ->sumColumns([
-                                'entrata',
-                                'uscita',
-                                'saldo',
-                                'storno_entrata',
-                                'storno_uscita',
+                                'Entrata',
+                                'Uscita',
+                                'Saldo',
+                                'Storno Entrata',
+                                'Storno Uscita',
                             ]),  // Campi da sommare
                     ])
                     ->label('Excel')

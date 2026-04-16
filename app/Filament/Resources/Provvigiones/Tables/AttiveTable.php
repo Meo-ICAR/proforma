@@ -53,8 +53,8 @@ class AttiveTable
                 ExportAction::make()
                     ->exports([
                         DynamicGroupExport::make()
-                            ->groupBy('denominazione_riferimento')  // Campo per il raggruppamento
-                            ->sumColumns(['importo']),  // Campi da sommare
+                            ->groupBy('Istituto Finanziario')  // Campo per il raggruppamento
+                            ->sumColumns(['Provvigione']),  // Campi da sommare
                     ])
                     ->label('Excel')
                     ->color('success'),
@@ -124,6 +124,16 @@ class AttiveTable
                 TextColumn::make('pratica.nome_cliente')
                     ->label('Nome')
                     ->searchable(),
+                TextColumn::make('pratica.tipo_prodotto')
+                    ->label('Tipo prodotto')
+                    ->searchable(),
+                TextColumn::make('id_pratica')
+                    ->label('Pratica')
+                    ->color('info')
+                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->openUrlInNewTab()
+                    ->searchable(),
+                TextColumn::make('descrizione'),
                 TextColumn::make('pratica.erogated_at')
                     ->label('Erogato il')
                     ->date()
@@ -136,14 +146,6 @@ class AttiveTable
                     ->label('Fattura del')
                     ->date()
                     ->sortable(),
-                TextColumn::make('descrizione'),
-                TextColumn::make('id_pratica')
-                    ->label('Pratica')
-                    ->color('info')
-                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
-                    ->openUrlInNewTab()
-                    ->searchable(),
-                TextColumn::make('descrizione'),
                 TextColumn::make('status_compenso'),
             ])
             ->filters([
@@ -199,7 +201,7 @@ class AttiveTable
                         '12' => 'Dicembre',
                     ])
                     // Imposta il mese attuale come default (es. "01", "02", ecc.)
-                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
+                    //    ->default(now()->startOfMonth()->subDay(1)->format('m'))
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
                             return $query;
@@ -278,7 +280,7 @@ class AttiveTable
                         '12' => 'Dicembre',
                     ])
                     // Imposta il mese attuale come default (es. "01", "02", ecc.)
-                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
+                    //    ->default(now()->startOfMonth()->subDay(1)->format('m'))
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
                             return $query;

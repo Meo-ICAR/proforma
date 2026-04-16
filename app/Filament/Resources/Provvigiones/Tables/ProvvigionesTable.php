@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Provvigiones\Tables;
 use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Compenso;
+use App\Models\Fornitore;
 use App\Models\Proforma;
 use App\Models\Provvigione;
 use Carbon\Carbon;
@@ -57,8 +58,8 @@ class ProvvigionesTable
                 ExportAction::make()
                     ->exports([
                         DynamicGroupExport::make()
-                            ->groupBy('denominazione_riferimento')  // Campo per il raggruppamento
-                            ->sumColumns(['importo']),  // Campi da sommare
+                            ->groupBy('Produttore')  // Campo per il raggruppamento
+                            ->sumColumns(['Provvigione']),  // Campi da sommare
                     ])
                     ->label('Excel')
                     ->color('success'),
@@ -70,8 +71,9 @@ class ProvvigionesTable
                     ->action(function (Collection $records) {
                         // Process each record with a visible loop
                         $records->each(function ($record) {
+                            $email = $record->email;
                             $piva = $record->piva;
-                            if (($piva > '0')) {
+                            if (($piva != null) && ($email != null) && (strpos($email, '@') > '0')) {
                                 $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
@@ -79,7 +81,7 @@ class ProvvigionesTable
                                 ]);
                             } else {
                                 Notification::make()
-                                    ->title('ATTENZIONE Provvigione senza partita IVA' . $record->id . ' ' . $record->denominazione_riferimento
+                                    ->title('ATTENZIONE Provvigione di produttore senza email o partita iva ' . $record->id . ' ' . $record->denominazione_riferimento
                                         . ' ' . $record->pratica->cognome_cliente . ' ' . $record->pratica->nome_cliente . ' ' . $record->pratica->id_pratica . ' proforma non emesso')
                                     ->danger()
                                     ->send();
@@ -169,6 +171,7 @@ class ProvvigionesTable
                 TextColumn::make('descrizione'),
                 TextColumn::make('status_compenso'),
                 TextColumn::make('piva'),
+                TextColumn::make('fornitore.email'),
             ])
             ->filters([
                 SelectFilter::make('stato')
@@ -347,7 +350,7 @@ class ProvvigionesTable
                         '12' => 'Dicembre',
                     ])
                     // Imposta il mese attuale come default (es. "01", "02", ecc.)
-                    ->default(now()->startOfMonth()->subDay(1)->format('m'))
+                    //   ->default(now()->startOfMonth()->subDay(1)->format('m'))
                     ->query(function (Builder $query, array $data): Builder {
                         if (empty($data['value'])) {
                             return $query;

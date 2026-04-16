@@ -142,7 +142,7 @@ class Provvigione extends Model
      */
     public function fornitore()
     {
-        return $this->belongsTo(Fornitori::class, 'piva', 'piva');
+        return $this->belongsTo(Fornitore::class, 'piva', 'piva');
     }
 
     public function cliente()
