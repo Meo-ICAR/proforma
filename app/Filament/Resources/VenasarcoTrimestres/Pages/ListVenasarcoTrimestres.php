@@ -8,11 +8,20 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\HtmlString;
 
 class ListVenasarcoTrimestres extends ListRecords
 {
     protected static string $resource = VenasarcoTrimestreResource::class;
+
+    public function getSubheading(): string|Htmlable|null
+    {
+        // $record = $this->getRecord();
+
+        return new HtmlString('Cliccare sul valore del trimestre per avere il dettaglio delle provvigioni di quel periodo');
+    }
 
     protected function getHeaderActions(): array
     {

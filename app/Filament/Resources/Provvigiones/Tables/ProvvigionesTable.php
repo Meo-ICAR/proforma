@@ -73,7 +73,7 @@ class ProvvigionesTable
                         $records->each(function ($record) {
                             $email = $record->email;
                             $piva = $record->piva;
-                            if (($piva != null) && ($email != null) && (strpos($email, '@') > '0')) {
+                            if (($email != null) && (strpos($email, '@') > '0')) {
                                 $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
@@ -385,6 +385,83 @@ class ProvvigionesTable
                             $dataScelta->subYear();
 
                         return 'Erogato nel mese ' . $dataScelta->translatedFormat('F Y');
+                    }),
+                SelectFilter::make('trimestre_erogazione')
+                    ->label('Trimestre erogazione')
+                    ->options([
+                        '1' => '1° Trimestre (Gen-Mar)',
+                        '2' => '2° Trimestre (Apr-Giu)',
+                        '3' => '3° Trimestre (Lug-Set)',
+                        '4' => '4° Trimestre (Ott-Dic)',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        $trimestre = $data['value'];
+                        $annoRiferimento = now()->year;
+
+                        switch ($trimestre) {
+                            case '1':
+                                $dataInizio = Carbon::create($annoRiferimento, 1, 1);
+                                $dataFine = Carbon::create($annoRiferimento, 3, 31)->endOfDay();
+                                break;
+                            case '2':
+                                $dataInizio = Carbon::create($annoRiferimento, 4, 1);
+                                $dataFine = Carbon::create($annoRiferimento, 6, 30)->endOfDay();
+                                break;
+                            case '3':
+                                $dataInizio = Carbon::create($annoRiferimento, 7, 1);
+                                $dataFine = Carbon::create($annoRiferimento, 9, 30)->endOfDay();
+                                break;
+                            case '4':
+                                $dataInizio = Carbon::create($annoRiferimento, 10, 1);
+                                $dataFine = Carbon::create($annoRiferimento, 12, 31)->endOfDay();
+                                break;
+                            default:
+                                return $query;
+                        }
+
+                        // Se le date sono nel futuro, sottraiamo un anno
+                        if ($dataInizio->isFuture()) {
+                            $dataInizio->subYear();
+                            $dataFine->subYear();
+                        }
+
+                        return $query
+                            ->where('erogated_at', '>=', $dataInizio)
+                            ->where('erogated_at', '<=', $dataFine);
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if (empty($data['value']))
+                            return null;
+
+                        $trimestre = $data['value'];
+                        $annoRiferimento = now()->year;
+
+                        switch ($trimestre) {
+                            case 'Q1':
+                                $dataInizio = Carbon::create($annoRiferimento, 1, 1);
+                                break;
+                            case 'Q2':
+                                $dataInizio = Carbon::create($annoRiferimento, 4, 1);
+                                break;
+                            case 'Q3':
+                                $dataInizio = Carbon::create($annoRiferimento, 7, 1);
+                                break;
+                            case 'Q4':
+                                $dataInizio = Carbon::create($annoRiferimento, 10, 1);
+                                break;
+                            default:
+                                return null;
+                        }
+
+                        if ($dataInizio->isFuture()) {
+                            $dataInizio->subYear();
+                        }
+
+                        return 'Erogato ' . $trimestre . ' ' . $dataInizio->year;
                     }),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([

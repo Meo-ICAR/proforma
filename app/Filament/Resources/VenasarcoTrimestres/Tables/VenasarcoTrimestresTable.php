@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\VenasarcoTrimestres\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\Provvigiones\ProvvigioneResource;
 use App\Models\Venasarcotot;
 use App\Models\VenasarcoTrimestre;
 use Filament\Actions\Action;
@@ -23,6 +25,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Filament\Forms;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class VenasarcoTrimestresTable
 {
@@ -41,7 +45,7 @@ class VenasarcoTrimestresTable
             ->filters([
                 SelectFilter::make('competenza')
                     ->options(
-                        fn() => \App\Models\VenasarcoTrimestre::query()
+                        fn() => VenasarcoTrimestre::query()
                             ->select('competenza')
                             ->distinct()
                             ->orderBy('competenza', 'desc')
@@ -92,7 +96,9 @@ class VenasarcoTrimestresTable
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->money('EUR')
                     ->alignRight()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?tableFilters[trimestre][value]=1&filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all&filters[trimestre_erogazione][value]=' . $record->Trimestre . '&filters[denominazione_riferimento][denominazione_riferimento]=' . $record->produttore)
+                    ->openUrlInNewTab(false),
                 TextColumn::make('contributo')
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->money('EUR')
@@ -108,6 +114,16 @@ class VenasarcoTrimestresTable
                     ->sortable()
                     ->searchable(),
             ])
-            ->defaultSort('Trimestre', 'asc');
+            ->defaultSort('Trimestre', 'asc')
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            //   ->groupBy('produttore')  // Campo per il raggruppamento
+                            ->sumColumns(['montante', 'contributo', 'di cui RACES']),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
+            ]);
     }
 }

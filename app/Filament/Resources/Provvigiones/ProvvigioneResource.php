@@ -22,16 +22,6 @@ use UnitEnum;
 
 class ProvvigioneResource extends Resource
 {
-    /*
-     * DELETE p1
-     * FROM provvigioni p1
-     * INNER JOIN provvigioni p2 ON
-     *     p1.id_pratica = p2.id_pratica AND
-     *     p1.tipo = p2.tipo AND
-     *     p1.denominazione_riferimento = p2.denominazione_riferimento AND
-     *     p1.descrizione = p2.descrizione
-     * WHERE p1.id < p2.id;
-     */
     protected static ?string $model = Provvigione::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';  // Heroicon::OutlinedRectangleStack;
