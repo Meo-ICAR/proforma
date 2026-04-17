@@ -148,14 +148,14 @@ class Provvigione extends Model
     public function cliente()
     {
         return $this
-            ->belongsTo(Client::class, 'istituto_finanziario', 'name')
+            ->belongsTo(Clienti::class, 'istituto_finanziario', 'name')
             ->where('is_active', 1);  // Only include active clients
     }
 
     public function customer()
     {
         return $this
-            ->belongsTo(Clienti::class, 'denominazione_riferimento', 'name')
+            ->belongsTo(Client::class, 'denominazione_riferimento', 'name')
             ->where('tipo', 'Cliente');  // Only include clients
     }
 

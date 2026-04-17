@@ -2,11 +2,12 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
-use App\Models\Clienti;
+use App\Models\Client;
 use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
 use App\Services\PurchaseCreditNoteImportService;
 use App\Services\PurchaseInvoiceImportService;
+use App\Services\PurchaseInvoiceMatchingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -119,102 +120,98 @@ class PurchaseInvoicesTable
                     ->query(fn($query) => $query->where('is_nopractice', true)),
             ])
             ->recordActions([
-                //   EditAction::make(),
                 Action::make('attach_to_model')
-                    ->label('Aggiungi')
+                    ->visible(fn($record) => is_null($record->invoiceable_id))
+                    ->label('Associa')
                     ->icon('heroicon-o-link')
                     ->color('success')
-                    ->visible(fn($record) => is_null($record->invoiceable_id))
-                    ->form([
-                        Select::make('invoiceable_type')
-                            ->label('Tipo')
-                            ->options([
-                                'App\Models\Clienti' => 'Consulenti',
-                                'App\Models\Fornitore' => 'Fornitorei',
-                                //  'App\Models\Principal' => 'Principal',
-                            ])
-                            ->default('App\Models\Clienti')
-                            ->required()
-                            ->reactive(),
-                        TextInput::make('invoiceable_name')
-                            ->label('Nome Record (cerca o crea nuovo)')
-                            ->default(fn($record) => $record->supplier)
-                            ->required()
-                            ->helperText('Inserisci un nome esistente o uno nuovo per creare automaticamente il record'),
-                    ])
-                    ->action(function (array $data, $record) {
-                        $invoiceableId = null;
-                        $searchTerm = $data['invoiceable_name'] ?? null;
-
-                        // Se è vuoto o null, crea il record
-                        if (is_null($searchTerm) || $searchTerm === '') {
-                            $newRecord = match ($data['invoiceable_type']) {
-                                'App\Models\Clienti' => Clienti::create(['name' => $record->supplier . date('Y-m-d H:i'),
-                                    'vat_number' => $record->vat_number]),
-                                'App\Models\Fornitore' => Fornitore::create(['name' => $record->supplier . date('Y-m-d H:i'),
-                                    'vat_number' => $record->vat_number]),
-                                'App\Models\Principal' => Principal::create(['name' => $record->supplier . date('Y-m-d H:i'),
-                                    'vat_number' => $record->vat_number]),
-                                default => null
-                            };
-
-                            if ($newRecord) {
-                                $invoiceableId = $newRecord->id;
-                            }
-                        } else {
-                            // Verifica se esiste un record con questo nome
-                            $existingRecord = match ($data['invoiceable_type']) {
-                                'App\Models\Clienti' => Clienti::where('name', $searchTerm)->first(),
-                                'App\Models\Fornitore' => Fornitore::where('name', $searchTerm)->first(),
-                                'App\Models\Principal' => Principal::where('name', $searchTerm)->first(),
-                                default => null
-                            };
-
-                            if ($existingRecord) {
-                                $invoiceableId = $existingRecord->id;
-                            } else {
-                                // Crea nuovo record con il nome cercato
-                                $newRecord = match ($data['invoiceable_type']) {
-                                    'App\Models\Clienti' => Clienti::create(['name' => $searchTerm,
-                                        'vat_number' => $record->vat_number]),
-                                    'App\Models\Fornitore' => Fornitore::create(['name' => $searchTerm,
-                                        'vat_number' => $record->vat_number]),
-                                    'App\Models\Principal' => Principal::create(['name' => $searchTerm,
-                                        'vat_number' => $record->vat_number]),
-                                    default => null
-                                };
-
-                                if ($newRecord) {
-                                    $invoiceableId = $newRecord->id;
-                                }
-                            }
-                        }
-
-                        if ($invoiceableId) {
-                            // Prima aggiorna il record corrente
-                            $record->update([
-                                'invoiceable_type' => $data['invoiceable_type'],
-                                'invoiceable_id' => $invoiceableId,
-                            ]);
-
-                            // Poi associa tutte le altre fatture dello stesso supplier senza attach
-                            $updatedCount = PurchaseInvoice::where('supplier', $record->supplier)
-                                ->whereNull('invoiceable_id')
-                                ->update([
-                                    'invoiceable_type' => $data['invoiceable_type'],
-                                    'invoiceable_id' => $invoiceableId,
+                    ->form(function ($record) {
+                        return [
+                            Select::make('action_type')
+                                ->label('Azione')
+                                ->options([
+                                    'create_new' => 'Crea nuovo Consulente',
+                                    'select_existing' => 'Seleziona Consulente esistente',
+                                    'attach_existing_agent' => 'Seleziona Agente esistente',
+                                    'create_agent' => 'Crea nuovo Agente'
+                                ])
+                                ->default('create_new')
+                                ->live()
+                                ->reactive(),
+                            Select::make('client_id')
+                                ->label('Consulente')
+                                ->options(Client::orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->visible(fn($get) => $get('action_type') === 'select_existing'),
+                            Select::make('agent_id')
+                                ->label('Agente')
+                                ->options(Fornitore::orderBy('name')->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->visible(fn($get) => $get('action_type') === 'attach_existing_agent')
+                        ];
+                    })
+                    ->action(function ($record, $data) {
+                        try {
+                            if ($data['action_type'] === 'create_new') {
+                                // Create new Client
+                                $client = Client::create([
+                                    'name' => $record->supplier,
+                                    'vat_number' => $record->vat_number,
+                                    'is_company' => 1,
+                                    'is_lead' => 0,
+                                    'is_client' => 0,
+                                    'company_id' => Auth::user()->company_id
                                 ]);
-
-                            $totalUpdated = $updatedCount + 1;  // +1 per il record corrente
-
-                            $actionText = (is_null($searchTerm) || $searchTerm === '') ? 'creato e associato' : 'associato';
+                                $record->update([
+                                    'invoiceable_type' => 'App\Models\Client',
+                                    'invoiceable_id' => $client->id
+                                ]);
+                            } elseif ($data['action_type'] === 'select_existing') {
+                                // Attach to existing Client
+                                $record->update([
+                                    'invoiceable_type' => 'App\Models\Client',
+                                    'invoiceable_id' => $data['client_id']
+                                ]);
+                            } elseif ($data['action_type'] === 'create_agent') {
+                                // Create new Agent
+                                $agent = Fornitore::create([
+                                    'name' => $record->supplier,
+                                    'piva' => $record->vat_number,
+                                    'is_active' => 1,
+                                    'company_id' => Auth::user()->company_id
+                                ]);
+                                $record->update([
+                                    'invoiceable_type' => 'App\Models\Fornitore',
+                                    'invoiceable_id' => $agent->id
+                                ]);
+                            } elseif ($data['action_type'] === 'attach_existing_agent') {
+                                // Attach to existing Agent
+                                $record->update([
+                                    'invoiceable_type' => 'App\Models\Fornitore',
+                                    'invoiceable_id' => $data['agent_id']
+                                ]);
+                                Fornitore::updateOrCreate([
+                                    'id' => $data['agent_id']
+                                ], [
+                                    'name' => $record->supplier,
+                                    'piva' => $record->vat_number,
+                                ]);
+                            }
                             Notification::make()
-                                ->title('Fatture associate')
-                                ->body("{$totalUpdated} fatture del supplier '{$record->supplier}' {$actionText} correttamente")
+                                ->title('Associazione completata')
+                                ->body('Fattura associata con successo')
                                 ->success()
                                 ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Errore associazione')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-                    }),
+                    })
             ], position: RecordActionsPosition::BeforeColumns)
             ->headerActions([
                 Action::make('import_credit_notes')
@@ -287,21 +284,23 @@ class PurchaseInvoicesTable
                                 ->send();
                         }
                     }),
-                Action::make('associate_invoices')
-                    ->label('Associa')
+                Action::make('associate_purchase_invoices')
+                    ->label('Abbina')
                     ->icon('heroicon-o-link')
                     ->color('warning')
                     ->action(function () {
                         try {
-                            $importService = new PurchaseInvoiceImportService();
+                            $companyId = Auth::user()->company_id;
+                            $matchService = new PurchaseInvoiceMatchingService();
+                            $matchService->setCompanyId($companyId);  // Usa il metodo setter
 
-                            // Esegui solo le funzioni di matching
-                            //  $importService->matchFornitoresByVatNumber(Auth::user()->company_id);
-                            $importService->matchClientisByVatNumber(Auth::user()->company_id);
+                            // Esegui solo le funzioni di matching per purchase invoices
+                            $matchService->matchFornitoresByVatNumber();
+                            //  $importService->matchClientsByVatNumber();
 
                             Notification::make()
                                 ->title('Associazione completata')
-                                ->body('Le fatture sono state associate a Fornitorei e Clientii')
+                                ->body('Le fatture di acquisto sono state associate a consulenti e agenti')
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
@@ -328,102 +327,6 @@ class PurchaseInvoicesTable
                                 ->body("{$count} fatture chiuse correttamente")
                                 ->success()
                                 ->send();
-                        })
-                        ->deselectRecordsAfterCompletion(),
-                    Action::make('bulk_attach_to_model')
-                        ->label('Associa Fornitoree/Consulente Selezionato')
-                        ->icon('heroicon-o-link')
-                        ->color('success')
-                        ->accessSelectedRecords()
-                        ->form([
-                            Select::make('invoiceable_type')
-                                ->label('Tipo')
-                                ->options([
-                                    'App\Models\Clienti' => 'Consulenti',
-                                    'App\Models\Fornitore' => 'Fornitorei',
-                                    // 'App\Models\Principal' => 'Mandanti',
-                                ])
-                                ->default('App\Models\Fornitore')
-                                ->required()
-                                ->reactive(),
-                            Select::make('invoiceable_id')
-                                ->label('Seleziona Record')
-                                ->options(function (callable $get) {
-                                    $type = $get('invoiceable_type');
-                                    if (!$type)
-                                        return [];
-
-                                    return match ($type) {
-                                        'App\Models\Clienti' => Clienti::pluck('name', 'id')->where('is_company', true)->sort(),
-                                        'App\Models\Fornitore' => Fornitore::pluck('name', 'id')->sort(),
-                                        'App\Models\Principal' => Principal::pluck('name', 'id')->sort(),
-                                        default => []
-                                    };
-                                })
-                                ->required()
-                                ->searchable()
-                                ->getSearchResultsUsing(function (string $search, callable $get) {
-                                    $type = $get('invoiceable_type');
-                                    if (!$type)
-                                        return [];
-
-                                    return match ($type) {
-                                        'App\Models\Clienti' => Clienti::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
-                                        'App\Models\Fornitore' => Fornitore::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
-                                        'App\Models\Principal' => Principal::where('name', 'like', "%{$search}%")->limit(50)->pluck('name', 'id'),
-                                        default => []
-                                    };
-                                }),
-                        ])
-                        ->action(function (array $data, $records) {
-                            $totalUpdated = 0;
-                            $invoiceableId = null;
-
-                            // Se è selezionato "new", crea il record
-                            if ($data['invoiceable_id'] === 'new') {
-                                $newRecord = match ($data['invoiceable_type']) {
-                                    'App\Models\Clienti' => Clienti::create(['name' => 'Nuovo Clienti ' . date('Y-m-d H:i')]),
-                                    'App\Models\Fornitore' => Fornitore::create(['name' => 'Nuovo Fornitore ' . date('Y-m-d H:i')]),
-                                    'App\Models\Principal' => Principal::create(['name' => 'Nuovo Principal ' . date('Y-m-d H:i')]),
-                                    default => null
-                                };
-
-                                if ($newRecord) {
-                                    $invoiceableId = $newRecord->id;
-                                }
-                            } else {
-                                $invoiceableId = $data['invoiceable_id'];
-                            }
-
-                            if ($invoiceableId) {
-                                foreach ($records as $record) {
-                                    if (is_null($record->invoiceable_id)) {
-                                        // Aggiorna il record corrente
-                                        $record->update([
-                                            'invoiceable_type' => $data['invoiceable_type'],
-                                            'invoiceable_id' => $invoiceableId,
-                                        ]);
-                                        $totalUpdated++;
-
-                                        // Associa tutte le altre fatture dello stesso supplier
-                                        $additionalUpdated = PurchaseInvoice::where('supplier', $record->supplier)
-                                            ->whereNull('invoiceable_id')
-                                            ->where('id', '!=', $record->id)  // Escludi il record corrente
-                                            ->update([
-                                                'invoiceable_type' => $data['invoiceable_type'],
-                                                'invoiceable_id' => $invoiceableId,
-                                            ]);
-                                        $totalUpdated += $additionalUpdated;
-                                    }
-                                }
-
-                                $actionText = $data['invoiceable_id'] === 'new' ? 'creati e associati' : 'associati';
-                                Notification::make()
-                                    ->title('Fatture associate')
-                                    ->body("{$totalUpdated} fatture {$actionText} correttamente (incluse tutte quelle degli stessi supplier)")
-                                    ->success()
-                                    ->send();
-                            }
                         })
                         ->deselectRecordsAfterCompletion(),
                 ]),

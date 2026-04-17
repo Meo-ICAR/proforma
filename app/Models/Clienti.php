@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * @property string $id
@@ -93,6 +94,12 @@ class Clienti extends Model
     {
         static::addGlobalScope('order_by_name', function ($builder) {
             $builder->orderBy('name');
+        });
+
+        static::creating(function ($clienti) {
+            if (empty($clienti->id)) {
+                $clienti->id = (string) \Illuminate\Support\Str::uuid();
+            }
         });
     }
 

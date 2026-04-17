@@ -52,10 +52,22 @@ class ClientResource extends Resource
         ];
     }
 
+    public static function getNavigationItems(): array
+    {
+        return [
+            ...parent::getNavigationItems(),
+            NavigationItem::make('Consulenti')
+                ->icon('heroicon-o-check-circle')
+                ->url(static::getUrl('consulenti'))
+                ->sort(2),
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => ListClients::route('/'),
+            'consulenti' => ListConsulenti::route('/attive'),
             'create' => CreateClient::route('/create'),
             'edit' => EditClient::route('/{record}/edit'),
         ];

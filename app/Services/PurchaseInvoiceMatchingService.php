@@ -3,15 +3,15 @@
 namespace App\Services;
 
 use App\Models\Client;
-use App\Models\Clienti;
 use App\Models\Company;
+use App\Models\Fornitore;
 use App\Models\Provvigione;
-use App\Models\SalesInvoice;
+use App\Models\PurchaseInvoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 
-class SalesInvoiceMatchingService
+class PurchaseInvoiceMatchingService
 {
     private $companyId = null;
 
@@ -24,12 +24,12 @@ class SalesInvoiceMatchingService
     }
 
     /**
-     * Match sales invoices with clienti using VAT number
+     * Match Purchase invoices with Fornitore using VAT number
      *
      * @param array $options Matching options
      * @return array Matching results
      */
-    public function matchSalesInvoices(array $options = []): array
+    public function matchPurchaseInvoices(array $options = []): array
     {
         $defaultOptions = [
             'dry_run' => false,
@@ -47,10 +47,10 @@ class SalesInvoiceMatchingService
             'details' => []
         ];
 
-        // Get all sales invoices that need matching
-        $salesInvoices = $this->getSalesInvoicesToMatch();
+        // Get all Purchase invoices that need matching
+        $PurchaseInvoices = $this->getPurchaseInvoicesToMatch();
 
-        foreach ($salesInvoices as $invoice) {
+        foreach ($PurchaseInvoices as $invoice) {
             try {
                 $matchResult = $this->matchSingleInvoice($invoice, $options);
 
@@ -93,11 +93,11 @@ class SalesInvoiceMatchingService
     }
 
     /**
-     * Get sales invoices that need matching
+     * Get Purchase invoices that need matching
      */
-    private function getSalesInvoicesToMatch(): Collection
+    private function getPurchaseInvoicesToMatch(): Collection
     {
-        $query = SalesInvoice::whereNull('invoiceable_id')
+        $query = PurchaseInvoice::whereNull('invoiceable_id')
             ->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery
@@ -118,60 +118,60 @@ class SalesInvoiceMatchingService
     }
 
     /**
-     * Match a single sales invoice with clienti or provvigioni
+     * Match a single Purchase invoice with Fornitore or provvigioni
      */
-    private function matchSingleInvoice(SalesInvoice $invoice, array $options): array
+    private function matchSingleInvoice(PurchaseInvoice $invoice, array $options): array
     {
-        // If invoice has VAT number, try to match with clienti using VAT
+        // If invoice has VAT number, try to match with Fornitore using VAT
         if (!empty($invoice->vat_number)) {
-            $clientiMatch = $this->matchWithClientiByVat($invoice);
-            if ($clientiMatch['matched']) {
-                return $clientiMatch;
+            $FornitoreMatch = $this->matchWithFornitoreByVat($invoice);
+            if ($FornitoreMatch['matched']) {
+                return $FornitoreMatch;
             }
             // match con nome cliente
-            $clientiMatch = $this->matchWithClientiByName($invoice);
-            if ($clientiMatch['matched']) {
-                // Update the Clienti model with VAT number
-                $clienti = Clienti::find($clientiMatch['update_data']['invoiceable_id']);
-                if ($clienti) {
-                    $clienti->update(['piva' => $invoice->vat_number]);
+            $FornitoreMatch = $this->matchWithFornitoreByName($invoice);
+            if ($FornitoreMatch['matched']) {
+                // Update the Fornitore model with VAT number
+                $Fornitore = Fornitore::find($FornitoreMatch['update_data']['invoiceable_id']);
+                if ($Fornitore) {
+                    $Fornitore->update(['piva' => $invoice->vat_number]);
                 }
-                return $clientiMatch;
+                return $FornitoreMatch;
             }
         }
 
         // If invoice has no VAT  number, try with Client model
         if (empty($invoice->vat_number)) {
-            $clientiMatch = $this->matchWithCustomerByName($invoice);
-            if ($clientiMatch['matched']) {
-                return $clientiMatch;
+            $FornitoreMatch = $this->matchWithClientByName($invoice);
+            if ($FornitoreMatch['matched']) {
+                return $FornitoreMatch;
             }
         }
 
         return [
             'matched' => false,
-            'reason' => 'No matching found for customer: ' . $invoice->customer_name
+            'reason' => 'No matching found for Client: ' . $invoice->supplier
         ];
     }
 
     /**
-     * Match sales invoice with clienti using VAT number (piva)
+     * Match Purchase invoice with Fornitore using VAT number (piva)
      */
-    private function matchWithClientiByVat(SalesInvoice $invoice): array
+    private function matchWithFornitoreByVat(PurchaseInvoice $invoice): array
     {
-        $clienti = Clienti::where('piva', $invoice->vat_number)
-            ->where('is_active', 1)
+        $Fornitore = Fornitore::where('piva', $invoice->vat_number)
+            //  ->where('is_active', 1)
             ->first();
 
-        if ($clienti) {
+        if ($Fornitore) {
             return [
                 'matched' => true,
-                'match_type' => 'vat_to_clienti',
-                'matched_to' => 'Clienti: ' . $clienti->name,
+                'match_type' => 'vat_to_Fornitore',
+                'matched_to' => 'Fornitore: ' . $Fornitore->name,
                 'confidence' => 1.0,
                 'update_data' => [
-                    'invoiceable_type' => 'App\Models\Clienti',
-                    'invoiceable_id' => $clienti->id
+                    'invoiceable_type' => 'App\Models\Fornitore',
+                    'invoiceable_id' => $Fornitore->id
                 ]
             ];
         }
@@ -183,7 +183,7 @@ class SalesInvoiceMatchingService
             return [
                 'matched' => true,
                 'match_type' => 'vat_to_client',
-                'matched_to' => 'Customer: ' . $client->name,
+                'matched_to' => 'Client: ' . $client->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Client',
@@ -195,27 +195,27 @@ class SalesInvoiceMatchingService
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No clienti found with VAT: ' . $invoice->vat_number
+            'reason' => 'No Fornitore found with VAT: ' . $invoice->vat_number
         ];
     }
 
     /**
-     * Match sales invoice with clienti by name (direct match)
+     * Match Purchase invoice with Fornitore by name (direct match)
      */
-    private function matchWithClientiByName(SalesInvoice $invoice): array
+    private function matchWithFornitoreByName(PurchaseInvoice $invoice): array
     {
-        $clienti = Clienti::where('name', $invoice->customer_name)
+        $Fornitore = Fornitore::where('name', $invoice->supplier)
             ->first();
 
-        if ($clienti) {
+        if ($Fornitore) {
             return [
                 'matched' => true,
-                'match_type' => 'name_to_clienti',
-                'matched_to' => 'Clienti: ' . $clienti->name,
+                'match_type' => 'name_to_Fornitore',
+                'matched_to' => 'Fornitore: ' . $Fornitore->name,
                 'confidence' => 1.0,
                 'update_data' => [
-                    'invoiceable_type' => 'App\Models\Clienti',
-                    'invoiceable_id' => $clienti->id
+                    'invoiceable_type' => 'App\Models\Fornitore',
+                    'invoiceable_id' => $Fornitore->id
                 ]
             ];
         }
@@ -223,20 +223,20 @@ class SalesInvoiceMatchingService
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No clienti found with name: ' . $invoice->customer_name
+            'reason' => 'No Fornitore found with name: ' . $invoice->supplier
         ];
     }
 
     /**
-     * Match sales invoice with clienti by name (direct match)
+     * Match Purchase invoice with Fornitore by name (direct match)
      */
-    private function matchWithCustomerByName(SalesInvoice $invoice): array
+    private function matchWithClientByName(PurchaseInvoice $invoice): array
     {
         // Normalize whitespace: convert multiple spaces to single space and trim
-        $normalizedName = preg_replace('/\s+/', ' ', trim($invoice->customer_name));
+        $normalizedName = preg_replace('/\s+/', ' ', trim($invoice->supplier));
 
         // Try exact match first
-        $client = Client::where('name', $invoice->customer_name)
+        $client = Client::where('name', $invoice->supplier)
             ->first();
 
         // If no exact match, try with normalized whitespace
@@ -255,7 +255,7 @@ class SalesInvoiceMatchingService
             return [
                 'matched' => true,
                 'match_type' => 'name_to_client',
-                'matched_to' => 'Customer: ' . $client->name,
+                'matched_to' => 'Client: ' . $client->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Client',
@@ -267,18 +267,18 @@ class SalesInvoiceMatchingService
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No client found with name: ' . $invoice->customer_name
+            'reason' => 'No client found with name: ' . $invoice->supplier
         ];
     }
 
     /**
-     * Match sales invoice with provvigioni using customer name
+     * Match Purchase invoice with provvigioni using Client name
      */
-    private function matchWithProvvigioneByCustomerName(SalesInvoice $invoice): array
+    private function matchWithProvvigioneByClientName(PurchaseInvoice $invoice): array
     {
         // Import Provvigione model
-        $provvigione = \App\Models\Provvigione::where('tipo', 'Cliente')
-            ->where('denominazione_riferimento', $invoice->customer_name)
+        $provvigione = Provvigione::where('tipo', 'Agente')
+            ->where('denominazione_riferimento', $invoice->supplier)
             ->whereNull('annullato')
             ->first();
 
@@ -287,18 +287,18 @@ class SalesInvoiceMatchingService
                 Client::insert([
                     'name' => $provvigione->denominazione_riferimento,
                     'company_id' => $companyId,
-                    'is_company' => 0,
+                    'is_company' => 1,
                     'is_lead' => 0,
-                    'is_client' => 1
+                    'is_client' => 0
                 ]);
             }
             return [
                 'matched' => true,
-                'match_type' => 'provvigione_to_clienti',
-                'matched_to' => 'Clienti: ' . $provvigione->cliente->name,
+                'match_type' => 'provvigione_to_Fornitore',
+                'matched_to' => 'Fornitore: ' . $provvigione->cliente->name,
                 'confidence' => 1.0,
                 'update_data' => [
-                    'invoiceable_type' => 'App\Models\Clienti',
+                    'invoiceable_type' => 'App\Models\Fornitore',
                     'invoiceable_id' => $provvigione->cliente->id
                 ]
             ];
@@ -307,14 +307,14 @@ class SalesInvoiceMatchingService
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No provvigione found for customer: ' . $invoice->customer_name
+            'reason' => 'No provvigione found for Client: ' . $invoice->supplier
         ];
     }
 
     /**
-     * Update sales invoice with match data
+     * Update Purchase invoice with match data
      */
-    private function updateInvoiceWithMatch(SalesInvoice $invoice, array $updateData): void
+    private function updateInvoiceWithMatch(PurchaseInvoice $invoice, array $updateData): void
     {
         $invoice->update($updateData);
     }
@@ -324,7 +324,7 @@ class SalesInvoiceMatchingService
      */
     public function getMatchingStats(): array
     {
-        $baseQuery = SalesInvoice::query();
+        $baseQuery = PurchaseInvoice::query();
 
         if ($this->companyId) {
             $baseQuery->where('company_id', $this->companyId);
@@ -332,7 +332,7 @@ class SalesInvoiceMatchingService
 
         $totalToMatch = $baseQuery->whereNull('invoiceable_id')->count();
 
-        $matchedQuery = SalesInvoice::query();
+        $matchedQuery = PurchaseInvoice::query();
         if ($this->companyId) {
             $matchedQuery->where('company_id', $this->companyId);
         }
@@ -340,12 +340,12 @@ class SalesInvoiceMatchingService
         $stats = [
             'total_invoices' => $baseQuery->count(),
             'total_to_match' => $totalToMatch,
-            'unmatched_invoices' => $this->getSalesInvoicesToMatch()->count(),
+            'unmatched_invoices' => $this->getPurchaseInvoicesToMatch()->count(),
             'matched_invoices' => $matchedQuery
                 ->whereNotNull('invoiceable_type')
                 ->whereNotNull('invoiceable_id')
                 ->count(),
-            'clienti_matches' => $matchedQuery->where('invoiceable_type', 'App\Models\Clienti')->count(),
+            'Fornitore_matches' => $matchedQuery->where('invoiceable_type', 'App\Models\Fornitore')->count(),
         ];
 
         $stats['match_percentage'] = $totalToMatch > 0
@@ -356,15 +356,15 @@ class SalesInvoiceMatchingService
     }
 
     /**
-     * Execute matching for sales invoices (called from Filament action)
+     * Execute matching for Purchase invoices (called from Filament action)
      */
-    public function matchClientisByVatNumber(): array
+    public function matchFornitoresByVatNumber(): array
     {
         $options = [
             'dry_run' => false,
         ];
 
-        return $this->matchSalesInvoices($options);
+        return $this->matchPurchaseInvoices($options);
     }
 
     /**
@@ -372,7 +372,7 @@ class SalesInvoiceMatchingService
      */
     public function clearMatches(): int
     {
-        $query = SalesInvoice::where('invoiceable_type', 'App\Models\Clienti');
+        $query = PurchaseInvoice::where('invoiceable_type', 'App\Models\Fornitore');
 
         if ($this->companyId) {
             $query->where('company_id', $this->companyId);

@@ -259,8 +259,8 @@ class SalesInvoicesTable
                                 Select::make('action_type')
                                     ->label('Azione')
                                     ->options([
-                                        'select_existing' => 'Seleziona Cliente esistente',
-                                        'create_new' => 'Crea nuovo Cliente'
+                                        'select_existing' => 'Seleziona Istituto esistente',
+                                        'create_new' => 'Crea nuovo Istituto'
                                     ])
                                     ->default('select_existing')
                                     ->reactive(),
@@ -284,7 +284,8 @@ class SalesInvoicesTable
                                         'vat_number' => $record->vat_number,
                                         'is_company' => $record->is_nopractice,
                                         'is_lead' => 0,
-                                        'is_client' => 1
+                                        'is_client' => 1,
+                                        'company_id' => Auth::user()->company_id
                                     ]);
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Client',
@@ -302,9 +303,12 @@ class SalesInvoicesTable
                                 if ($data['action_type'] === 'create_new') {
                                     // Create new Clienti with VAT number
                                     $clienti = Clienti::create([
+                                        //   'id' => uuid(),
                                         'name' => $record->customer_name,
+                                        'nome' => $record->customer_name,
                                         'piva' => $record->vat_number,
-                                        'is_active' => 1
+                                        'is_active' => 1,
+                                        'company_id' => Auth::user()->company_id
                                     ]);
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Clienti',
@@ -319,6 +323,7 @@ class SalesInvoicesTable
                                     Clienti::updateOrCreate([
                                         'id' => $data['clienti_id']
                                     ], [
+                                        'name' => $record->customer_name,
                                         'piva' => $record->vat_number,
                                     ]);
                                 }
