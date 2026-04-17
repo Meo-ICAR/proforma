@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PurchaseInvoices;
 use App\Filament\Resources\PurchaseInvoices\Pages\CreatePurchaseInvoice;
 use App\Filament\Resources\PurchaseInvoices\Pages\EditPurchaseInvoice;
 use App\Filament\Resources\PurchaseInvoices\Pages\ListPurchaseInvoices;
+use App\Filament\Resources\PurchaseInvoices\RelationManagers\ProformasAfterRegistrationRelationManager;
 use App\Filament\Resources\PurchaseInvoices\Schemas\PurchaseInvoiceForm;
 use App\Filament\Resources\PurchaseInvoices\Tables\PurchaseInvoicesTable;
 use App\Models\PurchaseInvoice;
@@ -44,7 +45,7 @@ class PurchaseInvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ProformasAfterRegistrationRelationManager::class,
         ];
     }
 

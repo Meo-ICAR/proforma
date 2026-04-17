@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Fornitori;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Model;
@@ -77,25 +77,13 @@ class PurchaseInvoice extends Model
 
     public function proformas()
     {
-        return $this->hasManyThrough(
-            Proforma::class,
-            Fornitore::class,
-            'piva',  // Foreign key on fornitore table
-            'fornitori_id',  // Foreign key on proformas table
-            'vat_number',  // Local key on purchase_invoices table
-            'id'  // Local key on fornitore table
-        );
+        return $this->hasMany(Proforma::class, 'vat_number', 'vat_number');
     }
 
     public function proformasAfterRegistration()
     {
-        return $this->hasManyThrough(
-            Proforma::class,
-            Fornitore::class,
-            'piva',  // Foreign key on fornitore table
-            'fornitori_id',  // Foreign key on proformas table
-            'vat_number',  // Local key on purchase_invoices table
-            'id'  // Local key on fornitore table
-        )->where('proformas.sended_at', '>=', $this->registration_date);
+        return $this->proformas()->when($this->registration_date, function ($query, $registrationDate) {
+            return $query->where('sended_at', '<=', $registrationDate);
+        });
     }
 }

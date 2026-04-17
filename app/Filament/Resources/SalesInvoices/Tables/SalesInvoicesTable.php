@@ -47,9 +47,9 @@ class SalesInvoicesTable
                     ->collapsible(),
             ])
             ->columns([
-                TextColumn::make('number')
-                    ->label('Numero')
-                    ->searchable()
+                TextColumn::make('registration_date')
+                    ->label('Data Registrazione')
+                    ->date('d/m/Y')
                     ->sortable(),
                 TextColumn::make('customer_name')
                     ->label('Cliente')
@@ -64,32 +64,25 @@ class SalesInvoicesTable
                             ->label('')
                     ])
                     ->sortable(),
+                ToggleColumn::make('closed')
+                    ->label('Riconciliata'),
                 TextColumn::make('vat_number')
                     ->label('Partita IVA')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('invoiceable_type')
-                    ->label('Model')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('registration_date')
-                    ->label('Data Registrazione')
-                    ->date('d/m/Y')
-                    ->sortable(),
                 ToggleColumn::make('is_nopractice')
                     ->label('No Provvigioni'),
-                TextColumn::make('residual_amount')
-                    ->label('Importo Residuo')
-                    ->money('EUR')
-                    ->sortable()
-                    ->color('warning'),
+                IconColumn::make('cancelled')
+                    ->label('Annullata')
+                    ->boolean(),
                 TextColumn::make('document_type')
                     ->label('Tipo Doc.')
                     ->searchable()
                     ->sortable(),
-                IconColumn::make('cancelled')
-                    ->label('Annullata')
-                    ->boolean(),
+                TextColumn::make('number')
+                    ->label('Numero')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('document_type')
@@ -117,6 +110,9 @@ class SalesInvoicesTable
                                 fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
                             );
                     }),
+                Filter::make('closed')
+                    ->label('Riconciliato')
+                    ->query(fn($query) => $query->where('closed', true)),
                 Filter::make('invoiceable_id')
                     ->label('Non ancora collegato a Cliente / Mandante')
                     ->query(fn($query) => $query->whereNull('invoiceable_id')),

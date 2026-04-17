@@ -31,26 +31,47 @@ class SalesInvoiceForm
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                                TextInput::make('number')
-                                    ->label('Numero Fattura')
-                                    ->required()
-                                    ->maxLength(255),
-                                TextInput::make('invoice_number')
-                                    ->label('Numero Fattura Clientie')
-                                    ->maxLength(255),
-                            ]),
-                        Grid::make(2)
-                            ->schema([
                                 TextInput::make('customer_name')
                                     ->label('Nome Clientie')
                                     ->required()
                                     ->maxLength(255),
-                                TextInput::make('customer_number')
-                                    ->label('Numero Clientie')
+                                TextInput::make('amount')
+                                    ->label('Importo')
+                                    ->numeric()
+                                    ->prefix('€')
+                                    ->step(0.01),
+                            ]),
+                        Grid::make(2)
+                            ->schema([
+                                DatePicker::make('registration_date')
+                                    ->label('Data Registrazione'),
+                                TextInput::make('number')
+                                    ->label('Numero Fattura')
+                                    ->required()
                                     ->maxLength(255),
                             ]),
                     ]),
+                Section::make('Stato')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                Toggle::make('closed')
+                                    ->label('Chiusa')
+                                    ->default(false),
+                                Toggle::make('cancelled')
+                                    ->label('Annullata')
+                                    ->default(false),
+                                Toggle::make('corrected')
+                                    ->label('Corretta')
+                                    ->default(false),
+                                Toggle::make('is_nopractice')
+                                    ->label('Non relativo a finanziamenti')
+                                    ->default(false)
+                                    ->helperText('Seleziona se questa fattura non è associata a provvigioni'),
+                            ]),
+                    ]),
                 Section::make('Dettagli Clientie')
+                    ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -69,14 +90,10 @@ class SalesInvoiceForm
                             ]),
                     ]),
                 Section::make('Informazioni Finanziarie')
+                    ->collapsed()
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                TextInput::make('amount')
-                                    ->label('Importo')
-                                    ->numeric()
-                                    ->prefix('€')
-                                    ->step(0.01),
                                 TextInput::make('amount_including_vat')
                                     ->label('Importo IVA Inclusa')
                                     ->numeric()
@@ -105,18 +122,21 @@ class SalesInvoiceForm
                             ]),
                     ]),
                 Section::make('Date')
+                    ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 DatePicker::make('document_date')
                                     ->label('Data Documento'),
-                                DatePicker::make('registration_date')
-                                    ->label('Data Registrazione'),
                                 DatePicker::make('due_date')
                                     ->label('Data Scadenza'),
+                                TextInput::make('customer_number')
+                                    ->label('Numero Clientie')
+                                    ->maxLength(255),
                             ]),
                     ]),
                 Section::make('Informazioni Pagamento e Indirizzo')
+                    ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -138,25 +158,6 @@ class SalesInvoiceForm
                                 TextInput::make('pay_to_country_code')
                                     ->label('Codice Nazione Pagamento')
                                     ->maxLength(2),
-                            ]),
-                    ]),
-                Section::make('Stato')
-                    ->schema([
-                        Grid::make(3)
-                            ->schema([
-                                Toggle::make('closed')
-                                    ->label('Chiusa')
-                                    ->default(false),
-                                Toggle::make('cancelled')
-                                    ->label('Annullata')
-                                    ->default(false),
-                                Toggle::make('corrected')
-                                    ->label('Corretta')
-                                    ->default(false),
-                                Toggle::make('is_nopractice')
-                                    ->label('Non relativo a finanziamenti')
-                                    ->default(false)
-                                    ->helperText('Seleziona se questa fattura non è associata a provvigioni'),
                             ]),
                     ]),
             ]);

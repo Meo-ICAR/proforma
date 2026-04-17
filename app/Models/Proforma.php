@@ -52,6 +52,10 @@ class Proforma extends Model
         'anticipo_residuo',
         'delta_annotation',
         'proforma_id',
+        'tipo',
+        'vat_number',
+        'invoiceable_id',
+        'invoiceable_type',
     ];
 
     /**
@@ -71,6 +75,11 @@ class Proforma extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
+
+    public function getTotaleAttribute()
+    {
+        return $this->compenso + $this->anticipo + $this->contributo;
+    }
 
     /**
      * Get the fornitore that owns the proforma.
@@ -107,12 +116,12 @@ class Proforma extends Model
     /**
      * Get the invoice that this proforma belongs to (polymorphic).
      */
-    public function sales()
+    public function salesInvoice()
     {
         return $this->morphTo(SalesInvoice::class, 'sales');
     }
 
-    public function purchases()
+    public function purchasesInvoice()
     {
         return $this->morphTo(PurchaseInvoice::class, 'purchases');
     }
@@ -126,7 +135,7 @@ class Proforma extends Model
             'vat_number',  // Foreign key on sales_invoices table
             'fornitori_id',  // Foreign key on proformas table
             'piva'  // Local key on clienti table
-        )->where('sales_invoices.registration_date', '<=', $this->sended_at);
+        )->where('sales_invoices.registration_date', '>=', $this->sended_at);
     }
 
     protected static function booted()

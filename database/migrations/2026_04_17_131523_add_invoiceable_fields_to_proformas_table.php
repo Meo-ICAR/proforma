@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::table('proformas', function (Blueprint $table) {
             $table->string('tipo')->nullable();
+            $table->string('vat_number')->nullable();
             $table->string('invoiceable_type')->nullable();
             $table->unsignedBigInteger('invoiceable_id')->nullable();
             $table->index(['invoiceable_type', 'invoiceable_id']);

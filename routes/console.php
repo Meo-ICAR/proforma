@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('coge:sync-monthly')->monthlyOn(1, '01:00');
+
+// Load custom commands
+use App\Console\Commands\MatchProformasToInvoices;

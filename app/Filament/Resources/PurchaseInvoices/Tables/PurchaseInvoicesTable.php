@@ -40,11 +40,6 @@ class PurchaseInvoicesTable
                     ->collapsible(),
             ])
             ->columns([
-                TextColumn::make('number')
-                    ->label('Doc. n.')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
                 TextColumn::make('document_date')
                     ->label('Del')
                     ->date()
@@ -53,70 +48,65 @@ class PurchaseInvoicesTable
                     ->label('Fornitore')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('vat_number')
-                    ->label('Partita IVA')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('amount')
                     ->label('Amount')
                     ->money('EUR')
                     ->sortable()
                     ->summarize(Sum::make()->money('EUR')->label('')),
-                TextColumn::make('amount_including_vat')
-                    ->label('Amount incl. VAT')
-                    ->money('EUR')
-                    ->sortable()
-                    ->summarize(Sum::make()->money('EUR')->label('')),
-                TextColumn::make('residual_amount')
-                    ->label('Residual')
-                    ->money('EUR')
-                    ->sortable()
-                    ->summarize(Sum::make()->money('EUR')->label(''))
-                    ->color(function ($state) {
-                        return $state > 0 ? 'warning' : 'success';
-                    }),
-                TextColumn::make('due_date')
-                    ->label('Due Date')
-                    ->date()
-                    ->sortable()
-                    ->color(function ($state, $record) {
-                        if (!$state || $record->closed)
-                            return null;
-                        return $state->isPast() ? 'danger' : null;
-                    }),
                 IconColumn::make('closed')
-                    ->label('Closed')
+                    ->label('Riconciliato')
                     ->boolean()
                     ->sortable(),
                 IconColumn::make('cancelled')
                     ->label('Cancelled')
                     ->boolean()
                     ->sortable(),
+                TextColumn::make('number')
+                    ->label('Doc. n.')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('vat_number')
+                    ->label('Partita IVA')
+                    ->searchable()
+                    ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('invoiceable_type')
-                    ->label('Attached To')
-                    ->options([
-                        null => 'Nessuno',
-                        'App\Models\Clienti' => 'Clienti',
-                        'App\Models\Fornitore' => 'Fornitore',
-                    ]),
-                Filter::make('invoiceable_id')
-                    ->label('Non ancora collegato a Clienti / Fornitore')
-                    ->query(fn($query) => $query->whereNull('invoiceable_id')),
-                Filter::make('open_invoices')
-                    ->label('Open Invoices')
-                    ->query(fn($query) => $query->where('closed', false)),
-                Filter::make('overdue')
-                    ->label('Overdue')
-                    ->query(function ($query) {
-                        return $query
-                            ->where('closed', false)
-                            ->whereNotNull('due_date')
-                            ->where('due_date', '<', now());
+                SelectFilter::make('document_type')
+                    ->label('Tipo Documento')
+                    ->options(SalesInvoice::distinct('document_type')
+                        ->whereNotNull('document_type')
+                        ->pluck('document_type', 'document_type')
+                        ->toArray()),
+                Filter::make('registration_date')
+                    ->label('Data Registrazione')
+                    ->form([
+                        DatePicker::make('registered_from')
+                            ->label('Da'),
+                        DatePicker::make('registered_until')
+                            ->label('A'),
+                    ])
+                    ->query(function (array $data) {
+                        return SalesInvoice::query()
+                            ->when(
+                                $data['registered_from'],
+                                fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
+                            )
+                            ->when(
+                                $data['registered_until'],
+                                fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
+                            );
                     }),
+                Filter::make('closed')
+                    ->label('Riconciliato')
+                    ->query(fn($query) => $query->where('closed', true)),
+                Filter::make('invoiceable_id')
+                    ->label('Non ancora collegato a Consulente / Agente')
+                    ->query(fn($query) => $query->whereNull('invoiceable_id')),
+                Filter::make('cancelled')
+                    ->label('Annullate')
+                    ->query(fn($query) => $query->where('cancelled', true)),
                 Filter::make('is_nopractice')
-                    ->label('Non Practice')
+                    ->label('Non legato a provvigioni')
                     ->query(fn($query) => $query->where('is_nopractice', true)),
             ])
             ->recordActions([
