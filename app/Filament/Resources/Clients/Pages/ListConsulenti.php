@@ -8,7 +8,7 @@ use Filament\Resources\Pages\ListRecords;
 
 class ListConsulenti extends ListRecords
 {
-    protected static string $resource = ClientResource::class;
+    protected string $resource = ClientResource::class;
 
     protected function getHeaderActions(): array
     {
