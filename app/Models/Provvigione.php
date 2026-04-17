@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -184,11 +185,19 @@ class Provvigione extends Model
     }
 
     /**
-     * Get the stato record associated with the provvigione.
+     * Get stato record associated with provvigione.
      */
     public function compensoRecord()
     {
         return $this->belongsTo(Compenso::class, 'stato_compenso', 'stato_compenso');
+    }
+
+    /**
+     * Get the invoice that this provvigione belongs to (polymorphic).
+     */
+    public function invoiceable()
+    {
+        return $this->morphTo();
     }
 
     /**
@@ -264,8 +273,26 @@ class Provvigione extends Model
                 p1.denominazione_riferimento = p2.denominazione_riferimento AND
                 p1.descrizione = p2.descrizione
             WHERE p1.id < p2.id
-        ';
+            and p1.data_fattura is null
 
+        ';
+        return \DB::delete($sql);
+    }
+
+    public static function deleteOldDuplicates2()
+    {
+        $sql = '
+            DELETE p1
+            FROM provvigioni p1
+            INNER JOIN provvigioni p2 ON
+                p1.id_pratica = p2.id_pratica AND
+                p1.tipo = p2.tipo AND
+                p1.denominazione_riferimento = p2.denominazione_riferimento AND
+                p1.descrizione = p2.descrizione
+            WHERE p1.id > p2.id
+            and p1.data_fattura is null
+
+        ';
         return \DB::delete($sql);
     }
 }

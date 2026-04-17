@@ -320,6 +320,9 @@ class ImportProvvigioniFromApi extends Command
 
             // Delete old duplicates
             $deletedCount = Provvigione::deleteOldDuplicates();
+            $this->info("Deleted {$deletedCount} old duplicates no invoice.");
+
+            $deletedCount = Provvigione::deleteOldDuplicates2();
             $this->info("Deleted {$deletedCount} old duplicates.");
 
             $updatedCount = \DB::update(

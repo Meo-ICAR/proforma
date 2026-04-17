@@ -5,6 +5,7 @@ namespace App\Filament\Resources\SalesInvoices;
 use App\Filament\Resources\SalesInvoices\Pages\CreateSalesInvoice;
 use App\Filament\Resources\SalesInvoices\Pages\EditSalesInvoice;
 use App\Filament\Resources\SalesInvoices\Pages\ListSalesInvoices;
+use App\Filament\Resources\SalesInvoices\RelationManagers\ProvvigioniRelationManager;
 use App\Filament\Resources\SalesInvoices\Schemas\SalesInvoiceForm;
 use App\Filament\Resources\SalesInvoices\Tables\SalesInvoicesTable;
 use App\Models\SalesInvoice;
@@ -42,7 +43,7 @@ class SalesInvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ProvvigioniRelationManager::class,
         ];
     }
 

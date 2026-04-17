@@ -161,6 +161,7 @@ class PurchaseInvoicesTable
                                     'vat_number' => $record->vat_number,
                                     'is_company' => 1,
                                     'is_lead' => 0,
+                                    'is_person' => 0,
                                     'is_client' => 0,
                                     'company_id' => Auth::user()->company_id
                                 ]);

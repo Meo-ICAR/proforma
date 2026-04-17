@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Clienti;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Model;
 
@@ -75,13 +78,42 @@ class SalesInvoice extends Model
         'email_sent_at' => 'datetime',
     ];
 
-    public function invoiceable(): MorphTo
-    {
-        return $this->morphTo();
-    }
-
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function proforma()
+    {
+        return $this->morphto(Proforma::class, 'sales');
+    }
+
+    public function cliente()
+    {
+        return $this->belongsTo(Clienti::class, 'vat_number', 'piva');
+    }
+
+    public function proformas()
+    {
+        return $this->hasManyThrough(
+            Proforma::class,
+            Clienti::class,
+            'piva',  // Foreign key on clienti table
+            'fornitori_id',  // Foreign key on proformas table
+            'vat_number',  // Local key on sales_invoices table
+            'id'  // Local key on clienti table
+        );
+    }
+
+    public function proformasAfterRegistration()
+    {
+        return $this->hasManyThrough(
+            Proforma::class,
+            Clienti::class,
+            'piva',  // Foreign key on clienti table
+            'fornitori_id',  // Foreign key on proformas table
+            'vat_number',  // Local key on sales_invoices table
+            'id'  // Local key on clienti table
+        )->where('proformas.sended_at', '>=', $this->registration_date);
     }
 }

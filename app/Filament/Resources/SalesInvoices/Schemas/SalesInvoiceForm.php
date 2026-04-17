@@ -6,16 +6,17 @@ use App\Models\Client;
 use App\Models\Clienti;
 use App\Models\Company;
 use App\Models\Principal;
+use App\Models\Provvigione;
 use App\Services\SalesInvoiceCreditNoteImportService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Repeater;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
@@ -139,62 +140,6 @@ class SalesInvoiceForm
                                     ->maxLength(2),
                             ]),
                     ]),
-                Section::make('Relazioni')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                Select::make('invoiceable_type')
-                                    ->label('Collega A')
-                                    ->options([
-                                        Clienti::class => 'Clienti',
-                                        Client::class => 'Istituti',
-                                        // Client::class => 'Cliente', // Commentato per sales invoices
-                                    ])
-                                    ->reactive()
-                                    ->afterStateUpdated(fn($state, callable $set) => $set('invoiceable_id', null)),
-                                Select::make('invoiceable_id')
-                                    ->label('Seleziona Record')
-                                    ->required()
-                                    ->reactive()
-                                    ->getSearchResultsUsing(function (callable $get) {
-                                        $type = $get('invoiceable_type');
-                                        if (!$type)
-                                            return [];
-
-                                        $search = request()->get('search');
-                                        switch ($type) {
-                                            case Clienti::class:
-                                                return Clienti::where('name', 'like', "%{$search}%")
-                                                    ->orWhere('first_name', 'like', "%{$search}%")
-                                                    ->limit(50)
-                                                    ->pluck('name', 'id')
-                                                    ->toArray();
-                                            case Client::class:
-                                                returnClient::where('name', 'like', "%{$search}%")
-                                                    ->limit(50)
-                                                    ->pluck('name', 'id')
-                                                    ->toArray();
-                                            default:
-                                                return [];
-                                        }
-                                    })
-                                    ->getOptionLabelUsing(function (callable $get) {
-                                        $type = $get('invoiceable_type');
-                                        $id = $get('invoiceable_id');
-                                        if (!$type || !$id)
-                                            return null;
-
-                                        switch ($type) {
-                                            case Clienti::class:
-                                                return Clienti::find($id)?->name;
-                                            case Client::class:
-                                                returnClient::find($id)?->name;
-                                            default:
-                                                return null;
-                                        }
-                                    }),
-                            ]),
-                    ]),
                 Section::make('Stato')
                     ->schema([
                         Grid::make(3)
@@ -209,9 +154,9 @@ class SalesInvoiceForm
                                     ->label('Corretta')
                                     ->default(false),
                                 Toggle::make('is_nopractice')
-                                    ->label('Non relativo ad un finanziamento')
+                                    ->label('Non relativo a finanziamenti')
                                     ->default(false)
-                                    ->helperText('Seleziona se questa fattura non è associata a una provvigione'),
+                                    ->helperText('Seleziona se questa fattura non è associata a provvigioni'),
                             ]),
                     ]),
             ]);

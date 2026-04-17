@@ -3,10 +3,15 @@
 namespace App\Models;
 
 use App\Mail\ProformaMail;
+use App\Models\Clienti;
 use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\Provvigione;
+use App\Models\PurchaseInvoice;
+use App\Models\SalesInvoice;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Mail;
@@ -75,6 +80,11 @@ class Proforma extends Model
         return $this->belongsTo(Fornitore::class, 'fornitori_id');
     }
 
+    public function cliente()
+    {
+        return $this->belongsTo(Clienti::class, 'fornitori_id');
+    }
+
     protected $with = ['fornitore'];
 
     /**
@@ -92,6 +102,31 @@ class Proforma extends Model
     public function provvigioni()
     {
         return $this->hasMany(Provvigione::class, 'proforma_id');
+    }
+
+    /**
+     * Get the invoice that this proforma belongs to (polymorphic).
+     */
+    public function sales()
+    {
+        return $this->morphTo(SalesInvoice::class, 'sales');
+    }
+
+    public function purchases()
+    {
+        return $this->morphTo(PurchaseInvoice::class, 'purchases');
+    }
+
+    public function salesInvoicesBeforeSending()
+    {
+        return $this->hasManyThrough(
+            SalesInvoice::class,
+            Clienti::class,
+            'id',  // Local key on clienti table
+            'vat_number',  // Foreign key on sales_invoices table
+            'fornitori_id',  // Foreign key on proformas table
+            'piva'  // Local key on clienti table
+        )->where('sales_invoices.registration_date', '<=', $this->sended_at);
     }
 
     protected static function booted()

@@ -18,6 +18,43 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use BackedEnum;
 use UnitEnum;
 
+/*
+ * create view vwproformaistituto as
+ * select 'Pagato' AS `stato`,`c`.`id` AS `fornitori_id`,`p`.`data_fattura` AS `sended`,sum(`p`.`importo`) AS `compenso`,'Storico MediaFacile' AS `compenso_descrizione` from (`provvigioni` `p` join `clientis` `c` on((`c`.`name` = `p`.`denominazione_riferimento`))) where ((`p`.`data_fattura` is not null) and (`p`.`tipo` = 'Istituto')) group by `p`.`stato`,`c`.`id`,`p`.`data_fattura`
+ *
+ * insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaistituto
+ *
+ * update provvigioni p
+ * inner join clientis c on c.name =p.denominazione_riferimento
+ * inner join proformas f on f.fornitori_id = c.id
+ * set p.proforma_id = f.id
+ * where p.tipo = 'Istituto'
+ * and p.data_fattura is not null
+ * and p.data_fattura = f.sended_at
+ *
+ * UPDATE proformas p  INNER JOIN clientis c on c.id =p.fornitori_id
+ * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  , emailto = c.email
+ * where stato = 'Pagato' and emailsubject is null
+ *
+ * create view vwproformaagente as
+ * select 'Pagato' AS `stato`,`c`.`id` AS `fornitori_id`,`p`.`data_fattura` AS `sended`,sum(`p`.`importo`) AS `compenso`,'Storico MediaFacile' AS `compenso_descrizione` from (`provvigioni` `p` join `fornitoris` `c` on((`c`.`name` = `p`.`denominazione_riferimento`))) where ((`p`.`data_fattura` is not null) and (`p`.`tipo` = 'Agente') and (p.proforma_id is null)) group by `p`.`stato`,`c`.`id`,`p`.`data_fattura`
+ *
+ *  * insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaagente
+ *
+ * update provvigioni p
+ * inner join fornitoris  c on c.name =p.denominazione_riferimento
+ *  inner join proformas f on f.fornitori_id = c.id
+ *  set p.proforma_id = f.id
+ *  where p.tipo = 'Agente'
+ *  and p.data_fattura is not null
+ *  and p.data_fattura = f.sended_at
+ *  and p.proforma_id is null
+ *
+ * UPDATE proformas p  INNER JOIN fornitoris c on c.id =p.fornitori_id
+ * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  , emailto = c.email
+ * where stato = 'Pagato' and emailsubject is null
+ */
+
 class ProformaResource extends Resource
 {
     protected static ?string $model = Proforma::class;

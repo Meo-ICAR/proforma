@@ -42,8 +42,14 @@ class ClientForm
                                             ->visible(fn(Get $get) => $get('is_person'))  // Scompare se azienda
                                             ->maxLength(255),
                                         TextInput::make('tax_code')
-                                            ->label(fn(Get $get) => $get('is_person') ? 'Codice Fiscale' : 'P.IVA')
+                                            ->label('Codice Fiscale')
                                             ->unique(ignoreRecord: true)
+                                            ->visible(fn(Get $get) => $get('is_person'))
+                                            ->maxLength(16),
+                                        TextInput::make('vat_number')
+                                            ->label('P.IVA')
+                                            ->unique(ignoreRecord: true)
+                                            ->visible(fn(Get $get) => !$get('is_person'))
                                             ->maxLength(16),
                                     ])
                                     ->columns(4),
@@ -53,6 +59,7 @@ class ClientForm
                                         TextInput::make('phone')->label('Telefono')->tel(),
                                         Select::make('client_type_id')
                                             ->label('Tipologia')
+                                            ->visible(fn(Get $get) => !$get('is_person'))
                                             ->relationship('clientType', 'name')
                                             ->searchable(),
                                     ])
@@ -63,11 +70,23 @@ class ClientForm
                             ->icon('heroicon-o-cog')
                             ->schema([
                                 Grid::make(3)->schema([
-                                    Toggle::make('is_anonymous')->label('Anagrafica di comodo non reale'),
-                                    Toggle::make('is_lead')->label('È un Lead'),
+                                    Toggle::make('is_anonymous')->label('Anagrafica di comodo non di reale interesse es ATC'),
+                                    Toggle::make('privacy_consent')
+                                        ->live()
+                                        ->label('Nomina a responsabile Privacy')
+                                        ->visible(fn(Get $get) => !$get('is_person')),
+                                    Textarea::make('subfornitori')
+                                        ->visible(fn(Get $get) => $get('privacy_consent'))
+                                        ->label('Eventuali subfornitori che trattano dati personali per conto del consulente')
+                                        ->rows(3)
+                                        ->columnSpanFull(),
+                                    Toggle::make('is_lead')
+                                        ->label('È un Lead')
+                                        ->visible(fn(Get $get) => $get('is_person')),
                                     Select::make('leadsource_id')
                                         ->relationship('leadSource', 'name')
                                         ->label('Sorgente Lead')
+                                        ->visible(fn(Get $get) => $get('is_person'))
                                         ->searchable(),
                                 ]),
                             ]),
@@ -76,6 +95,7 @@ class ClientForm
                             ->icon('heroicon-o-shield-check')
                             ->schema([
                                 Section::make('Valutazione Rischio (AML)')
+                                    ->visible(fn(Get $get) => $get('is_person'))
                                     ->description('Indicatori di rischio e posizioni critiche')
                                     ->schema([
                                         Toggle::make('is_pep')->label('PEP (Esposto Politicamente)'),
@@ -101,14 +121,18 @@ class ClientForm
                                     ->columns(3),
                                 Section::make('Consensi Privacy')
                                     ->schema([
-                                        DateTimePicker::make('general_consent_at')->label('Consenso Base'),
-                                        DateTimePicker::make('consent_marketing_at')->label('Marketing'),
-                                        DateTimePicker::make('consent_profiling_at')->label('Profilazione'),
-                                        DateTimePicker::make('consent_sic_at')->label('Consenso SIC (CRIF)'),
-                                        Textarea::make('subfornitori')
-                                            ->label('Subfornitori che trattano dati personali per conto del cliente')
-                                            ->rows(3)
-                                            ->columnSpanFull(),
+                                        DateTimePicker::make('general_consent_at')
+                                            ->label('Consenso Base')
+                                            ->visible(fn(Get $get) => $get('is_person')),
+                                        DateTimePicker::make('consent_marketing_at')
+                                            ->label('Marketing')
+                                            ->visible(fn(Get $get) => $get('is_person')),
+                                        DateTimePicker::make('consent_profiling_at')
+                                            ->label('Profilazione')
+                                            ->visible(fn(Get $get) => $get('is_person')),
+                                        DateTimePicker::make('consent_sic_at')
+                                            ->label('Consenso SIC (CRIF)')
+                                            ->visible(fn(Get $get) => $get('is_person')),
                                     ])
                                     ->columns(2),
                             ]),

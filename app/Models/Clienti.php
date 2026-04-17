@@ -110,4 +110,12 @@ class Clienti extends Model
     {
         return $this->belongsTo(Company::class);
     }
+
+    /**
+     * Get the customertype that owns the client.
+     */
+    public function proforma()
+    {
+        return $this->hasMany(Proforma::class, 'fornitori_id');
+    }
 }
