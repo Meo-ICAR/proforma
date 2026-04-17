@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients\Tables;
 
+use App\Models\Client;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -25,10 +26,11 @@ use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
 
-class ConsulentiTable extends table
+class ConsulentiTable
 {
     public static function configure(Table $table): Table
     {
@@ -96,12 +98,6 @@ class ConsulentiTable extends table
                 // Date
             ])
             ->filters([
-                TernaryFilter::make('is_company')
-                    ->label('Consulenti')
-                    ->placeholder('Tutti')
-                    ->default(false)
-                    ->trueLabel('Consulenti')
-                    ->falseLabel('Clienti'),
                 // Filtro per tipologia
                 TernaryFilter::make('is_person')
                     ->label('Tipo Soggetto')

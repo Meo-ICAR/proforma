@@ -9,6 +9,7 @@ use App\Filament\Resources\Clients\Pages\ListConsulenti;
 use App\Filament\Resources\Clients\Schemas\ClientForm;
 use App\Filament\Resources\Clients\Tables\ClientsTable;
 use App\Models\Client;
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -22,11 +23,11 @@ class ClientResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'Consulenti';
+    protected static ?string $navigationLabel = 'Clienti';
 
-    protected static ?string $modelLabel = 'Consulenti';
+    protected static ?string $modelLabel = 'Cliente';
 
-    protected static ?string $pluralModelLabel = 'Consulenti';
+    protected static ?string $pluralModelLabel = 'Clienti';
 
     protected static UnitEnum|string|null $navigationGroup = 'Anagrafiche';
 
@@ -58,7 +59,9 @@ class ClientResource extends Resource
         return [
             ...parent::getNavigationItems(),
             NavigationItem::make('Consulenti')
-                ->icon('heroicon-o-check-circle')
+                ->label('Consulenti / Fornitori')
+                ->group('Anagrafiche')
+                ->icon('heroicon-o-users')
                 ->url(static::getUrl('consulenti'))
                 ->sort(2),
         ];
