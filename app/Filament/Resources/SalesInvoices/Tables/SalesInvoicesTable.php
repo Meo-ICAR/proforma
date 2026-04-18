@@ -222,6 +222,53 @@ class SalesInvoicesTable
                                 ->danger()
                                 ->send();
                         }
+                    }),
+                Action::make('process_proformas')
+                    ->label('Ricava Proforme')
+                    ->icon('heroicon-o-cog')
+                    ->color('info')
+                    ->action(function () {
+                        try {
+                            \DB::statement('
+                                insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione )
+select v.stato, v.fornitori_id, v.sended, v.compenso, v.compenso_descrizione
+from vwproformaistituto v
+left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
+where p.id is null
+                            ');
+
+                            \DB::statement("
+                                update provvigioni p
+                                inner join clientis c on c.name = p.denominazione_riferimento
+                                inner join proformas f on f.fornitori_id = c.id
+                                set p.proforma_id = f.id
+                                where p.tipo = 'Istituto'
+                                and p.data_fattura is not null
+                                and p.data_fattura = f.sended_at
+                                and p.proforma_id is null
+                            ");
+
+                            \DB::statement("
+                                UPDATE proformas p
+                                INNER JOIN clientis c on c.id = p.fornitori_id
+                                set emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso) ,
+                                emailto = c.email,
+                                p.tipo = 'Istituto', p.vat_number = c.piva
+                                where stato = 'Pagato' and emailsubject is null
+                            ");
+
+                            Notification::make()
+                                ->title('Processamento Proforme completato')
+                                ->body('Proforme istituto processate con successo')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Errore processamento Proforme')
+                                ->body('Errore durante il processamento: ' . $e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     })
             ])
             ->recordActions([

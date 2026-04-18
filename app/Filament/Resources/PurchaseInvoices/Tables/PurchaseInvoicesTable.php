@@ -13,6 +13,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -73,7 +74,7 @@ class PurchaseInvoicesTable
             ->filters([
                 SelectFilter::make('document_type')
                     ->label('Tipo Documento')
-                    ->options(SalesInvoice::distinct('document_type')
+                    ->options(PurchaseInvoice::distinct('document_type')
                         ->whereNotNull('document_type')
                         ->pluck('document_type', 'document_type')
                         ->toArray()),
@@ -86,7 +87,7 @@ class PurchaseInvoicesTable
                             ->label('A'),
                     ])
                     ->query(function (array $data) {
-                        return SalesInvoice::query()
+                        return PurchaseInvoice::query()
                             ->when(
                                 $data['registered_from'],
                                 fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
@@ -202,7 +203,7 @@ class PurchaseInvoicesTable
                                 ->danger()
                                 ->send();
                         }
-                    })
+                    }),
             ], position: RecordActionsPosition::BeforeColumns)
             ->headerActions([
                 Action::make('import_credit_notes')
@@ -298,6 +299,53 @@ class PurchaseInvoicesTable
                             Notification::make()
                                 ->title('Errore associazione')
                                 ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+                Action::make('process_proformas')
+                    ->label('Ricava Proforme')
+                    ->icon('heroicon-o-cog')
+                    ->color('info')
+                    ->action(function () {
+                        try {
+                            \DB::statement('
+                                insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione )
+                                select v.stato, v.fornitori_id, v.sended, v.compenso, v.compenso_descrizione
+                                from vwproformaagente v
+                                left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
+                                where p.id is null
+                            ');
+
+                            \DB::statement("
+                                update provvigioni p
+                                inner join fornitoris c on c.name = p.denominazione_riferimento
+                                inner join proformas f on f.fornitori_id = c.id
+                                set p.proforma_id = f.id
+                                where p.tipo = 'Agente'
+                                and p.data_fattura is not null
+                                and p.data_fattura = f.sended_at
+                                and p.proforma_id is null
+                            ");
+
+                            \DB::statement("
+                                UPDATE proformas p
+                                INNER JOIN fornitoris c on c.id = p.fornitori_id
+                                set emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso) ,
+                                emailto = c.email,
+                                p.tipo = 'Agente', p.vat_number = c.piva
+                                where stato = 'Pagato' and emailsubject is null
+                            ");
+
+                            Notification::make()
+                                ->title('Inserimento Proforma completato')
+                                ->body('Proforma agente inserite con successo')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Errore processamento Proforme')
+                                ->body('Errore durante il processamento: ' . $e->getMessage())
                                 ->danger()
                                 ->send();
                         }

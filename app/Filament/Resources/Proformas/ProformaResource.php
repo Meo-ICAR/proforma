@@ -22,7 +22,12 @@ use UnitEnum;
  * create view vwproformaistituto as
  * select 'Pagato' AS `stato`,`c`.`id` AS `fornitori_id`,`p`.`data_fattura` AS `sended`,sum(`p`.`importo`) AS `compenso`,'Storico MediaFacile' AS `compenso_descrizione` from (`provvigioni` `p` join `clientis` `c` on((`c`.`name` = `p`.`denominazione_riferimento`))) where ((`p`.`data_fattura` is not null) and (`p`.`tipo` = 'Istituto')) group by `p`.`stato`,`c`.`id`,`p`.`data_fattura`
  *
- * insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaistituto
+ * create view vwproformaagente as
+ * select 'Pagato' AS `stato`,`c`.`id` AS `fornitori_id`,`p`.`data_fattura` AS `sended`,sum(`p`.`importo`) AS `compenso`,'Storico MediaFacile' AS `compenso_descrizione` from (`provvigioni` `p` join `fornitoris` `c` on((`c`.`name` = `p`.`denominazione_riferimento`))) where ((`p`.`data_fattura` is not null) and (`p`.`tipo` = 'Agente') and (p.proforma_id is null)) group by `p`.`stato`,`c`.`id`,`p`.`data_fattura`
+ *
+ * insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaistituto v
+ * left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
+ * where p.id is null
  *
  * update provvigioni p
  * inner join clientis c on c.name =p.denominazione_riferimento
@@ -31,15 +36,19 @@ use UnitEnum;
  * where p.tipo = 'Istituto'
  * and p.data_fattura is not null
  * and p.data_fattura = f.sended_at
+ * and p.proforma_id is null
  *
  * UPDATE proformas p  INNER JOIN clientis c on c.id =p.fornitori_id
- * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  , emailto = c.email
+ * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  , emailto = c.email,
+ * p.tipo = 'Istituto', p.vat_number = c.piva,
  * where stato = 'Pagato' and emailsubject is null
  *
- * create view vwproformaagente as
- * select 'Pagato' AS `stato`,`c`.`id` AS `fornitori_id`,`p`.`data_fattura` AS `sended`,sum(`p`.`importo`) AS `compenso`,'Storico MediaFacile' AS `compenso_descrizione` from (`provvigioni` `p` join `fornitoris` `c` on((`c`.`name` = `p`.`denominazione_riferimento`))) where ((`p`.`data_fattura` is not null) and (`p`.`tipo` = 'Agente') and (p.proforma_id is null)) group by `p`.`stato`,`c`.`id`,`p`.`data_fattura`
  *
- *  * insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaagente
+ *
+ *  insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione ) select * from vwproformaagente v
+ *  left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
+ * where p.id is null
+ *
  *
  * update provvigioni p
  * inner join fornitoris  c on c.name =p.denominazione_riferimento
@@ -51,7 +60,8 @@ use UnitEnum;
  *  and p.proforma_id is null
  *
  * UPDATE proformas p  INNER JOIN fornitoris c on c.id =p.fornitori_id
- * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  , emailto = c.email
+ * set  emailsubject = concat('Storico #',p.id,' ',c.name,' Totale ',p.compenso)  ,
+ * emailto = c.email, p.tipo = 'Agente', p.vat_number = c.piva
  * where stato = 'Pagato' and emailsubject is null
  */
 
