@@ -24,8 +24,10 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class PurchaseInvoicesTable
@@ -58,6 +60,8 @@ class PurchaseInvoicesTable
                     ->label('Riconciliato')
                     ->boolean()
                     ->sortable(),
+                ToggleColumn::make('is_nopractice')
+                    ->label('No Provvigioni'),
                 IconColumn::make('cancelled')
                     ->label('Cancelled')
                     ->boolean()
@@ -106,7 +110,7 @@ class PurchaseInvoicesTable
                     ->label('Annullate'),
                 SelectFilter::make('document_type')
                     ->label('Tipo Documento')
-                    ->options(SalesInvoice::distinct('document_type')
+                    ->options(PurchaseInvoice::distinct('document_type')
                         ->whereNotNull('document_type')
                         ->pluck('document_type', 'document_type')
                         ->toArray()),

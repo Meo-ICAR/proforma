@@ -66,14 +66,16 @@ class SalesInvoicesTable
                             ->label('')
                     ])
                     ->sortable(),
-                ToggleColumn::make('closed')
-                    ->label('Riconciliata'),
+                IconColumn::make('closed')
+                    ->label('Riconciliato')
+                    ->boolean()
+                    ->sortable(),
+                ToggleColumn::make('is_nopractice')
+                    ->label('No Provvigioni'),
                 TextColumn::make('vat_number')
                     ->label('Partita IVA')
                     ->searchable()
                     ->sortable(),
-                ToggleColumn::make('is_nopractice')
-                    ->label('No Provvigioni'),
                 IconColumn::make('cancelled')
                     ->label('Annullata')
                     ->boolean(),
