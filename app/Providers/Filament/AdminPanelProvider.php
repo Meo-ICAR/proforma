@@ -8,8 +8,10 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Filament\Panel;
@@ -40,9 +42,15 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()
+            ->navigationGroups([
+                NavigationGroup::make()->label('Pratiche'),
+                NavigationGroup::make()->label('Contabilita'),
+                NavigationGroup::make()->label('Anagrafica')->collapsed(),
+                NavigationGroup::make()->label('Settings')->collapsed(),
+            ])
             ->favicon(asset('favicon.ico'))
             // ->search()
+            ->default()
             ->id('admin')
             ->path('admin')
             ->login()

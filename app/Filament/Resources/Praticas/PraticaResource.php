@@ -29,7 +29,7 @@ class PraticaResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Pratiche';
 
-    //  protected static UnitEnum|string|null $navigationGroup = 'Archivi';
+    // protected static UnitEnum|string|null $navigationGroup = 'Pratiche';
 
     protected static ?int $navigationSort = 10;
 

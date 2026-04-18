@@ -122,6 +122,10 @@ class AttiveTable
                     ->label('Perfezionata il')
                     ->date()
                     ->sortable(),
+                TextColumn::make('data_fattura')
+                    ->label('Fatturato il')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
                     ->searchable(),

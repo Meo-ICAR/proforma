@@ -29,11 +29,11 @@ class UserResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Utenti';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Anagrafiche';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 8;
 
     public static function form(Schema $schema): Schema
     {

@@ -33,6 +33,9 @@ class ClientisTable
                 TextColumn::make('coge')
                     ->sortable()
                     ->searchable(),
+                ToggleColumn::make('is_dummy')
+                    ->label('Fittizia')
+                    ->sortable(),
                 ToggleColumn::make('is_active')
                     ->label('Attiva')
                     ->sortable(),

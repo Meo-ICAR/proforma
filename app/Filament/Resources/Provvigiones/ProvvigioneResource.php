@@ -32,7 +32,8 @@ class ProvvigioneResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Provvigioni';
 
-    // protected static UnitEnum|string|null $navigationGroup = 'Archivi';
+    // protected static UnitEnum|string|null $navigationGroup = 'Pratiche';
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'denominazione_riferimento';

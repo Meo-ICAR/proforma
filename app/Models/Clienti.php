@@ -77,6 +77,7 @@ class Clienti extends Model
         'citta',
         'company_id',
         'is_active',
+        'is_dummy',
     ];
 
     /**
@@ -87,6 +88,8 @@ class Clienti extends Model
     protected $casts = [
         'id' => 'string',
         'company_id' => 'string',
+        'is_active' => 'boolean',
+        'is_dummy' => 'boolean',
         'deleted_at' => 'datetime',
     ];
 

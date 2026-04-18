@@ -67,7 +67,8 @@ class ProformaResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Proforma';
 
-    //  protected static UnitEnum|string|null $navigationGroup = 'Archivi';
+    // protected static UnitEnum|string|null $navigationGroup = 'Pratiche';
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'emailsubject';

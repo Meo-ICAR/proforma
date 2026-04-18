@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Clienti;
 use App\Models\Fornitore;
 use App\Models\Pratica;
 use Carbon\Carbon;
@@ -103,7 +104,11 @@ class ImportPraticheFromApi extends Command
                     if ($praticaData['is_notowned'] === true) {
                         continue;
                     }
-
+                    // check banca esiste
+                    $banca = Clienti::firstOrCreate(
+                        ['name' => $praticaData['denominazione_banca']],
+                        //  ['piva' => $praticaData['partita_iva_agente']]
+                    );
                     if (empty($praticaData['id'])) {
                         $this->warn('Skipping item without id: ' . json_encode($item));
                         $errors++;
@@ -134,6 +139,13 @@ class ImportPraticheFromApi extends Command
                             ['name' => $praticaData['denominazione_agente']],
                             ['piva' => $praticaData['partita_iva_agente']]
                         );
+
+                        // check banca esiste
+                        $banca = Clienti::firstOrCreate(
+                            ['name' => $praticaData['denominazione_banca']],
+                            //  ['piva' => $praticaData['partita_iva_agente']]
+                        );
+
                         Pratica::create($praticaData);
                         $imported++;
                         //  $this->info("Imported new pratica: {$praticaData['id']}");

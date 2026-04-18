@@ -30,6 +30,8 @@ class PurchaseInvoiceResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 
+    protected static ?int $navigationSort = 4;
+
     //    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema

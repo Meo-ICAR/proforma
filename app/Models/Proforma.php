@@ -206,6 +206,8 @@ class Proforma extends Model
             'emailfrom' => $fornitore->company->emailfrom ?? 'proforma@hassisto.eu',
             'stato' => 'Inserito',
             'compenso' => 0,
+            'tipo' => 'Agente',
+            'vat_number' => $fornitore->piva,
             'created_at' => now(),
             'updated_at' => now(),
         ];
