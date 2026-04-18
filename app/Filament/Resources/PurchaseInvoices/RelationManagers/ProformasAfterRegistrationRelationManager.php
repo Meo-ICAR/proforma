@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\RelationManagers;
 
+use App\Models\Proforma;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -52,6 +53,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                 TextInput::make('emailsubject')
                     ->columnSpanFull(),
                 TextInput::make('invoiceable_id'),
+                TextInput::make('id'),
             ]);
     }
 
@@ -59,10 +61,10 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
     {
         return $table
             ->checkIfRecordIsSelectableUsing(
-                fn(\App\Models\Proforma $record): bool => $record->invoiceable_id === null
+                fn(Proforma $record): bool => $record->invoiceable_id === null
             )
             ->recordTitleAttribute('name')
-            ->defaultSort('sended_at')
+            ->defaultSort('sended_at', 'desc')
             ->columns([
                 TextColumn::make('sended_at')
                     ->dateTime()
@@ -92,12 +94,9 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('emailsubject')
                     ->searchable(),
+                TextColumn::make('purchaseInvoice.sended_at')
             ])
             ->filters([
-                Filter::make('unassociated')
-                    ->label('Solo non associate')
-                    ->query(fn(Builder $query): Builder => $query->whereNull('invoiceable_id'))
-                    ->default(),
                 Filter::make('sended_at_range')
                     ->label('Intervallo date invio')
                     ->form([
@@ -121,9 +120,8 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                         if ($data['sended_to']) {
                             return "A: {$data['sended_to']}";
                         }
-                        return 'Solo non associate';
+                        return '';
                     }),
-                // TrashedFilter::make(),
             ])
             ->headerActions([
                 BulkAction::make('riconcilia')

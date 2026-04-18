@@ -94,6 +94,19 @@ class Proforma extends Model
         return $this->belongsTo(Clienti::class, 'fornitori_id');
     }
 
+    /**
+     * Get the invoice that this proforma belongs to (polymorphic).
+     */
+    public function salesInvoice()
+    {
+        return $this->morphTo(SalesInvoice::class, 'sales');
+    }
+
+    public function purchasesInvoice()
+    {
+        return $this->morphTo(PurchaseInvoice::class, 'purchases');
+    }
+
     protected $with = ['fornitore'];
 
     /**
@@ -111,31 +124,6 @@ class Proforma extends Model
     public function provvigioni()
     {
         return $this->hasMany(Provvigione::class, 'proforma_id');
-    }
-
-    /**
-     * Get the invoice that this proforma belongs to (polymorphic).
-     */
-    public function salesInvoice()
-    {
-        return $this->morphTo(SalesInvoice::class, 'sales');
-    }
-
-    public function purchasesInvoice()
-    {
-        return $this->morphTo(PurchaseInvoice::class, 'purchases');
-    }
-
-    public function salesInvoicesBeforeSending()
-    {
-        return $this->hasManyThrough(
-            SalesInvoice::class,
-            Clienti::class,
-            'id',  // Local key on clienti table
-            'vat_number',  // Foreign key on sales_invoices table
-            'fornitori_id',  // Foreign key on proformas table
-            'piva'  // Local key on clienti table
-        )->where('sales_invoices.registration_date', '>=', $this->sended_at);
     }
 
     protected static function booted()
