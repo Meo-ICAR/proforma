@@ -274,6 +274,7 @@ class Provvigione extends Model
                 p1.descrizione = p2.descrizione
             WHERE p1.id < p2.id
             and p1.data_fattura is null
+               and p1.proforma_id is null
 
         ';
         return \DB::delete($sql);
@@ -291,6 +292,7 @@ class Provvigione extends Model
                 p1.descrizione = p2.descrizione
             WHERE p1.id > p2.id
             and p1.data_fattura is null
+            and p1.proforma_id is null
 
         ';
         return \DB::delete($sql);
