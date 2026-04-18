@@ -244,7 +244,11 @@ class SalesInvoicesTable
                                     ->reactive(),
                                 Select::make('client_id')
                                     ->label('Cliente')
-                                    ->options(Client::orderBy('name')->whereNull('vat_number')->pluck('name', 'id'))
+                                    ->options(
+                                        Client::orderBy('name')
+                                            ->whereNull('vat_number')
+                                            ->pluck('name', 'id')
+                                    )
                                     ->searchable()
                                     ->required()
                                     ->visible(fn($get) => $get('action_type') === 'select_existing')
@@ -262,7 +266,12 @@ class SalesInvoicesTable
                                     ->reactive(),
                                 Select::make('clienti_id')
                                     ->label('Cliente')
-                                    ->options(Clienti::orderBy('name')->whereNull('piva')->where('is_dummy', false)->pluck('name', 'id'))
+                                    ->options(
+                                        Clienti::orderBy('name')
+                                            ->whereNull('piva')
+                                            ->where('is_dummy', false)
+                                            ->pluck('name', 'id')
+                                    )
                                     ->searchable()
                                     ->required()
                                     ->visible(fn($get) => $get('action_type') === 'select_existing')
