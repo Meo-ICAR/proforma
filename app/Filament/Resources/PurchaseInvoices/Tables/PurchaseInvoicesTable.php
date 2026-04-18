@@ -72,12 +72,6 @@ class PurchaseInvoicesTable
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('document_type')
-                    ->label('Tipo Documento')
-                    ->options(PurchaseInvoice::distinct('document_type')
-                        ->whereNotNull('document_type')
-                        ->pluck('document_type', 'document_type')
-                        ->toArray()),
                 Filter::make('registration_date')
                     ->label('Data Registrazione')
                     ->form([
@@ -86,8 +80,8 @@ class PurchaseInvoicesTable
                         DatePicker::make('registered_until')
                             ->label('A'),
                     ])
-                    ->query(function (array $data) {
-                        return PurchaseInvoice::query()
+                    ->query(function (Builder $query, array $data) {
+                        $query
                             ->when(
                                 $data['registered_from'],
                                 fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
@@ -97,18 +91,25 @@ class PurchaseInvoicesTable
                                 fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
                             );
                     }),
-                Filter::make('closed')
-                    ->label('Riconciliato')
-                    ->query(fn($query) => $query->where('closed', true)),
-                Filter::make('invoiceable_id')
-                    ->label('Non ancora collegato a Consulente / Agente')
-                    ->query(fn($query) => $query->whereNull('invoiceable_id')),
-                Filter::make('cancelled')
-                    ->label('Annullate')
-                    ->query(fn($query) => $query->where('cancelled', true)),
-                Filter::make('is_nopractice')
-                    ->label('Non legato a provvigioni')
-                    ->query(fn($query) => $query->where('is_nopractice', true)),
+                TernaryFilter::make('closed')
+                    ->label('Riconciliato'),
+                SelectFilter::make('invoiceable_type')
+                    ->label('Associato a')
+                    ->options([
+                        'App\Models\Fornitore' => 'Agente',
+                        'App\Models\Client' => 'Consulente',
+                        null => 'Non associato'
+                    ]),
+                TernaryFilter::make('is_nopractice')
+                    ->label('Non legato a provvigioni'),
+                TernaryFilter::make('cancelled')
+                    ->label('Annullate'),
+                SelectFilter::make('document_type')
+                    ->label('Tipo Documento')
+                    ->options(SalesInvoice::distinct('document_type')
+                        ->whereNotNull('document_type')
+                        ->pluck('document_type', 'document_type')
+                        ->toArray()),
             ])
             ->recordActions([
                 Action::make('attach_to_model')
@@ -277,7 +278,7 @@ class PurchaseInvoicesTable
                         }
                     }),
                 Action::make('associate_purchase_invoices')
-                    ->label('Abbina')
+                    ->label('Riconcilia con proforma')
                     ->icon('heroicon-o-link')
                     ->color('warning')
                     ->action(function () {
@@ -304,7 +305,7 @@ class PurchaseInvoicesTable
                         }
                     }),
                 Action::make('process_proformas')
-                    ->label('Ricava Proforme')
+                    ->label('Ricava storico proforma')
                     ->icon('heroicon-o-cog')
                     ->color('info')
                     ->action(function () {

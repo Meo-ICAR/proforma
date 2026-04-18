@@ -53,6 +53,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                 TextInput::make('emailsubject')
                     ->columnSpanFull(),
                 TextInput::make('invoiceable_id'),
+                TextInput::make('id'),
             ]);
     }
 
@@ -93,7 +94,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('emailsubject')
                     ->searchable(),
-                TextColumn::make('purchaseInvoice.sended_at')
+                TextColumn::make('SalesInvoice.sended_at')
             ])
             ->filters([
                 Filter::make('sended_at_range')

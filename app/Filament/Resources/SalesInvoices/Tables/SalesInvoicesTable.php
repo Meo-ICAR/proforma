@@ -29,8 +29,10 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class SalesInvoicesTable
@@ -85,12 +87,6 @@ class SalesInvoicesTable
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('document_type')
-                    ->label('Tipo Documento')
-                    ->options(SalesInvoice::distinct('document_type')
-                        ->whereNotNull('document_type')
-                        ->pluck('document_type', 'document_type')
-                        ->toArray()),
                 Filter::make('registration_date')
                     ->label('Data Registrazione')
                     ->form([
@@ -99,8 +95,8 @@ class SalesInvoicesTable
                         DatePicker::make('registered_until')
                             ->label('A'),
                     ])
-                    ->query(function (array $data) {
-                        return SalesInvoice::query()
+                    ->query(function (Builder $query, array $data) {
+                        $query
                             ->when(
                                 $data['registered_from'],
                                 fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
@@ -110,18 +106,25 @@ class SalesInvoicesTable
                                 fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
                             );
                     }),
-                Filter::make('closed')
-                    ->label('Riconciliato')
-                    ->query(fn($query) => $query->where('closed', true)),
-                Filter::make('invoiceable_id')
-                    ->label('Non ancora collegato a Cliente / Mandante')
-                    ->query(fn($query) => $query->whereNull('invoiceable_id')),
-                Filter::make('cancelled')
-                    ->label('Annullate')
-                    ->query(fn($query) => $query->where('cancelled', true)),
-                Filter::make('is_nopractice')
-                    ->label('Non legato a provvigioni')
-                    ->query(fn($query) => $query->where('is_nopractice', true)),
+                TernaryFilter::make('closed')
+                    ->label('Riconciliato'),
+                SelectFilter::make('invoiceable_type')
+                    ->label('Associato a')
+                    ->options([
+                        'App\Models\Clienti' => 'Istituto',
+                        'App\Models\Client' => 'Cliente',
+                        null => 'Non associato'
+                    ]),
+                TernaryFilter::make('is_nopractice')
+                    ->label('Non legato a provvigioni'),
+                TernaryFilter::make('cancelled')
+                    ->label('Annullate'),
+                SelectFilter::make('document_type')
+                    ->label('Tipo Documento')
+                    ->options(SalesInvoice::distinct('document_type')
+                        ->whereNotNull('document_type')
+                        ->pluck('document_type', 'document_type')
+                        ->toArray()),
             ])
             ->headerActions([
                 Action::make('import_sales_invoices')
@@ -197,7 +200,7 @@ class SalesInvoicesTable
                         }
                     }),
                 Action::make('associate_sales_invoices')
-                    ->label('Abbina')
+                    ->label('Riconcilia con proforma')
                     ->icon('heroicon-o-link')
                     ->color('warning')
                     ->action(function () {
@@ -224,7 +227,7 @@ class SalesInvoicesTable
                         }
                     }),
                 Action::make('process_proformas')
-                    ->label('Ricava Proforme')
+                    ->label('Ricava storico proforma')
                     ->icon('heroicon-o-cog')
                     ->color('info')
                     ->action(function () {
