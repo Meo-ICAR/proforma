@@ -90,7 +90,7 @@ class PurchaseInvoiceMatchingService
         }
         $n = \DB::update('UPDATE fornitoris c
 JOIN (
-    SELECT vat_number, MAX(supplier) AS unique_name, MAX(customer_number) AS unique_coge
+    SELECT vat_number, MAX(supplier) AS unique_name, MAX(supplier_number) AS unique_coge
     FROM purchase_invoices
     WHERE invoiceable_type like "%Fornitori"
     GROUP BY vat_number

@@ -25,7 +25,7 @@ class VenasarcototResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 
-    protected static ?string $navigationLabel = 'Conguaglio ENASARCO';
+    protected static ?string $navigationLabel = 'ENASARCO Conguaglio';
 
     protected static ?string $modelLabel = 'Conguaglio ENASARCO';
 
