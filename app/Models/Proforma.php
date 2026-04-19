@@ -78,7 +78,8 @@ class Proforma extends Model
 
     public function getTotaleAttribute()
     {
-        return $this->compenso + $this->anticipo + $this->contributo;
+        return $this->compenso + $this->anticipo + $this->contributo
+            + $this->delta;
     }
 
     /**

@@ -19,6 +19,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -27,6 +28,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProformasAfterRegistrationRelationManager extends RelationManager
@@ -37,23 +39,33 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                DateTimePicker::make('sended_at'),
+                TextInput::make('emailsubject')
+                    ->disabled()
+                    ->columnSpanFull(),
+                DateTimePicker::make('sended_at')
+                    ->disabled(),
                 TextInput::make('compenso')
+                    ->disabled()
                     ->numeric(),
                 TextInput::make('contributo')
+                    ->disabled()
                     ->numeric(),
                 TextInput::make('anticipo')
+                    ->disabled()
                     ->numeric(),
                 Textarea::make('annotation')
+                    ->disabled()
                     ->columnSpanFull(),
-                TextInput::make('anticipo')
+                TextInput::make('delta')
+                    ->label('Differenza con fattura')
+                    ->live()
                     ->numeric(),
                 Textarea::make('delta_annotation')
+                    ->label('Giustificativo differenza')
+                    ->required(fn($get) => $get('delta') != 0)
                     ->columnSpanFull(),
-                TextInput::make('emailsubject')
-                    ->columnSpanFull(),
-                TextInput::make('invoiceable_id'),
-                TextInput::make('id'),
+                TextInput::make('id')->disabled(),
+                TextInput::make('invoiceable_id')->disabled(),
             ]);
     }
 
@@ -127,9 +139,25 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                 BulkAction::make('riconcilia')
                     ->label('Riconcilia Proforma con fattura')
                     ->color('success')
-                    ->requiresConfirmation()
                     ->accessSelectedRecords()
-                    ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                    ->before(function (BulkAction $action, Collection $records) {
+                        $salesInvoice = $this->getOwnerRecord();
+                        $salesInvoiceId = $salesInvoice->id;
+                        $salesAmount = $salesInvoice->amount;
+                        $sum = $records->sum('totale');
+                        $delta = $sum - $salesAmount;
+                        if (abs($delta) > 5) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Differenza importi troppo grande!')
+                                ->body('Totale proforma ' . $sum . ' non corrisponde al totale della fattura ' . $salesAmount . ' (delta: ' . $delta . '). Modifica il delta su proforma e riprovare.')
+                                ->persistent()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    })
+                    ->action(function (Collection $records) {
                         // Get the parent sales invoice ID
                         $salesInvoiceId = $this->getOwnerRecord()->id;
 

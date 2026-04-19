@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\PurchaseInvoices\RelationManagers;
 
 use App\Models\Proforma;
+use App\Models\PurchaseInvoice;
+use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -17,8 +19,10 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -27,7 +31,9 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class ProformasAfterRegistrationRelationManager extends RelationManager
 {
@@ -37,23 +43,33 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                DateTimePicker::make('sended_at'),
+                TextInput::make('emailsubject')
+                    ->disabled()
+                    ->columnSpanFull(),
+                DateTimePicker::make('sended_at')
+                    ->disabled(),
                 TextInput::make('compenso')
+                    ->disabled()
                     ->numeric(),
                 TextInput::make('contributo')
+                    ->disabled()
                     ->numeric(),
                 TextInput::make('anticipo')
+                    ->disabled()
                     ->numeric(),
                 Textarea::make('annotation')
+                    ->disabled()
                     ->columnSpanFull(),
-                TextInput::make('anticipo')
+                TextInput::make('delta')
+                    ->label('Differenza con fattura')
+                    ->live()
                     ->numeric(),
                 Textarea::make('delta_annotation')
+                    ->label('Giustificativo differenza')
+                    ->required(fn($get) => $get('delta') != 0)
                     ->columnSpanFull(),
-                TextInput::make('emailsubject')
-                    ->columnSpanFull(),
-                TextInput::make('invoiceable_id'),
-                TextInput::make('id'),
+                TextInput::make('id')->disabled(),
+                TextInput::make('invoiceable_id')->disabled(),
             ]);
     }
 
@@ -127,12 +143,26 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                 BulkAction::make('riconcilia')
                     ->label('Riconcilia Proforma con fattura')
                     ->color('success')
-                    ->requiresConfirmation()
                     ->accessSelectedRecords()
-                    ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                        // Get the parent purchase invoice ID
-                        $purchaseInvoiceId = $this->getOwnerRecord()->id;
+                    ->before(function (BulkAction $action, Collection $records) {
+                        $purchaseInvoice = $this->getOwnerRecord();
+                        $purchaseInvoiceId = $purchaseInvoice->id;
+                        $purchaseAmount = $purchaseInvoice->amount;
+                        $sum = $records->sum('totale');
+                        $delta = $sum - $purchaseAmount;
+                        if (abs($delta) > 5) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Differenza importi troppo grande!')
+                                ->body('Totale proforma ' . $sum . ' non corrisponde al totale della fattura ' . $purchaseAmount . ' (delta: ' . $delta . '). Modifica il delta su proforma e riprovare.')
+                                ->persistent()
+                                ->send();
 
+                            $action->halt();
+                        }
+                    })
+                    //  ->requiresConfirmation()
+                    ->action(function (Collection $records) {
                         // Process each record with a visible loop
                         $records->each(function ($record) use ($purchaseInvoiceId) {
                             $record->update([
@@ -150,11 +180,6 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
             ])
             ->recordActions([
                 EditAction::make(),
-                //   AssociateAction::make(),
-                //  DissociateAction::make(),
-                //   DeleteAction::make(),
-                //   ForceDeleteAction::make(),
-                // RestoreAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
