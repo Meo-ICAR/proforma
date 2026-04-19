@@ -88,6 +88,14 @@ class SalesInvoiceMatchingService
                 ];
             }
         }
+        $n = \DB::update('UPDATE clientis c
+JOIN (
+    SELECT vat_number, MAX(customer_name) as unique_name, MAX(customer_number) AS unique_coge
+    FROM sales_invoices
+    WHERE invoiceable_type like "%Clienti"
+    GROUP BY vat_number
+) s ON c.piva = s.vat_number
+SET c.nome = s.unique_name, c.coge = s.unique_coge;');
 
         return $results;
     }

@@ -88,6 +88,14 @@ class PurchaseInvoiceMatchingService
                 ];
             }
         }
+        $n = \DB::update('UPDATE fornitoris c
+JOIN (
+    SELECT vat_number, MAX(supplier) AS unique_name, MAX(customer_number) AS unique_coge
+    FROM purchase_invoices
+    WHERE invoiceable_type like "%Fornitori"
+    GROUP BY vat_number
+) s ON c.piva = s.vat_number
+SET c.nome = s.unique_name, c.coge = s.unique_coge;');
 
         return $results;
     }

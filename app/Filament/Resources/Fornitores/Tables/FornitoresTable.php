@@ -9,8 +9,12 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class FornitoresTable
 {
@@ -41,7 +45,11 @@ class FornitoresTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('email')
-                    ->label('Email address'),
+                    ->label('Email')
+                    ->sortable(),
+                ToggleColumn::make('isdipendente')
+                    ->label('Dipendente')
+                    ->sortable(),
                 TextColumn::make('regione')
                     ->searchable()
                     ->sortable(),
@@ -53,6 +61,26 @@ class FornitoresTable
             ])
             ->filters([
                 TrashedFilter::make(),
+                TernaryFilter::make('email')
+                    ->label('Email')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Con Email')
+                    ->falseLabel('Senza Email')
+                    ->queries(
+                        true: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('isdipendente', false))->whereNotNull('email')->where('email', '!=', ''),
+                        false: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('isdipendente', false))->whereNull('email')->orWhere('email', ''),
+                        blank: fn(Builder $query) => $query,
+                    ),
+                TernaryFilter::make('enasarco')
+                    ->label('Enasarco')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Con Enasarco')
+                    ->falseLabel('Senza Enasarco')
+                    ->queries(
+                        true: fn(Builder $query) => $query->whereNotNull('enasarco')->where('enasarco', '!=', ''),
+                        false: fn(Builder $query) => $query->whereNull('enasarco')->orWhere('enasarco', ''),
+                        blank: fn(Builder $query) => $query,
+                    ),
             ])
             ->recordActions([
                 ViewAction::make(),

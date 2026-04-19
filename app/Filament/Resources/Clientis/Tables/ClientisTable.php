@@ -9,9 +9,12 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class ClientisTable
@@ -25,6 +28,7 @@ class ClientisTable
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('nome')
+                    ->label('Fattura a')
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('piva')
@@ -41,6 +45,16 @@ class ClientisTable
                     ->sortable(),
             ])
             ->filters([
+                TernaryFilter::make('piva')
+                    ->label('Partita IVA')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Con Partita IVA')
+                    ->falseLabel('Senza Partita IVA')
+                    ->queries(
+                        true: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('is_active', true))->whereNotNull('piva')->where('piva', '!=', ''),
+                        false: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('is_active', true))->whereNull('piva')->orWhere('piva', ''),
+                        blank: fn(Builder $query) => $query,
+                    ),
                 TrashedFilter::make(),
             ])
             ->recordActions([
@@ -48,9 +62,9 @@ class ClientisTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    ForceDeleteBulkAction::make(),
-                    RestoreBulkAction::make(),
+                    //   DeleteBulkAction::make(),
+                    //   ForceDeleteBulkAction::make(),
+                    //   RestoreBulkAction::make(),
                 ]),
             ]);
     }

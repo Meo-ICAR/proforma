@@ -10,10 +10,12 @@ use App\Filament\Resources\Fornitores\Schemas\FornitoreForm;
 use App\Filament\Resources\Fornitores\Schemas\FornitoreInfoList;
 use App\Filament\Resources\Fornitores\Tables\FornitoresTable;
 use App\Models\Fornitore;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use BackedEnum;
@@ -26,6 +28,35 @@ class FornitoreResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-user-group';  // Heroicon::OutlinedRectangleStack;
 
     protected static ?string $navigationLabel = 'Produttori';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $n =
+            Fornitore::where('isdipendente', false)
+                ->where(function ($query) {
+                    $query
+                        ->whereNull('email')
+                        ->orWhere('email', '');
+                })
+                ->count();
+        if ($n > 0) {
+            return $n;
+        }
+        return null;
+    }
+
+    public static function getNavigationBadgeTooltip(): Htmlable|string|null
+    {
+        return 'Produttori senza email';
+    }
+
+    public static function getNavigationBadgeAction(): ?Action
+    {
+        return Action::make('filter_no_email')
+            ->label('Filtra senza email')
+            ->icon('heroicon-o-funnel')
+            ->url('/admin/fornitori?filters[email][value]=0');
+    }
 
     protected static ?string $modelLabel = 'Produttori';
 

@@ -54,7 +54,8 @@ class PurchaseInvoiceForm
                     ->schema([
                         Grid::make(2)
                             ->schema([
-                               ->label('No Provvigioni')
+                                Toggle::make('is_nopractice')
+                                    ->label('No Provvigioni')
                                     ->afterStateUpdated(function ($record, $state) {
                                         $record->update(['closed' => $state]);
                                     })

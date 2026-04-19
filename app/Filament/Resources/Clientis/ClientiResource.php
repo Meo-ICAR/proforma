@@ -8,10 +8,12 @@ use App\Filament\Resources\Clientis\Pages\ListClientis;
 use App\Filament\Resources\Clientis\Schemas\ClientiForm;
 use App\Filament\Resources\Clientis\Tables\ClientisTable;
 use App\Models\Clienti;
+use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use BackedEnum;
@@ -52,6 +54,38 @@ class ClientiResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $n =
+            Clienti::where('is_active', true)
+                ->whereNull('piva')
+                ->count();
+        if ($n > 0) {
+            return $n;
+        }
+        return null;
+    }
+
+    public static function getNavigationBadgeTooltip(): Htmlable|string|null
+    {
+        return 'Istituti senza partita IVA';
+    }
+
+    public static function getNavigationBadgeAction(): ?Action
+    {
+        // filters[piva][value]=0
+        return Action::make('filter_no_piva')
+            ->label('Filtra senza partita IVA')
+            ->icon('heroicon-o-funnel')
+            ->url(fn() => static::getUrl('index', [
+                'filters' => [
+                    'piva' => [
+                        'value' => 0,
+                    ],
+                ],
+            ]));
     }
 
     public static function getPages(): array
