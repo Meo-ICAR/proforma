@@ -62,7 +62,10 @@ class PurchaseInvoicesTable
                     ->boolean()
                     ->sortable(),
                 ToggleColumn::make('is_nopractice')
-                    ->label('No Provvigioni'),
+                    ->label('No Provvigioni')
+                    ->afterStateUpdated(function ($record, $state) {
+                        $record->update(['closed' => $state]);
+                    }),
                 IconColumn::make('cancelled')
                     ->label('Cancelled')
                     ->boolean()

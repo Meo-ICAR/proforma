@@ -55,8 +55,18 @@ class SalesInvoiceForm
                     ->schema([
                         Grid::make(3)
                             ->schema([
+                                Toggle::make('is_nopractice')
+                                    ->label('No Provvigioni')
+                                    ->afterStateUpdated(function ($record, $state) {
+                                        $record->update(['closed' => $state]);
+                                    })
+                                    ->default(false)
+                                    /*
+                                     * ->disabled(fn($record) => $record && $record->proformas()->count() > 0)
+                                     */
+                                    ->helperText('Fattura non relativa a finanziamenti'),
                                 Toggle::make('closed')
-                                    ->label('Chiusa')
+                                    ->label('Riconciliata')
                                     ->default(false),
                                 Toggle::make('cancelled')
                                     ->label('Annullata')
@@ -64,10 +74,6 @@ class SalesInvoiceForm
                                 Toggle::make('corrected')
                                     ->label('Corretta')
                                     ->default(false),
-                                Toggle::make('is_nopractice')
-                                    ->label('Non relativo a finanziamenti')
-                                    ->default(false)
-                                    ->helperText('Seleziona se questa fattura non è associata a provvigioni'),
                             ]),
                     ]),
                 Section::make('Dettagli Clientie')

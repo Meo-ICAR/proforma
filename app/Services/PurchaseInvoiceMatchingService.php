@@ -144,13 +144,14 @@ class PurchaseInvoiceMatchingService
         if (empty($invoice->vat_number)) {
             $FornitoreMatch = $this->matchWithClientByName($invoice);
             if ($FornitoreMatch['matched']) {
+                $invoice->update(['closed' => true, 'is_notpractice' => true]);
                 return $FornitoreMatch;
             }
         }
 
         return [
             'matched' => false,
-            'reason' => 'No matching found for Client: ' . $invoice->supplier
+            'reason' => 'No matching found for supplier: ' . $invoice->supplier
         ];
     }
 

@@ -63,19 +63,34 @@ class AttiveTable
                     ->color('primary')
                     ->requiresConfirmation()
                     ->accessSelectedRecords()
-                    ->requiresConfirmation()
-                    ->accessSelectedRecords()
-                    ->action(function (Collection $records) {
+                    // chiede data emissione proforma
+                    // crea o trova proforma con fornitore_id = $record->istituto_finanziario
+                    // associa provvigioni a proforma
+                    ->form([
+                        DatePicker::make('data_emissione')
+                            ->label('Data Emissione Proforma')
+                            ->default(now())
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn($state, callable $set) => $set('data_emissione', $state)),
+                    ])
+                    ->action(function (Collection $records, array $data) {
+                        $dataEmissione = $data['data_emissione'];
+
                         // Process each record with a visible loop
-                        $records->each(function ($record) {
+                        $records->each(function ($record) use ($dataEmissione) {
+                            $proformaId = Proforma::createFromIstitutoFinanziario($record->istituto_finanziario, $dataEmissione);
                             $record->update([
                                 'stato' => 'Proforma',
+                                //  'data_fattura' => $dataEmissione,
+                                'proforma_id' => $proformaId,
                             ]);
                         });
 
-                        // Show success notification with count
+                        // Show success notification with count and date
                         Notification::make()
                             ->title(count($records) . ' provvigioni abbinate a proforma')
+                            ->body('Data emissione: ' . Carbon::parse($dataEmissione)->format('d/m/Y'))
                             ->success()
                             ->send();
                     }),
@@ -94,7 +109,7 @@ class AttiveTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . ' provvigioni abbinate a proforma')
+                            ->title(count($records) . ' provvigioni annullate')
                             ->success()
                             ->send();
                     }),
@@ -369,20 +384,6 @@ class AttiveTable
                     ->collapsible(),  // SOSTITUISCE le vecchie impostazioni di groupingSettings
             ])
             ->defaultGroup('istituto_finanziario');
-
-        /*
-         * ->recordGroupActions([
-         * Action::make('create_proforma')
-         * ->label('Emetti proforma')
-         * ->icon('heroicon-o-arrow-down-tray')
-         * ->action(function (Group $livewire, array $data, $groupKey) {
-         *     // $groupKey contiene il valore del raggruppamento
-         *     // Esporta solo record di questo gruppo
-         * }),
-         *  ])
-         */
-        // Se vuoi che sia raggruppato di default:
-        // ->defaultGroup('denominazione_riferimento');
     }
 
     protected function getTableListeners(): array

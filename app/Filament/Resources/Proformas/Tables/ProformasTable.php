@@ -9,6 +9,7 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
@@ -18,6 +19,7 @@ use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Columns\Column;
@@ -81,9 +83,49 @@ class ProformasTable
                     ->multiple()
                     ->placeholder('Tutti gli stati')
                     ->default(['Inserito']),
+                SelectFilter::make('tipo')
+                    ->label('Tipo')
+                    ->options([
+                        'Agente' => 'Agente',
+                        'Istituto' => 'Istituto',
+                        'Cliente' => 'Cliente',
+                    ])
+                    ->multiple()
+                    ->placeholder('Tutti i tipi')
+                    ->default(['Agente']),
+                Filter::make('reconciled')
+                    ->label('Riconciliato')
+                    ->form([
+                        Select::make('status')
+                            ->label('Riconciliazione')
+                            ->options([
+                                'all' => 'Tutti',
+                                'reconciled' => 'Riconciliati',
+                                'not_reconciled' => 'Non riconciliati',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        $status = $data['status'] ?? 'all';
+
+                        return match ($status) {
+                            'reconciled' => $query->whereNotNull('invoiceable_id'),
+                            'not_reconciled' => $query->whereNull('invoiceable_id'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $status = $data['status'] ?? 'all';
+
+                        return match ($status) {
+                            'reconciled' => 'Riconciliati',
+                            'not_reconciled' => 'Non riconciliati',
+                            default => null,
+                        };
+                    }),
                 QueryBuilder::make()
                     ->constraints([
-                        DateConstraint::make('updated_at')
+                        DateConstraint::make('sended_at')
                             ->label('Data Invio')
                             ->icon('heroicon-m-calendar'),
                     ])

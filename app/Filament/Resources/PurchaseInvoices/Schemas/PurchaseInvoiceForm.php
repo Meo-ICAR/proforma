@@ -52,8 +52,17 @@ class PurchaseInvoiceForm
                     ]),
                 Section::make('Status')
                     ->schema([
-                        Grid::make(3)
+                        Grid::make(2)
                             ->schema([
+                               ->label('No Provvigioni')
+                                    ->afterStateUpdated(function ($record, $state) {
+                                        $record->update(['closed' => $state]);
+                                    })
+                                    ->default(false)
+                                    /*
+                                     * ->disabled(fn($record) => $record && $record->proformas()->count() > 0)
+                                     */
+                                    ->helperText('Fattura non relativa a finanziamenti'),
                                 Toggle::make('closed')
                                     ->label('Riconciliata')
                                     ->default(false),
@@ -63,10 +72,6 @@ class PurchaseInvoiceForm
                                 Toggle::make('corrected')
                                     ->label('Corretta')
                                     ->default(false),
-                                Toggle::make('is_nopractice')
-                                    ->label('No Provvigioni')
-                                    ->default(false)
-                                    ->helperText('Seleziona se questa fattura non è associata a finanziamenti'),
                             ]),
                     ]),
                 Section::make('Supplier Details')

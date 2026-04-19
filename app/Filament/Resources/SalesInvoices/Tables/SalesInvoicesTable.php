@@ -71,7 +71,10 @@ class SalesInvoicesTable
                     ->boolean()
                     ->sortable(),
                 ToggleColumn::make('is_nopractice')
-                    ->label('No Provvigioni'),
+                    ->label('No Provvigioni')
+                    ->afterStateUpdated(function ($record, $state) {
+                        $record->update(['closed' => $state]);
+                    }),
                 TextColumn::make('vat_number')
                     ->label('Partita IVA')
                     ->searchable()

@@ -183,6 +183,8 @@ class Proforma extends Model
 
         $proformaData = [
             'fornitori_id' => $fornitori_id,
+            'tipo' => 'Uscita',
+            'vat_number' => $fornitore->piva,
             'anticipo' => $fornitore->anticipo,
             'anticipo_descrizione' => $fornitore->anticipo_description,
             'anticipo_residuo' => $fornitore->anticipo_residuo,
@@ -213,6 +215,34 @@ class Proforma extends Model
         }
 
         return self::create($proformaData);
+    }
+
+    public static function createFromIstitutoFinanziario(string $istituto_finanziario, date $del): Proforma
+    {
+        $fornitore = Clienti::with('company')->where('name', '=', $istituto_finanziario)->firstOrFail();
+        $fornitoreId = $fornitore->id;
+
+        $exists = Proforma::where('fornitori_id', '=', $fornitoreId)->where('sended_at', '=', $del)->first();
+        if ($exists != null) {
+            return $exists->id;
+        }
+        $proformaData = [
+            'fornitori_id' => $fornitoreId,
+            'sended_at' => $del,
+            //  'tipo' =>'Entrata',
+            'vat_number' => $fornitore->piva,
+            'emailsubject' => 'Proforma - ' . $istituto_finanziario,
+            //  'emailto' => $fornitore->email,
+            'emailfrom' => $fornitore->company->emailfrom ?? 'proforma@hassisto.eu',
+            'stato' => 'Inserito',
+            'compenso' => 0,
+            'tipo' => 'Istituto',
+            'vat_number' => $fornitore->piva,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+        $proforma = self::create($proformaData);
+        return $proforma->id;
     }
 
     /**
