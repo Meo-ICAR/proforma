@@ -10,7 +10,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Client extends Model
 {
-    // use HasUserstamps;
+    //  use HasUserstamps;
+
+    /*
+     * protected static function booted()
+     * {
+     *
+     *      * static::creating(function ($client) {
+     *      *     if (auth()->check() && empty($client->company_id)) {
+     *      *         $client->company_id = auth()->user()->company_id;
+     *      *     }
+     *      * });
+     *
+     * }
+     */
 
     protected $fillable = [
         'company_id',

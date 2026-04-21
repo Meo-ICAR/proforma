@@ -109,4 +109,3 @@ class Pratica extends Model
         return $this->HasMany(Provvigione::class, 'id_pratica', 'id');
     }
 }
-app/Providers
