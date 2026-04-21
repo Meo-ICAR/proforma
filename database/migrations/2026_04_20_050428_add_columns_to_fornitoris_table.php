@@ -4,19 +4,18 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
-
     public function up(): void
     {
         Schema::connection($this->connection)->table('fornitoris', function (Blueprint $table) {
             $table->string('pec', 255)->nullable()->comment('Indirizzo Posta Elettronica Certificata')->after('id');
             $table->string('description', 255)->nullable()->comment('Descrizione')->after('pec');
 
-            $table->enum('supervisor_type', ['no', 'si', 'filiale'])
+            $table
+                ->enum('supervisor_type', ['no', 'si', 'filiale'])
                 ->default('no')
                 ->comment('Se supervisore indicare e specificare se di filiale')
                 ->after('description');
@@ -41,8 +40,8 @@ return new class extends Migration
 
             $table->unsignedInteger('company_branch_id')->nullable()->comment('Filiale di riferimento')->after('is_art108');
             $table->unsignedInteger('coordinated_type')->nullable()->comment('ID del dipendente coordinatore')->after('company_branch_id');
-            $table->unsignedInteger('coordinated_id')->nullable()->comment('ID dell\'agente coordinatore')->after('coordinated_type');
-            $table->unsignedBigInteger('user_id')->nullable()->comment('ID dell\'utente collegato')->after('coordinated_id');
+            $table->unsignedInteger('coordinated_id')->nullable()->comment("ID dell'agente coordinatore")->after('coordinated_type');
+            $table->unsignedBigInteger('user_id')->nullable()->comment("ID dell'utente collegato")->after('coordinated_id');
 
             $table->date('oam_dismissed_at')->nullable()->comment('Data revoca OAM')->after('user_id');
             $table->decimal('welcome_bonus', 10, 2)->nullable()->comment('Premio benvenuto')->after('oam_dismissed_at');

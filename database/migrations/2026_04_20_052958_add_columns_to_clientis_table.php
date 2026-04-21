@@ -43,9 +43,11 @@ return new class extends Migration {
             $table->text('notes')->nullable()->comment('Note su provvigioni particolari o patti specifici')->after('status');
             $table->enum('principal_type', ['--', 'banca', 'agente_assicurativo', 'agente_captive'])->default('banca')->comment('Tipologia del mandante')->after('notes');
             $table->enum('submission_type', ['--', 'accesso portale', 'inoltro', 'entrambi'])->default('accesso portale')->comment('Modalità inoltro pratiche')->after('principal_type');
-            $table->string('website', 255)->nullable()->comment('sito web')->after('submission_type');
 
             $table->boolean('is_reported')->default(false)->comment('Accordi di segnalazione')->after('website');
+
+            $table->string('privacy_contact_email')->nullable()->comment('Email contatto privacy')->after('is_reported');
+            $table->string('dpo_email')->nullable()->comment('Email DPO')->after('privacy_contact_email');
         });
     }
 
