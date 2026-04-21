@@ -92,7 +92,7 @@ class Pratica extends Model
      */
     public function agente()
     {
-        return $this->belongsTo(Fornitori::class, 'partita_iva_agente', 'piva');
+        return $this->belongsTo(Fornitore::class, 'partita_iva_agente', 'piva');
     }
 
     /**
