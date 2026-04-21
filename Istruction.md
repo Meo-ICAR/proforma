@@ -12,20 +12,18 @@ Applicazione per mediatori creditizi che gestisce l'intero ciclo provvigionale: 
 
 ### 1.1 Lista Provvigioni (uscite)
 
-La schermata principale mostra tutte le provvigioni passive (uscite verso produttori), escludendo quelle con importo zero.
-
+La schermata principale mostra tutte le provvigioni passive (uscite verso produttori)
 **Colonne principali:** Stato, Produttore, Provvigione (€), Coordinamento, Data Perfezionamento, Cliente, Istituto Finanziario, Data Erogazione, Data Fattura, Pratica.
-
 **Stati possibili:** `Inserito`, `Sospeso`, `Proforma`, `Pagato`, `Annullato`, `Escluso`, `Fatturato`, `Stornato`.
 
 **Azioni su singola riga:**
 - **Inverti stato** (icona freccia): alterna la provvigione tra `Inserito` e `Sospeso`. Utile per sospendere singole provvigioni prima dell'emissione del proforma.
 
-**Azioni di massa (header):**
+**Azioni :**
 - **Emetti Proforma**: seleziona le provvigioni in stato `Inserito` e le aggrega in proforma per partita IVA del produttore. Le provvigioni di coordinamento vengono differenziate automaticamente.
 - **Annulla Provvigioni**: porta le provvigioni selezionate in stato `Annullato`.
 - **Excel**: esporta la lista raggruppata per produttore con totali.
-
+**Raggruppamento:** di default per Produttore; disponibile anche per Stato.
 **Filtri disponibili:**
 - Stato (multiplo, default: Inserito + Sospeso)
 - Coordinamento (Sì/No)
@@ -37,9 +35,6 @@ La schermata principale mostra tutte le provvigioni passive (uscite verso produt
 - **Fino al mese**: filtra le provvigioni perfezionate entro il mese selezionato (default: mese precedente)
 - **Mese erogazione**: filtra per mese di erogazione pratica
 - **Trimestre erogazione**: filtra per trimestre (1°–4°)
-
-**Raggruppamento:** di default per Produttore; disponibile anche per Stato.
-
 ---
 
 ### 1.2 Provvigioni Attive
@@ -66,7 +61,7 @@ Mostra tutti i proforma emessi verso produttori e istituti.
 - Riconciliazione (Tutti / Riconciliati / Non riconciliati)
 - Data Invio (range con query builder)
 
-**Azioni di massa (toolbar):**
+**Azioni **
 - **Invia email Proforma (al produttore)**: invia l'email con il dettaglio provvigionale al produttore reale.
 - **Simulazione invio email (a se stessi)**: invia una copia a se stessi per verifica prima dell'invio reale.
 - **Forza data invio email senza inviarla**: segna il proforma come inviato e aggiorna il montante anticipi del produttore, senza spedire l'email.

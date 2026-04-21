@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Address;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Fornitore;
@@ -96,6 +97,24 @@ JOIN (
     GROUP BY vat_number
 ) s ON c.piva = s.vat_number
 SET c.nome = s.unique_name, c.coge = s.unique_coge;');
+
+        // Get all purchase invoices that need matching
+        $purchaseInvoices = PurchaseInvoice::wherenotNull('invoiceable_id')
+            ->get();
+
+        foreach ($purchaseInvoices as $invoice) {
+            Address::updateOrCreate([
+                'addressable_id' => $invoice->invoiceable_id,
+                'addressable_type' => $invoice->invoiceable_type,
+                'address_type_id' => 5  // Sede Legale
+            ], [
+                'name' => 'Indirizzo Fatturazione',
+                'street' => $invoice->bill_to_address,
+                'city' => $invoice->bill_to_city,
+                // 'province' => $invoice->bill_to_province,
+                //  'zip_code' => $invoice->bill_to_postal_code,
+            ]);
+        }
 
         return $results;
     }

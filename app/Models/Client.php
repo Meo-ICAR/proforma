@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
 // use Wildside\Userstamps\HasUserstamps;
 
@@ -92,5 +93,13 @@ class Client extends Model
     public function leads(): HasMany
     {
         return $this->hasMany(Client::class, 'leadsource_id');
+    }
+
+    /**
+     * Get all addresses for the client.
+     */
+    public function addresses(): MorphMany
+    {
+        return $this->morphMany(Address::class, 'addressable');
     }
 }
