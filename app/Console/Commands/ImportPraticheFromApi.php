@@ -130,6 +130,10 @@ class ImportPraticheFromApi extends Command
                             $praticaData['erogated_at'] = '2024-12-31';
                             // $this->info("Updating pratica: {$praticaData['id']}");
                         }
+                        if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
+                            $praticaData['rejected_at'] = Carbon::now();
+                            //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
+                        }
                         $existing->update($praticaData);
                         $updated++;
                         //  $this->info("Updated pratica: {$praticaData['id']}");

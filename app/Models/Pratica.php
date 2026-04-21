@@ -58,6 +58,7 @@ class Pratica extends Model
         'sended_at',
         'approved_at',
         'erogated_at',
+        'rejected_at',
         'amount',
         'net',
         'is_notowned',
@@ -75,6 +76,7 @@ class Pratica extends Model
         'erogato' => 'decimal:2',
         'nrate' => 'integer',
         'sended_at' => 'date',
+        'rejected_at' => 'date',
         'approved_at' => 'date',
         'erogated_at' => 'date',
         'amount' => 'decimal:2',
@@ -100,6 +102,12 @@ class Pratica extends Model
     {
         return $this->belongsTo(PraticheStato::class, 'stato_pratica', 'stato_pratica');
     }
+
+    public function annullato()
+    {
+        return $this->stato()->is_rejected;
+    }
+
 
     /**
      * Get the agent (fornitore) associated with the pratica.
