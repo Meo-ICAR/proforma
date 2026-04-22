@@ -115,14 +115,19 @@ class ImportPraticheFromApi extends Command
                         continue;
                     }
 
-                    /*
-                     * if ($praticaData['id'] === 'QT06608') {
-                     *     \Log::info($item);
-                     * }
-                     * if ($praticaData['id'] === 'QT06494') {
-                     *     \Log::info($item);
-                     * }
-                     */
+                    if ($praticaData['id'] === 'QT06608') {
+                        \Log::info($item);
+                    }
+                    if ($praticaData['id'] === 'QT06494') {
+                        \Log::info($item);
+                    }
+                    if ($praticaData['id'] === 'QT06308') {
+                        \Log::info($item);
+                    }
+                    if ($praticaData['id'] === ' QT06266') {
+                        \Log::info($item);
+                    }
+
                     $existing = Pratica::where('id', $praticaData['id'])->first();
 
                     if ($existing) {
@@ -130,10 +135,13 @@ class ImportPraticheFromApi extends Command
                             $praticaData['erogated_at'] = '2024-12-31';
                             // $this->info("Updating pratica: {$praticaData['id']}");
                         }
-                        if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
-                            $praticaData['rejected_at'] = Carbon::now();
-                            //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
-                        }
+
+                        /*
+                         * if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
+                         *     $praticaData['rejected_at'] = Carbon::now();
+                         *     //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
+                         * }
+                         */
                         $existing->update($praticaData);
                         $updated++;
                         //  $this->info("Updated pratica: {$praticaData['id']}");
@@ -196,6 +204,7 @@ class ImportPraticheFromApi extends Command
         //   $this->info($apiData['Data_invio_istruttoria'] . ' Sended at: ' . $sendedAt);
         $approvedAt = $this->parseDate($apiData['Data_delibera_banca'] ?? null);
         $erogatedAt = $this->parseDate($apiData['Data_erogazione'] ?? null);
+        $rejectedAt = $this->parseDate($apiData['Data Annullamento'] ?? null);
 
         $amount = $this->parseDecimal($apiData['Montante'] ?? null);
         $net = $this->parseDecimal($apiData['Importo_Erogazione'] ?? null);
@@ -222,6 +231,7 @@ class ImportPraticheFromApi extends Command
             'net' => $net,
             'is_notowned' => ($apiData['Pratica_terzi'] ?? '') == 'SI' ? true : false,
             'uploaded_at' => now(),
+            'rejected_at' => $rejectedAt,
         ];
     }
 
