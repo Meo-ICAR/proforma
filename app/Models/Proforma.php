@@ -256,12 +256,32 @@ class Proforma extends Model
     public static function findOrCreateByPiva(string $piva, float $importo, bool $coordinamento): string
     {
         try {
+            \Log::info('Finding or creating proforma for P.IVA: ' . $piva);
             // Clean up the P.IVA
             $cleanedPiva = str_replace(' ', '', $piva);
 
             // Find fornitore by P.IVA (case insensitive and ignoring spaces)
-            $fornitore = Fornitore::whereRaw("REPLACE(piva, ' ', '') = ?", [$cleanedPiva])
-                ->firstOrFail();
+            // Include soft-deleted records in case the fornitore was deleted
+            $fornitore = Fornitore::withTrashed()
+                ->where(function ($query) use ($cleanedPiva) {
+                    $query
+                        ->where('piva', $cleanedPiva)
+                        ->orWhereRaw("REPLACE(piva, ' ', '') = ?", [$cleanedPiva]);
+                })
+                ->first();
+
+            if (!$fornitore) {
+                \Log::error("No fornitore found with P.IVA: {$piva} (cleaned: {$cleanedPiva})");
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException(
+                    "No query results for model [App\Models\Fornitore] with P.IVA: {$piva}"
+                );
+            }
+
+            // If the fornitore was soft-deleted, restore it
+            if ($fornitore->trashed()) {
+                \Log::info("Restoring soft-deleted fornitore with P.IVA: {$piva}");
+                $fornitore->restore();
+            }
 
             // Check if there's already a proforma in 'Inserito' status for this fornitore
             $existingProforma = self::where('fornitori_id', $fornitore->id)

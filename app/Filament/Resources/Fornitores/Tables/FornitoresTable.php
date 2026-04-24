@@ -22,6 +22,7 @@ class FornitoresTable
     {
         return $table
             ->reorderableColumns()
+            ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')
                     ->label('Produttore')

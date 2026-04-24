@@ -52,7 +52,7 @@ class ProvvigionesTable
             ->reorderableColumns()
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
-                fn(Model $record): bool => $record->stato === 'Inserito'
+                fn(Model $record): bool => $record->stato === 'Inserito' && $record->piva != null && ((strlen($record->piva) == 11) || (strlen($record->piva) == 16))
             )
             ->headerActions([
                 ExportAction::make()
@@ -73,15 +73,17 @@ class ProvvigionesTable
                         $records->each(function ($record) {
                             $email = $record->email;
                             $piva = $record->piva;
-                            if (true || ($email != null) && (strpos($email, '@') > '0')) {
+                            //     \Log::info('Processing record: ' . $email . '-' . $piva);
+                            if (($piva != null) && ((strlen($piva) == 11) || (strlen($piva) == 16))) {
                                 $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
                                     'proforma_id' => $proformaId
                                 ]);
                             } else {
+                                $reason = ($piva == null) ? 'senza partita iva' : 'con partita iva non valida (lunghezza: ' . strlen($piva) . ')';
                                 Notification::make()
-                                    ->title('ATTENZIONE Provvigione di produttore senza email o partita iva ' . $record->id . ' ' . $record->denominazione_riferimento
+                                    ->title('ATTENZIONE Provvigione di produttore ' . $reason . ' ' . $record->id . ' ' . $record->denominazione_riferimento
                                         . ' ' . $record->pratica->cognome_cliente . ' ' . $record->pratica->nome_cliente . ' ' . $record->pratica->id_pratica . ' proforma non emesso')
                                     ->danger()
                                     ->send();

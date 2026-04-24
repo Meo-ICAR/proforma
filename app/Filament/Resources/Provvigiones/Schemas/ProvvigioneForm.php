@@ -39,7 +39,7 @@ class ProvvigioneForm
                                     ->disabled(),
                                 TextInput::make('istituto_finanziario')
                                     ->disabled(),
-                                TextInput::make('piva')->disabled(),
+                                TextInput::make('piva'),
                                 TextInput::make('cf')->disabled(),
                                 TextInput::make('fonte')->disabled(),
                                 TextInput::make('tipo_pratica')->disabled(),
