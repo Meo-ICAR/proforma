@@ -2,6 +2,8 @@
 // app/Models/Fornitore.php
 namespace App\Models;
 
+use App\Models\Proforma;
+use App\Models\Provvigione;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +26,33 @@ class Fornitore extends Model
         static::creating(function ($model) {
             if (empty($model->{$model->getKeyName()})) {
                 $model->{$model->getKeyName()} = (string) Str::uuid();
+            }
+        });
+
+        static::updating(function ($model) {
+            // Check if piva is being changed
+            if ($model->isDirty('piva')) {
+                $oldPiva = $model->getOriginal('piva');
+                $newPiva = $model->piva;
+
+                // Update all related provvigioni records with the new P.IVA
+                Provvigione::where('piva', $oldPiva)
+                    ->update(['piva' => $newPiva]);
+
+                \Log::info("Updated provvigioni P.IVA from {$oldPiva} to {$newPiva} for fornitore: {$model->id}");
+            }
+
+            // Check if email is being changed
+            if ($model->isDirty('email')) {
+                $oldEmail = $model->getOriginal('email');
+                $newEmail = $model->email;
+
+                // Update all related proforma records with the new email, but only for 'Inserito' status
+                Proforma::where('fornitori_id', $model->id)
+                    ->where('stato', 'Inserito')
+                    ->update(['emailto' => $newEmail]);
+
+                \Log::info("Updated proforma email from {$oldEmail} to {$newEmail} for fornitore: {$model->id} (only 'Inserito' status)");
             }
         });
     }
@@ -90,6 +119,11 @@ class Fornitore extends Model
     public function proforma()
     {
         return $this->hasMany(Proforma::class, 'fornitori_id');
+    }
+
+    public function provvigioni()
+    {
+        return $this->hasMany(Provvigione::class, 'piva', 'vat_number');
     }
 
     /**
