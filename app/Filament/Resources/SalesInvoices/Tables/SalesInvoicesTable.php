@@ -118,8 +118,17 @@ class SalesInvoicesTable
                     ->options([
                         'App\Models\Clienti' => 'Istituto',
                         'App\Models\Client' => 'Cliente',
-                        null => 'Non associato'
-                    ]),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if ($data['value'] === null) {
+                            return $query->whereNull('invoiceable_type')->whereNull('invoiceable_id');
+                        }
+
+                        return $query
+                            ->where('invoiceable_type', $data['value'])
+                            ->whereNotNull('invoiceable_id');
+                    })
+                    ->placeholder('Non associato'),
                 TernaryFilter::make('is_nopractice')
                     ->label('Non legato a provvigioni'),
                 TernaryFilter::make('cancelled')

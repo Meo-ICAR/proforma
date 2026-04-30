@@ -98,6 +98,11 @@ class SalesInvoice extends Model
         return $this->hasMany(Proforma::class, 'vat_number', 'vat_number');
     }
 
+    public function invoiceable(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
     public function proformasAfterRegistration()
     {
         return $this->proformas()->when($this->registration_date, function ($query, $registrationDate) {
