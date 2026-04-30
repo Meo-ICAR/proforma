@@ -163,7 +163,7 @@ class PurchaseInvoicesTable
                                     'is_lead' => 0,
                                     'is_person' => 0,
                                     'is_client' => 0,
-                                    'company_id' => Auth::user()->company_id
+                                    'company_id' => Auth::user()->company_id ?? \App\Models\Company::first()->id
                                 ]);
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Client',
@@ -181,7 +181,7 @@ class PurchaseInvoicesTable
                                     'name' => $record->supplier,
                                     'piva' => $record->vat_number,
                                     'is_active' => 1,
-                                    'company_id' => Auth::user()->company_id
+                                    'company_id' => Auth::user()->company_id ?? \App\Models\Company::first()->id
                                 ]);
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Fornitore',
@@ -234,7 +234,8 @@ class PurchaseInvoicesTable
                                 throw new \Exception("File non trovato: {$filePath}");
                             }
 
-                            $result = $importService->import($filePath, Auth::user()->company_id);
+                            // Get company_id from user or fallback to first company
+                            $result = $importService->import($filePath, Auth::user()->company_id ?? \App\Models\Company::first()->id);
 
                             Notification::make()
                                 ->title('Importazione Note Credito')
@@ -266,7 +267,8 @@ class PurchaseInvoicesTable
                     ->action(function (array $data) {
                         try {
                             $filePath = storage_path('app/public/' . $data['import_file_excel']);
-                            $companyId = Auth::user()->company_id;
+                            // Get company_id from user or fallback to first company
+                            $companyId = Auth::user()->company_id ?? \App\Models\Company::first()->id;
                             $filename = basename($data['import_file_excel']);
 
                             $importService = new \App\Services\PurchaseInvoiceImportService($filename);
@@ -291,7 +293,8 @@ class PurchaseInvoicesTable
                     ->color('warning')
                     ->action(function () {
                         try {
-                            $companyId = Auth::user()->company_id;
+                            // Get company_id from user or fallback to first company
+                            $companyId = Auth::user()->company_id ?? \App\Models\Company::first()->id;
                             $matchService = new PurchaseInvoiceMatchingService();
                             $matchService->setCompanyId($companyId);  // Usa il metodo setter
 

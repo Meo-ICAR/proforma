@@ -16,6 +16,7 @@ class PurchaseInvoiceImportService
 {
     protected $companyId;
     protected $filename;
+    protected $processedInvoices = [];
 
     protected $importResults = [
         'imported' => 0,
@@ -52,6 +53,9 @@ class PurchaseInvoiceImportService
             'details' => [],
             'filename' => $this->filename,
         ];
+
+        // Reset processed invoices for new import
+        $this->processedInvoices = [];
 
         // Handle storage path
         $actualFilePath = $filePath;
@@ -265,21 +269,43 @@ class PurchaseInvoiceImportService
             // Add company_id
             $invoiceData['company_id'] = $this->companyId;
 
-            // Check if invoice already exists
+            // Get cleaned invoice number for duplicate checking
+            $invoiceNumber = $invoiceData['number'];
+
+            // Check if this invoice number has already been processed in the current import
+            if (isset($this->processedInvoices[$invoiceNumber])) {
+                Log::info('Skipping duplicate invoice within same import', [
+                    'row_number' => $rowNumber,
+                    'invoice_number' => $invoiceNumber,
+                    'previous_row' => $this->processedInvoices[$invoiceNumber]
+                ]);
+                $this->importResults['skipped']++;
+                $this->importResults['details'][] = "Skipped duplicate invoice: {$invoiceNumber} (row {$rowNumber})";
+                return;
+            }
+
+            // Mark this invoice number as processed
+            $this->processedInvoices[$invoiceNumber] = $rowNumber;
+
+            // Check if invoice already exists in database
             $existingInvoice = PurchaseInvoice::where('company_id', $this->companyId)
-                ->where('number', $invoiceData['number'])
+                ->where('number', $invoiceNumber)
                 ->first();
 
             if ($existingInvoice) {
-                // Update existing invoice
-                $existingInvoice->update($invoiceData);
-                $this->importResults['updated']++;
-                $this->importResults['details'][] = "Updated invoice: {$invoiceData['number']} (row {$rowNumber})";
+                // Skip existing invoice - do not update
+                Log::info('Skipping existing invoice in database', [
+                    'row_number' => $rowNumber,
+                    'invoice_number' => $invoiceNumber,
+                    'existing_id' => $existingInvoice->id
+                ]);
+                $this->importResults['skipped']++;
+                $this->importResults['details'][] = "Skipped existing invoice: {$invoiceNumber} (row {$rowNumber})";
             } else {
                 // Create new invoice
                 $invoice = PurchaseInvoice::create($invoiceData);
                 $this->importResults['imported']++;
-                $this->importResults['details'][] = "Imported invoice: {$invoiceData['number']} (row {$rowNumber})";
+                $this->importResults['details'][] = "Imported invoice: {$invoiceNumber} (row {$rowNumber})";
             }
         } catch (\Exception $e) {
             Log::error('Error processing row', [

@@ -7,6 +7,7 @@ use App\Filament\Resources\SalesInvoices\Pages\CreateSalesInvoice;
 use App\Models\Client;
 use App\Models\Clienti;
 use App\Models\SalesInvoice;
+use App\Services\ProformaInvoiceMatchingService;
 use App\Services\SalesInvoiceCreditNoteImportService;
 use App\Services\SalesInvoiceImportService;
 use App\Services\SalesInvoiceMatchingService;
@@ -223,13 +224,16 @@ class SalesInvoicesTable
                             $matchService = new SalesInvoiceMatchingService();
                             $matchService->setCompanyId($companyId);  // Usa il metodo setter
 
-                            // Esegui solo le funzioni di matching per sales invoices
+                            // Esegui il matching per sales invoices con clienti
                             $matchService->matchClientisByVatNumber();
-                            //  $importService->matchClientsByVatNumber();
+
+                            // Esegui anche il matching per proforme
+                            $proformaMatchService = new ProformaInvoiceMatchingService();
+                            $proformaResults = $proformaMatchService->matchProformasToInvoices();
 
                             Notification::make()
                                 ->title('Associazione completata')
-                                ->body('Le fatture di vendita sono state associate a mandanti e clienti')
+                                ->body('Le fatture di vendita sono state associate a mandanti, clienti e proforme. Proforme abbinate: ' . $proformaResults['matched_proformas'])
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
