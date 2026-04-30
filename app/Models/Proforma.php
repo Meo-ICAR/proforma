@@ -218,7 +218,7 @@ class Proforma extends Model
         return self::create($proformaData);
     }
 
-    public static function createFromIstitutoFinanziario(string $istituto_finanziario, date $del): Proforma
+    public static function createFromIstitutoFinanziario(string $istituto_finanziario, string $del): Proforma
     {
         $fornitore = Clienti::with('company')->where('name', '=', $istituto_finanziario)->firstOrFail();
         $fornitoreId = $fornitore->id;
