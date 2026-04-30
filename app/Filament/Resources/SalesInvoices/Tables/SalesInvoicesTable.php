@@ -117,19 +117,25 @@ class SalesInvoicesTable
                 SelectFilter::make('invoiceable_type')
                     ->label('Associato a')
                     ->options([
+                        'all' => 'Tutti',
+                        'null' => 'Non associato',
                         'App\Models\Clienti' => 'Istituto',
                         'App\Models\Client' => 'Cliente',
                     ])
+                    ->default('all')
                     ->query(function (Builder $query, array $data): Builder {
-                        if ($data['value'] === null) {
+                        if ($data['value'] === 'all') {
+                            return $query;
+                        }
+
+                        if ($data['value'] === 'null') {
                             return $query->whereNull('invoiceable_type')->whereNull('invoiceable_id');
                         }
 
                         return $query
                             ->where('invoiceable_type', $data['value'])
                             ->whereNotNull('invoiceable_id');
-                    })
-                    ->placeholder('Non associato'),
+                    }),
                 TernaryFilter::make('is_nopractice')
                     ->label('Non legato a provvigioni'),
                 TernaryFilter::make('cancelled')
@@ -142,42 +148,6 @@ class SalesInvoicesTable
                         ->toArray()),
             ])
             ->headerActions([
-                Action::make('import_sales_invoices')
-                    ->label('Importa Note Credito')
-                    ->icon('heroicon-o-document-arrow-up')
-                    ->color('success')
-                    ->form([
-                        FileUpload::make('import_file_excel')
-                            ->label('File Excel')
-                            ->helperText('Carica un file Excel con i dati delle fatture di vendita')
-                            ->acceptedFileTypes(['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
-                            ->maxSize(10240)  // 10MB
-                            ->directory('sales-invoice-imports')
-                            ->visibility('private')
-                            ->required(),
-                    ])
-                    ->action(function (array $data) {
-                        try {
-                            $filePath = storage_path('app/private/' . $data['import_file_excel']);
-                            $companyId = Auth::user()->company_id;
-                            $filename = basename($data['import_file_excel']);
-
-                            $importService = new SalesInvoiceCreditNoteImportService($filename);
-                            $results = $importService->import($filePath, $companyId);
-
-                            Notification::make()
-                                ->title('Importazione Excel completata')
-                                ->body("Importazione da {$filename} completata. Importate: {$results['imported']}, Aggiornate: {$results['updated']}, Errori: {$results['errors']}")
-                                ->success()
-                                ->send();
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('Errore importazione Excel')
-                                ->body('Errore durante importazione: ' . $e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
                 Action::make('import_sales_invoices_excel')
                     ->label('Importa Fatture Vendita Excel')
                     ->icon('heroicon-o-document-arrow-up')
