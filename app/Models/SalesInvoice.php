@@ -101,7 +101,7 @@ class SalesInvoice extends Model
     public function proformasAfterRegistration()
     {
         return $this->proformas()->when($this->registration_date, function ($query, $registrationDate) {
-            return $query->where('sended_at', '>=', $registrationDate);
+            return $query->where('sended_at', '<=', $registrationDate);
         });
     }
 }

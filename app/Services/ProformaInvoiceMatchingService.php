@@ -105,6 +105,7 @@ class ProformaInvoiceMatchingService
             $proforma->update([
                 'invoiceable_type' => SalesInvoice::class,
                 'invoiceable_id' => $salesInvoice->id,
+                'stato' => 'Pagato',
             ]);
             $salesInvoice->update([
                 'closed' => 1,

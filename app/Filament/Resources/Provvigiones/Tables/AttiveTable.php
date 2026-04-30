@@ -85,6 +85,12 @@ class AttiveTable
                                 'stato' => 'Proforma',
                                 //  'data_fattura' => $dataEmissione,
                                 'proforma_id' => $proforma->id,
+                                'piva' => $proforma->vat_number,
+                            ]);
+                            $compenso = $proforma->compenso;
+                            $compenso += $record->importo;
+                            $proforma->update([
+                                'compenso' => $compenso,
                             ]);
                         });
 

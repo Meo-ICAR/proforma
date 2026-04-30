@@ -123,7 +123,24 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
      */
     private function getSalesInvoicesToMatch(): Collection
     {
-        $query = SalesInvoice::whereNull('invoiceable_id')
+        $query = SalesInvoice::where(function ($query) {
+            // Include invoices with no invoiceable_id
+            $query
+                ->whereNull('invoiceable_id')
+                // OR invoices matched to dummy clients
+                ->orWhere(function ($subQuery) {
+                    $subQuery
+                        ->where('invoiceable_type', 'App\Models\Clienti')
+                        ->whereNotNull('invoiceable_id')
+                        ->whereExists(function ($existsQuery) {
+                            $existsQuery
+                                ->select('id')
+                                ->from('clientis')
+                                ->whereColumn('clientis.id', 'sales_invoices.invoiceable_id')
+                                ->where('is_dummy', 1);
+                        });
+                });
+        })
             ->where(function ($query) {
                 $query->where(function ($subQuery) {
                     $subQuery
@@ -187,6 +204,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
     {
         $clienti = Clienti::where('piva', $invoice->vat_number)
             ->where('is_active', 1)
+            ->where('is_dummy', 0)
             ->first();
 
         if ($clienti) {
@@ -231,6 +249,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
     private function matchWithClientiByName(SalesInvoice $invoice): array
     {
         $clienti = Clienti::where('name', $invoice->customer_name)
+            ->where('is_dummy', 0)
             ->first();
 
         if ($clienti) {
@@ -263,17 +282,20 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
 
         // Try exact match first
         $client = Client::where('name', $invoice->customer_name)
+            ->where('is_dummy', 0)
             ->first();
 
         // If no exact match, try with normalized whitespace
         if (!$client) {
             $client = Client::whereRaw("REGEXP_REPLACE(TRIM(name), '[[:space:]]+', ' ') = ?", [$normalizedName])
+                ->where('is_dummy', 0)
                 ->first();
         }
 
         // If still no match, try with LIKE for more flexible matching
         if (!$client) {
             $client = Client::where('name', 'LIKE', '%' . $normalizedName . '%')
+                ->where('is_dummy', 0)
                 ->first();
         }
 
