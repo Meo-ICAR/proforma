@@ -7,6 +7,7 @@ use App\Models\Fornitore;
 use App\Models\Pratica;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -115,31 +116,35 @@ class ImportPraticheFromApi extends Command
                         continue;
                     }
 
-                    if ($praticaData['id'] === 'QT06608') {
-                        \Log::info($item);
-                    }
-                    if ($praticaData['id'] === 'QT06494') {
-                        \Log::info($item);
-                    }
-                    if ($praticaData['id'] === 'QT06308') {
-                        \Log::info($item);
-                    }
-                    if ($praticaData['id'] === ' QT06266') {
-                        \Log::info($item);
-                    }
+                    /*
+                     * if ($praticaData['id'] === 'QT06608') {
+                     *     \Log::info($item);
+                     * }
+                     * if ($praticaData['id'] === 'QT06494') {
+                     *     \Log::info($item);
+                     * }
+                     * if ($praticaData['id'] === 'QT06308') {
+                     *     \Log::info($item);
+                     * }
+                     * if ($praticaData['id'] === ' QT06266') {
+                     *     \Log::info($item);
+                     * }
+                     */
 
-                    $existing = Pratica::where('id', $praticaData['id'])->first();
-                    $erogatedAt = null;
-
-                    if ($praticaData['erogated_at'] === null && Carbon::parse($praticaData['data_inserimento_pratica'])->year < 2025) {
-                        $erogatedAt = '2024-12-31';
-
-                        // $this->info("Updating pratica: {$praticaData['id']}");
-                    } else {
-                        // $this->info("Updating pratica: {$praticaData['id']}");
-                        $erogatedAt = $praticaData['erogated_at'];
-                    }
-                    $praticaData['erogated_at'] = $erogatedAt;
+                    /*
+                     * $existing = Pratica::where('id', $praticaData['id'])->first();
+                     * $erogatedAt = null;
+                     *
+                     * if ($praticaData['erogated_at'] === null && Carbon::parse($praticaData['data_inserimento_pratica'])->year < 2025) {
+                     *     $erogatedAt = '2024-12-31';
+                     *
+                     *     // $this->info("Updating pratica: {$praticaData['id']}");
+                     * } else {
+                     *     // $this->info("Updating pratica: {$praticaData['id']}");
+                     *     $erogatedAt = $praticaData['erogated_at'];
+                     * }
+                     * $praticaData['erogated_at'] = $erogatedAt;
+                     */
 
                     /*
                      * if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
@@ -177,7 +182,7 @@ class ImportPraticheFromApi extends Command
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
             return 0;
-        } catch (\Illuminate\Http\Client\RequestException $e) {
+        } catch (RequestException $e) {
             $this->error('HTTP Request Error: ' . $e->getMessage());
             \Log::error('Pratiche API Request Exception', [
                 'message' => $e->getMessage(),

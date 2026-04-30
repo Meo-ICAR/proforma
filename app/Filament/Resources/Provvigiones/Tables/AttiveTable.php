@@ -6,6 +6,7 @@ use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Cliente;
 use App\Models\Compenso;
+use App\Models\Proforma;
 use App\Models\Provvigione;
 use Carbon\Carbon;
 use Filament\Actions\Action;

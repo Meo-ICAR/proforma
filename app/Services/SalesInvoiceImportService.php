@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Agent;
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\PracticeCommission;
 use App\Models\Principal;
 use App\Models\SalesInvoice;

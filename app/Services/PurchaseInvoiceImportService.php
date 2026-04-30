@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\Provvigioni;
 use App\Models\PurchaseInvoice;
