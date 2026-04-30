@@ -225,7 +225,7 @@ class Proforma extends Model
 
         $exists = Proforma::where('fornitori_id', '=', $fornitoreId)->where('sended_at', '=', $del)->first();
         if ($exists != null) {
-            return $exists->id;
+            return $exists;
         }
         $proformaData = [
             'fornitori_id' => $fornitoreId,
@@ -243,7 +243,7 @@ class Proforma extends Model
             'updated_at' => now(),
         ];
         $proforma = self::create($proformaData);
-        return $proforma->id;
+        return $proforma;
     }
 
     /**

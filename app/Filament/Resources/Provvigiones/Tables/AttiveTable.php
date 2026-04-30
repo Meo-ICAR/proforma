@@ -80,11 +80,11 @@ class AttiveTable
 
                         // Process each record with a visible loop
                         $records->each(function ($record) use ($dataEmissione) {
-                            $proformaId = Proforma::createFromIstitutoFinanziario($record->istituto_finanziario, $dataEmissione);
+                            $proforma = Proforma::createFromIstitutoFinanziario($record->istituto_finanziario, $dataEmissione);
                             $record->update([
                                 'stato' => 'Proforma',
                                 //  'data_fattura' => $dataEmissione,
-                                'proforma_id' => $proformaId,
+                                'proforma_id' => $proforma->id,
                             ]);
                         });
 
