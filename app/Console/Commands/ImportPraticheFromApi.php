@@ -129,19 +129,26 @@ class ImportPraticheFromApi extends Command
                     }
 
                     $existing = Pratica::where('id', $praticaData['id'])->first();
+                    $erogatedAt = null;
+
+                    if ($praticaData['erogated_at'] === null && Carbon::parse($praticaData['data_inserimento_pratica'])->year < 2025) {
+                        $erogatedAt = '2024-12-31';
+
+                        // $this->info("Updating pratica: {$praticaData['id']}");
+                    } else {
+                        // $this->info("Updating pratica: {$praticaData['id']}");
+                        $erogatedAt = $praticaData['erogated_at'];
+                    }
+                    $praticaData['erogated_at'] = $erogatedAt;
+
+                    /*
+                     * if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
+                     *     $praticaData['rejected_at'] = Carbon::now();
+                     *     //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
+                     * }
+                     */
 
                     if ($existing) {
-                        if ($praticaData['erogated_at'] === null && Carbon::parse($praticaData['data_inserimento_pratica'])->year < 2025) {
-                            $praticaData['erogated_at'] = '2024-12-31';
-                            // $this->info("Updating pratica: {$praticaData['id']}");
-                        }
-
-                        /*
-                         * if (($existing->stato_pratica === 'DECLINATA' || $$existing->stato_pratica === 'PRATICA RESPINTA' || $$existing->stato_pratica === 'RINUNCIA CLIENTE') && $existing->rejected_at === null) {
-                         *     $praticaData['rejected_at'] = Carbon::now();
-                         *     //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
-                         * }
-                         */
                         $existing->update($praticaData);
                         $updated++;
                         //  $this->info("Updated pratica: {$praticaData['id']}");
