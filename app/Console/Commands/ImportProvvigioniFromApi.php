@@ -265,8 +265,8 @@ class ImportProvvigioniFromApi extends Command
                     // Ensure we have the ID Compenso in our data
                     // debug 3
                     //          $provvigioneData['id'] = $item['ID Compenso'];
-
-                    $existing = Provvigione::where('id', $provvigioneData['id'])->first();
+                    $codprovvigione = $provvigioneData['id'];
+                    $existing = Provvigione::where('id', $codprovvigione)->first();
                     if ($provvigioneData['tipo'] === 'Cliente') {
                         $client = Client::where('name', $provvigioneData['denominazione_riferimento'])->first();
                         if (!$client) {
@@ -279,8 +279,23 @@ class ImportProvvigioniFromApi extends Command
                             ]);
                         }
                     }
+
+                    $piva = trim($provvigioneData['piva']);
+                    $pivanew = $piva;
+                    $nameprod = $provvigioneData['denominazione_riferimento'];
+                    if ($provvigioneData['entrata_uscita'] == 'Uscita' && !(strlen($piva) === 11)) {
+                        $fornitore = Fornitore::where('name', $nameprod)->first();
+                        if ($fornitore && ($fornitore->piva <> $piva)) {
+                            $pivanew = $fornitore->piva;
+                            if (strlen($pivanew) === 11) {
+                                $provvigioneData['piva'] = $pivanew;
+                            }
+                        }
+                        \Log::debug('Piva not valid:', ['piva' => $piva, 'nameprod' => $nameprod, 'pivanew' => $pivanew]);
+                    }
+
                     if ($existing) {
-                        $existing->update(['upload_at' => $adesso]);
+                        $existing->update(['upload_at' => $adesso, 'piva' => $pivanew]);
                         // Check if any of the timestamp fields are already set
                         if (empty($existing->stato)) {
                             if (!empty($existingPratica->erogated_at) && empty($existing->erogated_at)) {

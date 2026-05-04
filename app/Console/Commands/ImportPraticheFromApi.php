@@ -116,7 +116,7 @@ class ImportPraticheFromApi extends Command
                         continue;
                     }
 
-                    if ($praticaData['id'] === 'QT06585') {
+                    cd if ($praticaData['id'] === 'QT06585') {
                         \Log::info($item);
                     }
 
