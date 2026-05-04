@@ -116,10 +116,11 @@ class ImportPraticheFromApi extends Command
                         continue;
                     }
 
+                    if ($praticaData['id'] === 'QT06585') {
+                        \Log::info($item);
+                    }
+
                     /*
-                     * if ($praticaData['id'] === 'QT06608') {
-                     *     \Log::info($item);
-                     * }
                      * if ($praticaData['id'] === 'QT06494') {
                      *     \Log::info($item);
                      * }
@@ -152,7 +153,7 @@ class ImportPraticheFromApi extends Command
                      *     //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
                      * }
                      */
-
+                    $existing = Pratica::where('id', $praticaData['id'])->first();
                     if ($existing) {
                         $existing->update($praticaData);
                         $updated++;
