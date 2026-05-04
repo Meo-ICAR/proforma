@@ -362,6 +362,11 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Updated {$updatedCount} records to stato erogato from pratiche.");
 
+            $updatedCount = \DB::update(
+                'UPDATE provvigioni p INNER JOIN fornitoris f on p.denominazione_riferimento = f.name SET p.piva = f.piva WHERE p.piva <> f.piva and length(f.piva) = 11 and p.entrata_uscita = "Uscita"'
+            );
+            $this->info("Updated {$updatedCount} records piva.");
+
             /*
              * $updatedCount = \DB::update(
              *     'UPDATE provvigioni p
