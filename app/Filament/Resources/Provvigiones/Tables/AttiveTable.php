@@ -206,6 +206,30 @@ class AttiveTable
                     ->multiple()
                     ->default(['Inserito', 'Sospeso'])
                     ->placeholder('Tutti gli stati'),
+                SelectFilter::make('descrizione')
+                    ->options([
+                        'COMPENSO' => 'COMPENSO',
+                        'Compenso  ()' => 'Compenso  ()',
+                        'Compenso  (50)' => 'Compenso  (50)',
+                        'COMPENSO (50)' => 'COMPENSO (50)',
+                        'Compenso BROKERAGGIO' => 'Compenso BROKERAGGIO',
+                        'Compenso da Cliente' => 'Compenso da Cliente',
+                        'Compenso da Istituto' => 'Compenso da Istituto',
+                        'Compenso da Istituto I tranche' => 'Compenso da Istituto I tranche',
+                        'Compenso da istituto II Tranche' => 'Compenso da istituto II Tranche',
+                        'Compenso da istituto III tranche' => 'Compenso da istituto III tranche',
+                        'compenso gas' => 'compenso gas',
+                        'compenso II tranche' => 'compenso II tranche',
+                        'compenso internet' => 'compenso internet',
+                        'compenso luce' => 'compenso luce',
+                        'COMPENSO PREMIO' => 'COMPENSO PREMIO',
+                        'Compenso Premio (1) da Istituto' => 'Compenso Premio (1) da Istituto',
+                        'Compenso Premio (2,5) da Istituto' => 'Compenso Premio (2,5) da Istituto',
+                        'Compenso Premio (3) da Istituto' => 'Compenso Premio (3) da Istituto',
+                        'POLIZZA BANCA' => 'POLIZZA BANCA',
+                    ])
+                    ->multiple()
+                    ->placeholder('Tutti i tipi di compenso'),
                 SelectFilter::make('status_compenso')
                     ->label('Stato Compenso')
                     ->multiple()

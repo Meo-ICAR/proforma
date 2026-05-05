@@ -29,16 +29,16 @@ class VcogesTable
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Entrata')
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
-                    ->openUrlInNewTab(false),
+                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?filters[erogated_at][has_erogated_date]=has_date&filters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(true),
                 TextColumn::make('uscita')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Uscita')
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
-                    ->openUrlInNewTab(false),
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all&filters[mese_status][value]=&filters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->openUrlInNewTab(true),
                 TextColumn::make('saldo')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
