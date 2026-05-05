@@ -20,7 +20,7 @@ class ListVenasarcoTrimestres extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return new HtmlString('Cliccare sul valore del trimestre per avere il dettaglio delle provvigioni di quel periodo');
+        return new HtmlString('Cliccare sul valore del trimestre per avere il dettaglio delle provvigioni perfezionate in quel periodo');
     }
 
     protected function getHeaderActions(): array

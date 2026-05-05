@@ -389,7 +389,7 @@ class ProvvigionesTable
                         return 'Erogato nel mese ' . $dataScelta->translatedFormat('F Y');
                     }),
                 SelectFilter::make('trimestre_erogazione')
-                    ->label('Trimestre erogazione')
+                    ->label('Trimestre perfezionamento')
                     ->options([
                         '1' => '1° Trimestre (Gen-Mar)',
                         '2' => '2° Trimestre (Apr-Giu)',
@@ -432,8 +432,8 @@ class ProvvigionesTable
                         }
 
                         return $query
-                            ->where('erogated_at', '>=', $dataInizio)
-                            ->where('erogated_at', '<=', $dataFine);
+                            ->where('data_status', '>=', $dataInizio)
+                            ->where('data_status', '<=', $dataFine);
                     })
                     ->indicateUsing(function (array $data): ?string {
                         if (empty($data['value']))
@@ -463,7 +463,7 @@ class ProvvigionesTable
                             $dataInizio->subYear();
                         }
 
-                        return 'Erogato ' . $trimestre . ' ' . $dataInizio->year;
+                        return 'Perfezionato ' . $trimestre . ' ' . $dataInizio->year;
                     }),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([

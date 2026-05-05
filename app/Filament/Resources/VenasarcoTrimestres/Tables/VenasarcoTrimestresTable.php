@@ -97,8 +97,9 @@ class VenasarcoTrimestresTable
                     ->money('EUR')
                     ->alignRight()
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?tableFilters[trimestre][value]=1&filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all&filters[trimestre_erogazione][value]=' . $record->Trimestre . '&filters[denominazione_riferimento][denominazione_riferimento]=' . $record->produttore)
-                    ->openUrlInNewTab(false),
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?filters[status_compenso][values][0]=Pratica+perfezionata&filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all'
+                        . '&filters[trimestre_erogazione][value]=' . $record->Trimestre . '&filters[denominazione_riferimento][denominazione_riferimento]=' . $record->produttore)
+                    ->openUrlInNewTab(true),
                 TextColumn::make('contributo')
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->money('EUR')
