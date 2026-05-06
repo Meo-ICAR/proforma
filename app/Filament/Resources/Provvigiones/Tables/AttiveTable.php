@@ -150,6 +150,7 @@ class AttiveTable
                     ->sortable(),
                 TextColumn::make('pratica.cognome_cliente')
                     ->label('Cognome Cliente')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('pratica.nome_cliente')
                     ->label('Nome')
@@ -310,6 +311,35 @@ class AttiveTable
                         return match ($hasErogatedDate) {
                             'has_date' => 'Con data erogazione',
                             'no_date' => 'Senza data erogazione',
+                            default => null,
+                        };
+                    }),
+                Filter::make('data_fattura')
+                    ->form([
+                        Select::make('has_invoice_date')
+                            ->label('Fatturato')
+                            ->options([
+                                'all' => 'Tutti',
+                                'has_date' => 'Si',
+                                'no_date' => 'No',
+                            ])
+                            ->default('all')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $hasInvoiceDate = $data['has_invoice_date'] ?? 'all';
+
+                        return match ($hasInvoiceDate) {
+                            'has_date' => $query->whereNotNull('data_fattura'),
+                            'no_date' => $query->whereNull('data_fattura'),
+                            default => $query,
+                        };
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        $hasInvoiceDate = $data['has_invoice_date'] ?? 'all';
+
+                        return match ($hasInvoiceDate) {
+                            'has_date' => 'Con data fatturazione',
+                            'no_date' => 'Senza data fatturazione',
                             default => null,
                         };
                     }),

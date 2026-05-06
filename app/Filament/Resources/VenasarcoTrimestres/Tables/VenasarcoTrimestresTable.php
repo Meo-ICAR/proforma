@@ -19,6 +19,7 @@ use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -63,7 +64,7 @@ class VenasarcoTrimestresTable
                         '4' => '4°  Ott-Dic',
                     ])
                     ->label('Trimestre'),
-            ])
+            ], layout: FiltersLayout::AboveContent)
             ->columns([
                 TextColumn::make('Trimestre')
                     ->formatStateUsing(fn(string $state): string => match ($state) {

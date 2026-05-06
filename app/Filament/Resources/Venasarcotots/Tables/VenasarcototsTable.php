@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Venasarcotots\Tables;
 use App\Models\Venasarcotot;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -81,7 +82,7 @@ class VenasarcototsTable
                             ->pluck('competenza', 'competenza');
                     })
                     ->default(now()->subDays(20)->format('Y')),
-            ])
+            ], layout: FiltersLayout::AboveContent)
             ->recordActions([])
             ->toolbarActions([]);
     }
