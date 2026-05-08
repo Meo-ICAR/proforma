@@ -493,7 +493,7 @@ class ProvvigionesTable
                             'no_date' => 'Senza data fatturazione',
                             default => null,
                         };
-                    }),
+                    }), cd
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
                 Action::make('toggleStatus')

@@ -372,8 +372,12 @@ class Proforma extends Model
                 }
             }
             if ($this->anticipo <> 0) {
-                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format(-$this->anticipo, 2);
+                $anticipo2 = $this->anticipo;
                 $somma -= $this->anticipo;
+                if ($anticipo2 < 0) {
+                    $anticipo2 = -$anticipo2;
+                }
+                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($anticipo2, 2);
             }
 
             if ($this->contributo <> 0) {

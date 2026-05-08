@@ -63,6 +63,8 @@ class ViewFornitore extends ViewRecord
                             'stato' => 'Inserito',
                             'anticipo' => -$data['anticipo'] ?? 0,
                             'annotation' => $data['annotation'] ?? null,
+                            'tipo' => 'Agente',
+                            'vat_number' => $this->record->piva,
                         ]);
                         $proforma->emailsubject .= $proforma->id . ' ' . $this->record->name;
                         $proforma->save();
