@@ -109,6 +109,7 @@ class ProvvigioniRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn(Provvigione $record): bool =>
                         ($record->entrata_uscita === 'Entrata') &&
+                        ($record->tipo === 'Istituto') &&
                         ($record->quota == 0))
                     ->form([
                         TextInput::make('quota')
@@ -142,7 +143,7 @@ class ProvvigioniRelationManager extends RelationManager
                             // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
                             $newRecord->status_compenso = 'Pratica stornata';
                             $newRecord->importo = $uscita->importo * $quotaPercent;
-                            $newRecord->decrizione = 'Storno provvigione ' . $record->id;
+                            $newRecord->descrizione = 'Storno provvigione ' . $record->id;
 
                             // 3. Salva il nuovo record nel database
                             $newRecord->save();

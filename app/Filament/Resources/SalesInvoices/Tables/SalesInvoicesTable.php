@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SalesInvoices\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Provvigioni\ProvvigioniResource;
 use App\Filament\Resources\SalesInvoices\Pages\CreateSalesInvoice;
 use App\Models\Client;
@@ -148,6 +149,12 @@ class SalesInvoicesTable
                         ->toArray()),
             ])
             ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make(),
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
                 Action::make('import_sales_invoices_excel')
                     ->label('Importa Fatture Vendita Excel')
                     ->icon('heroicon-o-document-arrow-up')

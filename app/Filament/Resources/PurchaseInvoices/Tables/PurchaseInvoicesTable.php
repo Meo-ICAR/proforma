@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
 use App\Models\Client;
 use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
@@ -215,6 +216,12 @@ class PurchaseInvoicesTable
                     }),
             ], position: RecordActionsPosition::BeforeColumns)
             ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make(),
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
                 Action::make('import_purchase_invoices_excel')
                     ->label('Importa Fatture Acquisto Excel')
                     ->icon('heroicon-o-document-arrow-up')
