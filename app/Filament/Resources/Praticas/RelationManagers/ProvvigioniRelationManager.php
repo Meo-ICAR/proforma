@@ -121,8 +121,28 @@ class ProvvigioniRelationManager extends RelationManager
                             ->prefix('€')
                     ])
                     ->action(function (array $data, Provvigione $record): void {
+                        $quota = $data['quota'];
+                        $relatedEntrata0 = Provvigione::where('id', $record->id)
+                            ->get();
+                        $relatedEntrata = $relatedEntrata0->replicate();
+
+                        $relatedEntrata->id = $record->id . '-';
+                        $relatedEntrata->data_inserimento_compenso = now();
+                        $relatedEntrata->descrizione = 'Storno provvigione';
+                        $relatedEntrata->status_compenso = 'Pratica stornata';
+                        $relatedEntrata->data_status = now();
+                        $relatedEntrata->data_pagamento = null;
+                        $relatedEntrata->stato = 'Inserito';
+                        $relatedEntrata->n_fattura = null;
+                        $relatedEntrata->data_fattura = null;
+                        $relatedEntrata->importo = -$quota;
+                        $relatedEntrata->status_pagamento = 'Inserito';
+                        $relatedEntrata->proforma_id = null;
+
+                        $relatedEntrata->save();
+
                         $provvigioneattiva = $record->importo;
-                        $quotaPercent = -$data['quota'] / $provvigioneattiva;
+                        $quotaPercent = -$quota / $provvigioneattiva;
 
                         // Update the current record
                         $record->update([
@@ -139,11 +159,19 @@ class ProvvigioniRelationManager extends RelationManager
                         // Update each related 'Uscita' record
                         foreach ($relatedUscite as $uscita) {
                             $newRecord = $uscita->replicate();
-                            $newRecord->id = $record->id . '-';
+                            $newRecord->id = $relatedUscite->id . '-';
                             // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
                             $newRecord->status_compenso = 'Pratica stornata';
                             $newRecord->importo = $uscita->importo * $quotaPercent;
                             $newRecord->descrizione = 'Storno provvigione ' . $record->id;
+                            $newRecord->data_inserimento_compenso = now();
+                            $newRecord->data_status = now();
+                            $newRecord->data_pagamento = null;
+                            $newRecord->stato = 'Inserito';
+                            $newRecord->n_fattura = null;
+                            $newRecord->data_fattura = null;
+                            $newRecord->status_pagamento = 'Inserito';
+                            $newRecord->proforma_id = null;
 
                             // 3. Salva il nuovo record nel database
                             $newRecord->save();
