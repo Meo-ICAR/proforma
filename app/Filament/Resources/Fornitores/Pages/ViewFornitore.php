@@ -21,7 +21,7 @@ class ViewFornitore extends ViewRecord
     {
         return [
             Action::make('erogaAnticipo')
-                ->label('Eroga Anticipo')
+                ->label('Eroga Anticipo / Welcome bonus')
                 ->color('success')
                 ->form(function () {
                     $schema = ProformaEditSchema::configure(Schema::make());
