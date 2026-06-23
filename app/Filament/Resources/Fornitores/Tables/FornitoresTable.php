@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Fornitores\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\Praticas\PraticaResource;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ForceDeleteBulkAction;
@@ -15,6 +17,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class FornitoresTable
 {
@@ -39,17 +42,23 @@ class FornitoresTable
                 TextColumn::make('enasarco')
                     ->badge()
                     ->sortable(),
-                TextColumn::make('coordinatore')
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('piva')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('email')
                     ->label('Email')
                     ->sortable(),
+                TextColumn::make('dismissed_at')
+                    ->label('Data Fine')
+                    ->sortable(),
+                TextColumn::make('stipulated_at')
+                    ->label('Data Inizio')
+                    ->sortable(),
                 ToggleColumn::make('isdipendente')
                     ->label('Dipendente')
+                    ->sortable(),
+                TextColumn::make('coordinatore')
+                    ->searchable()
                     ->sortable(),
                 TextColumn::make('regione')
                     ->searchable()
@@ -59,6 +68,7 @@ class FornitoresTable
                     ->sortable(),
                 TextColumn::make('tel')
                     ->searchable(),
+                TextColumn::make('id'),
             ])
             ->filters([
                 TrashedFilter::make(),
@@ -82,9 +92,29 @@ class FornitoresTable
                         false: fn(Builder $query) => $query->whereNull('enasarco')->orWhere('enasarco', ''),
                         blank: fn(Builder $query) => $query,
                     ),
+                TernaryFilter::make('dismissed_at')
+                    ->label('Data Fine')
+                    ->placeholder('Tutti')
+                    ->trueLabel('Con Data Fine')
+                    ->falseLabel('Senza Data Fine')
+                    ->queries(
+                        true: fn(Builder $query) => $query->whereNotNull('dismissed_at'),
+                        false: fn(Builder $query) => $query->whereNull('dismissed_at'),
+                        blank: fn(Builder $query) => $query,
+                    ),
             ])
             ->recordActions([
                 ViewAction::make(),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            ->groupBy('Produttore')  // Campo per il raggruppamento
+                            ->sumColumns(['Provvigione']),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
             ])
             ->toolbarActions([]);
     }

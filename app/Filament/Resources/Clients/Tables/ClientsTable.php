@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -27,6 +28,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class ClientsTable
 {
@@ -86,13 +88,7 @@ class ClientsTable
                     ->falseIcon('heroicon-o-x-mark')
                     ->color(fn($state) => $state ? 'success' : 'gray'),
                 // Dati Finanziari
-                TextColumn::make('salary')
-                    ->sortable()
-                    ->label('RAL')
-                    ->money('EUR')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                // Date
+                TextColumn::make('id'),
             ])
             ->filters([
                 // Filtro per tipologia
@@ -121,6 +117,16 @@ class ClientsTable
                 //  BulkActionGroup::make([
                 //      DeleteBulkAction::make(),
                 //  ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            ->groupBy('Produttore')  // Campo per il raggruppamento
+                            ->sumColumns(['Provvigione']),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
             ])
             ->defaultSort('name');
     }
