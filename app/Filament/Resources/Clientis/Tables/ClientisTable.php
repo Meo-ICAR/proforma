@@ -43,18 +43,18 @@ class ClientisTable
                 ToggleColumn::make('is_active')
                     ->label('Attiva')
                     ->sortable(),
+                TextColumn::make('type')
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('stipulated_at')
-                    ->label('Data Inizio')
+                    ->label('Stipulata il')
                     ->sortable(),
                 TextColumn::make('dismissed_at')
-                    ->label('Data Fine')
+                    ->label('Cessata il')
                     ->sortable(),
                 ToggleColumn::make('is_active')
                     ->label('Attiva')
                     ->sortable(),
-                TextColumn::make('coge')
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('id'),
             ])
             ->filters([
