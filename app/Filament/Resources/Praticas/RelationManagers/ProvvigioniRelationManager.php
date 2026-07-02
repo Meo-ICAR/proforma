@@ -102,7 +102,7 @@ class ProvvigioniRelationManager extends RelationManager
                         $record->update([
                             'quota' => 0,
                         ]);
-                    }),
+                    }),  // da aggiungere cancellazione record di storno
                 Action::make('storna')
                     ->label('Storna')
                     ->icon('heroicon-o-arrow-uturn-left')
@@ -128,10 +128,13 @@ class ProvvigioniRelationManager extends RelationManager
 
                         $relatedEntrata->id = $record->id . '-';
                         $relatedEntrata->data_inserimento_compenso = now();
-                        $relatedEntrata->descrizione = 'Storno provvigione';
-                        $relatedEntrata->status_compenso = 'Pratica stornata';
                         $relatedEntrata->data_status = now();
                         $relatedEntrata->data_pagamento = null;
+                        $relatedEntrata->erogated_at = now();
+
+                        $relatedEntrata->descrizione = 'Storno provvigione';
+                        $relatedEntrata->status_compenso = 'Pratica stornata';
+
                         $relatedEntrata->stato = 'Inserito';
                         $relatedEntrata->n_fattura = null;
                         $relatedEntrata->data_fattura = null;
@@ -163,9 +166,10 @@ class ProvvigioniRelationManager extends RelationManager
                             // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
                             $newRecord->status_compenso = 'Pratica stornata';
                             $newRecord->importo = $uscita->importo * $quotaPercent;
-                            $newRecord->descrizione = 'Storno provvigione ' . $record->id;
+                            $newRecord->descrizione = 'Storno provvigione ';
                             $newRecord->data_inserimento_compenso = now();
                             $newRecord->data_status = now();
+                            $newRecord->erogated_at = now();
                             $newRecord->data_pagamento = null;
                             $newRecord->stato = 'Inserito';
                             $newRecord->n_fattura = null;

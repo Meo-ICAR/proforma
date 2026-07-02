@@ -275,6 +275,7 @@ class Provvigione extends Model
             WHERE p1.id < p2.id
             and p1.data_fattura is null
                and p1.proforma_id is null
+               and p1.status_compenso <> 'Stornata'
 
         ';
         return \DB::delete($sql);
@@ -293,6 +294,7 @@ class Provvigione extends Model
             WHERE p1.id > p2.id
             and p1.data_fattura is null
             and p1.proforma_id is null
+            and p1.status_compenso <> 'Stornata'
 
         ';
         return \DB::delete($sql);
