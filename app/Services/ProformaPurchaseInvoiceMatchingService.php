@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Proforma;
 use App\Models\PurchaseInvoice;
+use App\Models\Fornitore;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -22,8 +23,9 @@ class ProformaPurchaseInvoiceMatchingService
             'errors' => []
         ];
 
-        // Get all purchase invoices that are not closed
+        // Get all purchase invoices that are not closed and belong to a Fornitore
         $purchaseInvoices = PurchaseInvoice::where('closed', 0)
+            ->where('invoiceable_type', Fornitore::class)
             ->whereNotNull('amount')
             ->whereNotNull('registration_date')
             ->orderBy('registration_date')
@@ -54,24 +56,30 @@ class ProformaPurchaseInvoiceMatchingService
      */
     private function processPurchaseInvoice(PurchaseInvoice $purchaseInvoice, array &$stats): void
     {
-        // Get proformas sent before or on the registration date (note: <= for purchase invoices)
-        $proformas = $purchaseInvoice
-            ->proformasAfterRegistration()
-            ->whereNull('invoiceable_id')  // Only process unassociated proformas
+        // Query proformas that match VAT (either via vat_number or via fornitore->piva), are unassociated,
+        // and were sent on or before the purchase invoice registration date.
+        $proformas = Proforma::whereNull('invoiceable_id')
+            ->whereNotNull('sended_at')
+            ->where(function ($query) use ($purchaseInvoice) {
+                $query->where('vat_number', $purchaseInvoice->vat_number)
+                    ->orWhereHas('fornitore', function ($q) use ($purchaseInvoice) {
+                        $q->where('piva', $purchaseInvoice->vat_number);
+                    });
+            })
+            ->where('sended_at', '<=', $purchaseInvoice->registration_date)
             ->get();
 
         if ($proformas->isEmpty()) {
-            Log::debug("No proformas found for purchase invoice {$purchaseInvoice->id}");
+            Log::debug("No matching proformas found for purchase invoice {$purchaseInvoice->id} (VAT: {$purchaseInvoice->vat_number})");
             return;
         }
 
         foreach ($proformas as $proforma) {
-            // Calculate total amount (compenso + anticipo + contributo)
-            $proformaTotal = $proforma->compenso + $proforma->anticipo + $proforma->contributo;
+            // Use the `totale` accessor which includes delta
+            $proformaTotal = (float) $proforma->totale;
 
-            // Compare with purchase invoice amount (allowing small floating point differences)
-            if ($this->amountsMatch($purchaseInvoice->amount, $proformaTotal)) {
-                // Associate proforma with purchase invoice
+            // Compare with purchase invoice amount (tight tolerance for exact matching)
+            if ($this->amountsMatch((float) $purchaseInvoice->amount, $proformaTotal)) {
                 $this->associateProformaWithInvoice($proforma, $purchaseInvoice);
                 $stats['matched_proformas']++;
 
@@ -88,7 +96,7 @@ class ProformaPurchaseInvoiceMatchingService
      * @param float $tolerance
      * @return bool
      */
-    private function amountsMatch(float $amount1, float $amount2, float $tolerance = 10): bool
+    private function amountsMatch(float $amount1, float $amount2, float $tolerance = 0.01): bool
     {
         return abs($amount1 - $amount2) <= $tolerance;
     }
