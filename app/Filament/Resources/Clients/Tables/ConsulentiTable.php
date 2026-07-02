@@ -41,9 +41,8 @@ class ConsulentiTable
                 // Identificazione Rapida
                 TextColumn::make('name')  // Presuppone un accessor nel modello o usa formatStateUsing
                     ->label('Consulente/Fornitore')
-                    ->description(fn($record) => $record->tax_code ?: $record->vat_number)
                     ->sortable()
-                    ->searchable(['name', 'vat_number']),
+                    ->searchable(),
                 // Partita IVA per consulenti/fornitori
                 TextColumn::make('vat_number')
                     ->label('P.IVA')
