@@ -49,7 +49,7 @@ class VcogesTable
                     ->alignEnd()
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?filter[status_compenso][values][0]=Pratica+stornata&tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->url(fn($record) => ProvvigioneResource::getUrl('attive') . '?filter[status_compenso][values][0]="Pratica stornata"&tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
                     ->openUrlInNewTab(false),
                 TextColumn::make('storno_uscita')
                     ->money('EUR')  // Forza Euro e formato italiano
@@ -57,7 +57,7 @@ class VcogesTable
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->label('Storno Uscita')
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?filter[status_compenso][values][0]=Pratica+stornata&tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
+                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?filter[status_compenso][values][0]="Pratica stornata"&tableFilters[mese_status][value]=&tableFilters[erogated_at][has_erogated_date]=all&tableFilters[mese_erogazione][value]=' . substr($record->mese, -2))
                     ->openUrlInNewTab(false),
             ])
             ->defaultSort('mese', 'desc')
