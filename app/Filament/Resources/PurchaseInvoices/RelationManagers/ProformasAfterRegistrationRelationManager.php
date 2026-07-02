@@ -174,7 +174,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                             ]);
                         });
                         $purchaseInvoice->update([
-                            'proforma_reconciled' => true,
+                            'closed' => true,
                         ]);
                         // Show success notification with count
                         Notification::make()
