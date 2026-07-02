@@ -159,22 +159,29 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     })
                     ->action(function (Collection $records) {
                         // Get the parent sales invoice ID
-                        $salesInvoiceId = $this->getOwnerRecord()->id;
+                        $salesInvoice = $this->getOwnerRecord();
+                        $salesInvoiceId = $salesInvoice->id;
 
                         // Process each record with a visible loop
                         $records->each(function ($record) use ($salesInvoiceId) {
                             $record->update([
                                 'invoiceable_type' => 'App\Models\SalesInvoice',
-                                'invoiceable_id' => $salesInvoiceId
+                                'invoiceable_id' => $salesInvoiceId,
+                            ]);
+
+                            $record->provvigioni()->update([
+                                'stato' => 'Pagato',
                             ]);
                         });
-
+                        $salesInvoice->update([
+                            'closed' => true,
+                        ]);
                         // Show success notification with count
                         Notification::make()
                             ->title(count($records) . ' proforme riconciliate con fattura')
                             ->success()
                             ->send();
-                    }),
+               })
             ])
             ->recordActions([
                 EditAction::make(),

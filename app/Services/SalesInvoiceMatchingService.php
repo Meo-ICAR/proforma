@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Address;
-use App\Models\Client;
 use App\Models\Clienti;
 use App\Models\Company;
 use App\Models\Provvigione;
@@ -220,22 +219,6 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             ];
         }
 
-        $client = Client::where('vat_number', $invoice->vat_number)
-            ->first();
-
-        if ($client) {
-            return [
-                'matched' => true,
-                'match_type' => 'vat_to_client',
-                'matched_to' => 'Customer: ' . $client->name,
-                'confidence' => 1.0,
-                'update_data' => [
-                    'invoiceable_type' => 'App\Models\Client',
-                    'invoiceable_id' => $client->id
-                ]
-            ];
-        }
-
         return [
             'matched' => false,
             'confidence' => 0,
@@ -281,33 +264,33 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
         $normalizedName = preg_replace('/\s+/', ' ', trim($invoice->customer_name));
 
         // Try exact match first
-        $client = Client::where('name', $invoice->customer_name)
+        $clienti = Clienti::where('name', $invoice->customer_name)
             ->where('is_dummy', 0)
             ->first();
 
         // If no exact match, try with normalized whitespace
-        if (!$client) {
-            $client = Client::whereRaw("REGEXP_REPLACE(TRIM(name), '[[:space:]]+', ' ') = ?", [$normalizedName])
+        if (!$clienti) {
+            $clienti = Clienti::whereRaw("REGEXP_REPLACE(TRIM(name), '[[:space:]]+', ' ') = ?", [$normalizedName])
                 ->where('is_dummy', 0)
                 ->first();
         }
 
         // If still no match, try with LIKE for more flexible matching
-        if (!$client) {
-            $client = Client::where('name', 'LIKE', '%' . $normalizedName . '%')
+        if (!$clienti) {
+            $clienti = Clienti::where('name', 'LIKE', '%' . $normalizedName . '%')
                 ->where('is_dummy', 0)
                 ->first();
         }
 
-        if ($client) {
+        if ($clienti) {
             return [
                 'matched' => true,
-                'match_type' => 'name_to_client',
-                'matched_to' => 'Customer: ' . $client->name,
+                'match_type' => 'name_to_clienti',
+                'matched_to' => 'Clienti: ' . $clienti->name,
                 'confidence' => 1.0,
                 'update_data' => [
-                    'invoiceable_type' => 'App\Models\Client',
-                    'invoiceable_id' => $client->id
+                    'invoiceable_type' => 'App\Models\Clienti',
+                    'invoiceable_id' => $clienti->id
                 ]
             ];
         }
@@ -315,7 +298,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No client found with name: ' . $invoice->customer_name
+            'reason' => 'No clienti found with name: ' . $invoice->customer_name
         ];
     }
 
@@ -332,12 +315,12 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
 
         if ($provvigione && $provvigione->cliente) {
             if (empty($provvigione->cliente)) {
-                Client::insert([
+                $companyId = $this->companyId ?: Company::first()->id;
+                Clienti::create([
                     'name' => $provvigione->denominazione_riferimento,
                     'company_id' => $companyId,
-                    'is_company' => 0,
-                    'is_lead' => 0,
-                    'is_client' => 1
+                    'is_active' => 1,
+                    'is_dummy' => 0,
                 ]);
             }
             return [

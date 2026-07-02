@@ -114,6 +114,11 @@ class ProformaPurchaseInvoiceMatchingService
                 'invoiceable_type' => PurchaseInvoice::class,
                 'invoiceable_id' => $purchaseInvoice->id,
             ]);
+
+            $proforma->provvigioni()->where('proforma_id', $proforma->id)->update([
+                'stato' => 'Pagato',
+            ]);
+
             $purchaseInvoice->update([
                 'closed' => 1,
             ]);

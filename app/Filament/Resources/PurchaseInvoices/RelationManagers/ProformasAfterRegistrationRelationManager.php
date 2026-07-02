@@ -172,6 +172,9 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                                 'invoiceable_type' => 'App\Models\PurchaseInvoice',
                                 'invoiceable_id' => $purchaseInvoiceId,
                             ]);
+                                $record->provvigioni()->where('proforma_id', $proforma->id)->update([
+                'stato' => 'Pagato',
+            ]);
                         });
                         $purchaseInvoice->update([
                             'closed' => true,
