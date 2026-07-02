@@ -67,6 +67,6 @@ class ListVcoges extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return new HtmlString('Cliccare sul valore del mese per avere il dettaglio delle provvigioni di pratiche erogate in quel mese');
+        return new HtmlString('Cliccare sul valore del mese per avere il dettaglio delle provvigioni di pratiche erogate in quel mese. Per inviare la prima nota in contabilita premere su Invia in Contabilita');
     }
 }

@@ -156,7 +156,11 @@ class ProvvigionesTable
                     ->sortable()
                     ->searchable(),
                 TextColumn::make('pratica.erogated_at')
-                    ->label('Erogato il')
+                    ->label('Erogato')
+                    ->date()
+                    ->sortable(),
+                TextColumn::make('proforma.sended_at')
+                    ->label('Proforma')
                     ->date()
                     ->sortable(),
                 TextColumn::make('data_fattura')
