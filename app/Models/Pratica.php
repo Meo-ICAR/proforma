@@ -63,6 +63,7 @@ class Pratica extends Model
         'net',
         'is_notowned',
         'upload_at',
+        'abi', 'abi_name',
     ];
 
     /**
@@ -107,7 +108,6 @@ class Pratica extends Model
     {
         return $this->stato()->is_rejected;
     }
-
 
     /**
      * Get the agent (fornitore) associated with the pratica.
