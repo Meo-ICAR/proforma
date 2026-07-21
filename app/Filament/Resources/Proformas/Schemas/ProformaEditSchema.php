@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Proformas\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -13,12 +14,19 @@ class ProformaEditSchema
         return $schema
             ->components([
                 TextInput::make('anticipo')
-                    ->label('Anticipo che si intende erogare')
+                    ->label('Importo da addebitare')
                     ->numeric()
                     ->prefix('€'),
-                TextInput::make('anticipo_descrizione')
-                    ->label('Causale anticipo')
-                    ->maxLength(255),
+                Select::make('anticipo_descrizione')
+                    ->label('Causale')
+                    ->options([
+                        'Anticipo Provvigionale' => 'Anticipo Provvigionale',
+                        'Welcome Bonus' => 'Welcome Bonus',
+                        'Recupero Costi' => 'Recupero Costi',
+                    ])
+                    ->default('Anticipo Provvigionale')
+                    ->required(),
+
                 Textarea::make('annotation')
                     ->label('Commenti')
                     ->columnSpanFull(),

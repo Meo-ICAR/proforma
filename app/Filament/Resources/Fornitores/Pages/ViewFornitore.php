@@ -3,12 +3,12 @@
 namespace App\Filament\Resources\Fornitores\Pages;
 
 use App\Filament\Resources\Fornitores\FornitoreResource;
-use App\Filament\Resources\Proformas\Schemas\ProformaEditSchema;
 use App\Filament\Resources\Proformas\ProformaResource;
+use App\Filament\Resources\Proformas\Schemas\ProformaEditSchema;
 use App\Models\Proforma;
-use Filament\Actions\Action;
+use Filament\Actions\Action; // Importato Select
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
@@ -21,7 +21,7 @@ class ViewFornitore extends ViewRecord
     {
         return [
             Action::make('erogaAnticipo')
-                ->label('Eroga Anticipo / Welcome bonus')
+                ->label('Anticipo / Welcome bonus / Costi')
                 ->color('success')
                 ->form(function () {
                     $schema = ProformaEditSchema::configure(Schema::make());
@@ -49,25 +49,31 @@ class ViewFornitore extends ViewRecord
                     //     return;
                     //  }
                     // Use a transaction to ensure data consistency
+
                     return \DB::transaction(function () use ($data) {
                         // Create the proforma
                         // $anticipo_residuo = $this->record->anticipo_residuo + $data['anticipo'];
+                        $descrizione = $data['anticipo_descrizione'] ?? 'Anticipo Provvigionale';
+                        $anticipo = isset($data['anticipo']) ? -$data['anticipo'] : 0;
+                        if ($descrizione == 'Recupero Costi') {
+                            $anticipo = -$anticipo;
+                        }
                         $proforma = Proforma::create([
                             'fornitori_id' => $this->record->id,
                             'anticipo_residuo' => $this->record->anticipo_residuo,
-                            'emailsubject' => 'Anticipo provvigionale #',
+                            'emailsubject' => $descrizione.' #',
                             'emailto' => $this->record->email,
-                            'emailfrom' => $this->record->company->email,
-                            //  'emailcc' => $this->record->company->email_cc,
-                            'anticipo_descrizione' => 'Anticipo provvigionale',
+                            'emailfrom' => $this->record->company->email ?? null,
+                            'anticipo_descrizione' => $descrizione,
                             'stato' => 'Inserito',
                             'anticipo' => -$data['anticipo'] ?? 0,
                             'annotation' => $data['annotation'] ?? null,
                             'tipo' => 'Agente',
                             'vat_number' => $this->record->piva,
                         ]);
-                        $proforma->emailsubject .= $proforma->id . ' ' . $this->record->name;
+                        $proforma->emailsubject .= $proforma->id.' '.$this->record->name;
                         $proforma->save();
+
                         return redirect()
                             ->to(ProformaResource::getUrl('edit', ['record' => $proforma]));
                     });
