@@ -3,33 +3,27 @@
 namespace App\Filament\Resources\Proformas\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
-use App\Models\Proforma;
-use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\QueryBuilder;
+use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class ProformasTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->paginated([10, 25, 50, 100, 'all'])
+            ->paginated([25, 50, 100, 1000])
             ->columns([
                 TextColumn::make('emailsubject')
                     ->label('Proforma')
@@ -68,7 +62,7 @@ class ProformasTable
             ])
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
-                fn($record): bool => !empty($record->emailto)
+                fn ($record): bool => ! empty($record->emailto)
             )
             ->filters([
                 SelectFilter::make('stato')
@@ -103,7 +97,7 @@ class ProformasTable
                                 'reconciled' => 'Riconciliati',
                                 'not_reconciled' => 'Non riconciliati',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data) {
                         $status = $data['status'] ?? 'all';
@@ -128,7 +122,7 @@ class ProformasTable
                         DateConstraint::make('sended_at')
                             ->label('Data Invio')
                             ->icon('heroicon-m-calendar'),
-                    ])
+                    ]),
             ])
             ->recordActions([
                 EditAction::make()->label(false),
@@ -157,7 +151,7 @@ class ProformasTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . '  proforma inviati')
+                            ->title(count($records).'  proforma inviati')
                             ->success()
                             ->send();
                     }),
@@ -175,7 +169,7 @@ class ProformasTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . '  proforma inviati')
+                            ->title(count($records).'  proforma inviati')
                             ->success()
                             ->send();
                     }),
@@ -195,18 +189,18 @@ class ProformasTable
                             // Update fornit ore's anticipo_residuo
                             if ($record->fornitore) {
                                 $record->fornitore->increment('anticipo_residuo', -$record->anticipo);
-                                \Log::info('Updated anticipo_residuo for fornitore ID: ' . $record->fornitore->id
-                                    . ' by ' . $record->anticipo
-                                    . '. New value: ' . $record->fornitore->anticipo_residuo);
-                            };
+                                \Log::info('Updated anticipo_residuo for fornitore ID: '.$record->fornitore->id
+                                    .' by '.$record->anticipo
+                                    .'. New value: '.$record->fornitore->anticipo_residuo);
+                            }
                         });
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . '  proforma forzata data invio')
+                            ->title(count($records).'  proforma forzata data invio')
                             ->success()
                             ->send();
-                    })
+                    }),
                 // ->iconButton()
                 // ->color('primary'),
             ]);

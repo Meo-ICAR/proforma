@@ -13,14 +13,10 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\Summarizers\Sum;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
@@ -28,19 +24,18 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as Builderq;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class AttiveTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->paginated([25, 50, 100, 1000])
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Entrata')
                 ->whereNot('importo', 0))
@@ -48,7 +43,7 @@ class AttiveTable
             ->reorderableColumns()
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
-                fn(Model $record): bool => $record->stato === 'Inserito'
+                fn (Model $record): bool => $record->stato === 'Inserito'
             )
             ->headerActions([
                 ExportAction::make()
@@ -73,7 +68,7 @@ class AttiveTable
                             ->default(now())
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(fn($state, callable $set) => $set('data_emissione', $state)),
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('data_emissione', $state)),
                     ])
                     ->action(function (Collection $records, array $data) {
                         $dataEmissione = $data['data_emissione'];
@@ -96,8 +91,8 @@ class AttiveTable
 
                         // Show success notification with count and date
                         Notification::make()
-                            ->title(count($records) . ' provvigioni abbinate a proforma')
-                            ->body('Data emissione: ' . Carbon::parse($dataEmissione)->format('d/m/Y'))
+                            ->title(count($records).' provvigioni abbinate a proforma')
+                            ->body('Data emissione: '.Carbon::parse($dataEmissione)->format('d/m/Y'))
                             ->success()
                             ->send();
                     }),
@@ -116,7 +111,7 @@ class AttiveTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . ' provvigioni annullate')
+                            ->title(count($records).' provvigioni annullate')
                             ->success()
                             ->send();
                     }),
@@ -124,7 +119,7 @@ class AttiveTable
             ->columns([
                 TextColumn::make('stato')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Inserito' => 'warning',
                         'Sospeso' => 'danger',
                         default => 'gray',
@@ -138,7 +133,7 @@ class AttiveTable
                     ->label('Provvigione')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
-                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn(Builderq $query) => $query->where('stato', 'Inserito')))
+                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
                 TextColumn::make('data_status')
                     ->label('Perfezionata il')
@@ -161,7 +156,7 @@ class AttiveTable
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
                     ->color('info')
-                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->url(fn ($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
                     ->openUrlInNewTab()
                     ->searchable(),
                 TextColumn::make('descrizione'),
@@ -196,7 +191,7 @@ class AttiveTable
                     //   ->options(function () {
                     //       return Cliente::orderBy('name')->pluck('name', 'id');
                     //    })
-                    ->getOptionLabelFromRecordUsing(fn($record) => "{$record->name}"),  // Opzionale: per personalizzare cosa vedi nel dropdown
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->name}"),  // Opzionale: per personalizzare cosa vedi nel dropdown
                 SelectFilter::make('stato')
                     ->options([
                         'Inserito' => 'Inserito',
@@ -280,14 +275,16 @@ class AttiveTable
                     })
                     // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
                     ->indicateUsing(function (array $data): ?string {
-                        if (empty($data['value']))
+                        if (empty($data['value'])) {
                             return null;
+                        }
 
                         $dataScelta = Carbon::create(now()->year, $data['value'], 1);
-                        if ($dataScelta->isFuture())
+                        if ($dataScelta->isFuture()) {
                             $dataScelta->subYear();
+                        }
 
-                        return 'Stato fino a fine ' . $dataScelta->translatedFormat('F Y');
+                        return 'Stato fino a fine '.$dataScelta->translatedFormat('F Y');
                     }),
                 Filter::make('erogated_at')
                     ->form([
@@ -298,7 +295,7 @@ class AttiveTable
                                 'has_date' => 'Si',
                                 'no_date' => 'No',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
@@ -327,7 +324,7 @@ class AttiveTable
                                 'has_date' => 'Si',
                                 'no_date' => 'No',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasInvoiceDate = $data['has_invoice_date'] ?? 'all';
@@ -385,20 +382,23 @@ class AttiveTable
                         $dataLimite = $dataScelta->copy()->endOfMonth();
 
                         $dataScelta = $dataScelta->startOfMonth();
+
                         return $query
                             ->where('erogated_at', '>=', $dataScelta)
                             ->where('erogated_at', '<', $dataLimite);
                     })
                     // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
                     ->indicateUsing(function (array $data): ?string {
-                        if (empty($data['value']))
+                        if (empty($data['value'])) {
                             return null;
+                        }
 
                         $dataScelta = Carbon::create(now()->year, $data['value'], 1);
-                        if ($dataScelta->isFuture())
+                        if ($dataScelta->isFuture()) {
                             $dataScelta->subYear();
+                        }
 
-                        return 'Erogato nel mese ' . $dataScelta->translatedFormat('F Y');
+                        return 'Erogato nel mese '.$dataScelta->translatedFormat('F Y');
                     }),
             ], layout: FiltersLayout::AboveContent)
             ->recordActions([
@@ -407,14 +407,14 @@ class AttiveTable
                     ->icon('heroicon-o-arrow-path')
                     ->action(function ($record) {
                         $record->update([
-                            'stato' => $record->stato === 'Inserito' ? 'Sospeso' : 'Inserito'
+                            'stato' => $record->stato === 'Inserito' ? 'Sospeso' : 'Inserito',
                         ]);
                         Notification::make()
                             ->title('Stato aggiornato con successo')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
+                    ->visible(fn ($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
                     ->iconButton()
                     ->color('primary'),
                 Action::make('forceStatus')
@@ -422,14 +422,14 @@ class AttiveTable
                     ->icon('heroicon-o-arrow-uturn-down')
                     ->action(function ($record) {
                         $record->update([
-                            'stato' => $record->stato === null ? 'Inserito' : null
+                            'stato' => $record->stato === null ? 'Inserito' : null,
                         ]);
                         Notification::make()
                             ->title('Stato forzato con successo')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn($record): bool => in_array($record->stato, ['Inserito', null]))
+                    ->visible(fn ($record): bool => in_array($record->stato, ['Inserito', null]))
                     ->iconButton()
                     ->color('success'),
             ], position: RecordActionsPosition::BeforeColumns)

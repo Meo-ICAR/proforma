@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Provvigiones\Tables;
 use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Compenso;
-use App\Models\Fornitore;
 use App\Models\Proforma;
 use App\Models\Provvigione;
 use Carbon\Carbon;
@@ -13,46 +12,40 @@ use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as Builderq;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class ProvvigionesTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->paginated(['all', 25, 50, 100])
+            ->paginated([25, 50, 100, 1000])
             ->query(Provvigione::query()
                 ->where('entrata_uscita', 'Uscita')
                 ->whereNot('importo', 0)
-            //  ->whereNot('annullato', 1))
+                //  ->whereNot('annullato', 1))
             )
             ->reorderableColumns()
             ->selectable()
             ->checkIfRecordIsSelectableUsing(
-                fn(Model $record): bool => $record->stato === 'Inserito' && $record->piva != null && ((strlen($record->piva) == 11) || (strlen($record->piva) == 16))
+                fn (Model $record): bool => $record->stato === 'Inserito' && $record->piva != null && ((strlen($record->piva) == 11) || (strlen($record->piva) == 16))
             )
             ->headerActions([
                 ExportAction::make()
@@ -78,13 +71,13 @@ class ProvvigionesTable
                                 $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
                                 $record->update([
                                     'stato' => 'Proforma',
-                                    'proforma_id' => $proformaId
+                                    'proforma_id' => $proformaId,
                                 ]);
                             } else {
-                                $reason = ($piva == null) ? 'senza partita iva' : 'con partita iva non valida (lunghezza: ' . strlen($piva) . ')';
+                                $reason = ($piva == null) ? 'senza partita iva' : 'con partita iva non valida (lunghezza: '.strlen($piva).')';
                                 Notification::make()
-                                    ->title('ATTENZIONE Provvigione di produttore ' . $reason . ' ' . $record->id . ' ' . $record->denominazione_riferimento
-                                        . ' ' . $record->pratica->cognome_cliente . ' ' . $record->pratica->nome_cliente . ' ' . $record->pratica->id_pratica . ' proforma non emesso')
+                                    ->title('ATTENZIONE Provvigione di produttore '.$reason.' '.$record->id.' '.$record->denominazione_riferimento
+                                        .' '.$record->pratica->cognome_cliente.' '.$record->pratica->nome_cliente.' '.$record->pratica->id_pratica.' proforma non emesso')
                                     ->danger()
                                     ->send();
                             }
@@ -92,7 +85,7 @@ class ProvvigionesTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . ' provvigioni abbinate a proforma')
+                            ->title(count($records).' provvigioni abbinate a proforma')
                             ->success()
                             ->send();
                     }),
@@ -111,15 +104,15 @@ class ProvvigionesTable
 
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . ' provvigioni abbinate a proforma')
+                            ->title(count($records).' provvigioni abbinate a proforma')
                             ->success()
                             ->send();
-                    })
+                    }),
             ])
             ->columns([
                 TextColumn::make('stato')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Inserito' => 'warning',
                         'Sospeso' => 'danger',
                         default => 'gray',
@@ -133,7 +126,7 @@ class ProvvigionesTable
                     ->label('Provvigione')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
-                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn(Builderq $query) => $query->where('stato', 'Inserito')))
+                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
                     ->sortable(),
                 IconColumn::make('coordinamento')
                     ->boolean()
@@ -170,7 +163,7 @@ class ProvvigionesTable
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
                     ->color('info')
-                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->url(fn ($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
                     ->openUrlInNewTab()
                     ->sortable()
                     ->searchable(),
@@ -209,7 +202,7 @@ class ProvvigionesTable
                                 'has_date' => 'Si',
                                 'no_date' => 'No',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasPaymentDate = $data['has_invoice_date'] ?? 'all';
@@ -238,7 +231,7 @@ class ProvvigionesTable
                                 'has_date' => 'Si',
                                 'no_date' => 'No',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasErogatedDate = $data['has_erogated_date'] ?? 'all';
@@ -266,13 +259,12 @@ class ProvvigionesTable
                     ->form([
                         TextInput::make('denominazione_riferimento')
                             ->label('Produttore')
-                            ->placeholder('Cerca per denominazione...')
+                            ->placeholder('Cerca per denominazione...'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['denominazione_riferimento'],
-                            fn(Builder $query, string $denominazione): Builder =>
-                                $query->where('denominazione_riferimento', 'like', "{$denominazione}%")
+                            fn (Builder $query, string $denominazione): Builder => $query->where('denominazione_riferimento', 'like', "{$denominazione}%")
                         );
                     }),
                 // test
@@ -280,13 +272,12 @@ class ProvvigionesTable
                     ->form([
                         TextInput::make('istituto_finanziario')
                             ->label('Istituto Finanziario')
-                            ->placeholder('Cerca per istituto...')
+                            ->placeholder('Cerca per istituto...'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['istituto_finanziario'],
-                            fn(Builder $query, string $istituto): Builder =>
-                                $query->where('istituto_finanziario', 'like', "{$istituto}%")
+                            fn (Builder $query, string $istituto): Builder => $query->where('istituto_finanziario', 'like', "{$istituto}%")
                         );
                     }),
                 SelectFilter::make('mese_status')
@@ -330,14 +321,16 @@ class ProvvigionesTable
                     })
                     // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
                     ->indicateUsing(function (array $data): ?string {
-                        if (empty($data['value']))
+                        if (empty($data['value'])) {
                             return null;
+                        }
 
                         $dataScelta = Carbon::create(now()->year, $data['value'], 1);
-                        if ($dataScelta->isFuture())
+                        if ($dataScelta->isFuture()) {
                             $dataScelta->subYear();
+                        }
 
-                        return 'Perfezionato fino al ' . $dataScelta->translatedFormat('F Y');
+                        return 'Perfezionato fino al '.$dataScelta->translatedFormat('F Y');
                     }),
                 SelectFilter::make('mese_erogazione')
                     ->label('Mese erogazione')
@@ -377,20 +370,23 @@ class ProvvigionesTable
                         $dataLimite = $dataScelta->copy()->endOfMonth();
 
                         $dataScelta = $dataScelta->startOfMonth();
+
                         return $query
                             ->where('erogated_at', '>=', $dataScelta)
                             ->where('erogated_at', '<', $dataLimite);
                     })
                     // Opzionale: mostra chiaramente nel badge quale anno è stato applicato
                     ->indicateUsing(function (array $data): ?string {
-                        if (empty($data['value']))
+                        if (empty($data['value'])) {
                             return null;
+                        }
 
                         $dataScelta = Carbon::create(now()->year, $data['value'], 1);
-                        if ($dataScelta->isFuture())
+                        if ($dataScelta->isFuture()) {
                             $dataScelta->subYear();
+                        }
 
-                        return 'Erogato nel mese ' . $dataScelta->translatedFormat('F Y');
+                        return 'Erogato nel mese '.$dataScelta->translatedFormat('F Y');
                     }),
                 SelectFilter::make('trimestre_erogazione')
                     ->label('Trimestre perfezionamento')
@@ -440,8 +436,9 @@ class ProvvigionesTable
                             ->where('data_status', '<=', $dataFine);
                     })
                     ->indicateUsing(function (array $data): ?string {
-                        if (empty($data['value']))
+                        if (empty($data['value'])) {
                             return null;
+                        }
 
                         $trimestre = $data['value'];
                         $annoRiferimento = now()->year;
@@ -467,7 +464,7 @@ class ProvvigionesTable
                             $dataInizio->subYear();
                         }
 
-                        return 'Perfezionato ' . $trimestre . ' ' . $dataInizio->year;
+                        return 'Perfezionato '.$trimestre.' '.$dataInizio->year;
                     }),
                 Filter::make('data_fattura')
                     ->form([
@@ -478,7 +475,7 @@ class ProvvigionesTable
                                 'has_date' => 'Si',
                                 'no_date' => 'No',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasInvoiceDate = $data['has_invoice_date'] ?? 'all';
@@ -505,14 +502,14 @@ class ProvvigionesTable
                     ->icon('heroicon-o-arrow-path')
                     ->action(function ($record) {
                         $record->update([
-                            'stato' => $record->stato === 'Inserito' ? 'Sospeso' : 'Inserito'
+                            'stato' => $record->stato === 'Inserito' ? 'Sospeso' : 'Inserito',
                         ]);
                         Notification::make()
                             ->title('Stato aggiornato con successo')
                             ->success()
                             ->send();
                     })
-                    ->visible(fn($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
+                    ->visible(fn ($record): bool => in_array($record->stato, ['Inserito', 'Sospeso']))
                     ->iconButton()
                     ->color('primary'),
             ], position: RecordActionsPosition::BeforeColumns)
