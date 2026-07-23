@@ -2,30 +2,21 @@
 
 namespace App\Filament\Resources\SalesInvoices\Tables;
 
+use App\Filament\Actions\QuickExcelExportAction;
 use App\Filament\Exports\DynamicGroupExport;
-use App\Filament\Resources\Provvigioni\ProvvigioniResource;
-use App\Filament\Resources\SalesInvoices\Pages\CreateSalesInvoice;
 use App\Models\Client;
 use App\Models\Clienti;
 use App\Models\SalesInvoice;
 use App\Services\ProformaInvoiceMatchingService;
-use App\Services\SalesInvoiceCreditNoteImportService;
 use App\Services\SalesInvoiceImportService;
 use App\Services\SalesInvoiceMatchingService;
 use Filament\Actions\Action;
-use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\Summarizers\Count;
-use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
@@ -37,7 +28,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class SalesInvoicesTable
 {
@@ -67,7 +57,7 @@ class SalesInvoicesTable
                     ->summarize([
                         Sum::make()
                             ->money('EUR')
-                            ->label('')
+                            ->label(''),
                     ])
                     ->sortable(),
                 IconColumn::make('closed')
@@ -108,11 +98,11 @@ class SalesInvoicesTable
                         $query
                             ->when(
                                 $data['registered_from'],
-                                fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
+                                fn ($query, $date) => $query->whereDate('registration_date', '>=', $date)
                             )
                             ->when(
                                 $data['registered_until'],
-                                fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
+                                fn ($query, $date) => $query->whereDate('registration_date', '<=', $date)
                             );
                     }),
                 TernaryFilter::make('closed')
@@ -157,6 +147,7 @@ class SalesInvoicesTable
                     ])
                     ->label('Excel')
                     ->color('success'),
+                QuickExcelExportAction::make(),
                 Action::make('import_sales_invoices_excel')
                     ->label('Importa Fatture Vendita Excel')
                     ->icon('heroicon-o-document-arrow-up')
@@ -173,7 +164,7 @@ class SalesInvoicesTable
                     ])
                     ->action(function (array $data) {
                         try {
-                            $filePath = storage_path('app/private/' . $data['import_file_excel']);
+                            $filePath = storage_path('app/private/'.$data['import_file_excel']);
                             $companyId = Auth::user()->company_id;
                             $filename = basename($data['import_file_excel']);
 
@@ -188,7 +179,7 @@ class SalesInvoicesTable
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('Errore importazione Excel')
-                                ->body('Errore durante importazione: ' . $e->getMessage())
+                                ->body('Errore durante importazione: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -200,19 +191,19 @@ class SalesInvoicesTable
                     ->action(function () {
                         try {
                             $companyId = Auth::user()->company_id;
-                            $matchService = new SalesInvoiceMatchingService();
+                            $matchService = new SalesInvoiceMatchingService;
                             $matchService->setCompanyId($companyId);  // Usa il metodo setter
 
                             // Esegui il matching per sales invoices con clienti
                             $matchService->matchClientisByVatNumber();
 
                             // Esegui anche il matching per proforme
-                            $proformaMatchService = new ProformaInvoiceMatchingService();
+                            $proformaMatchService = new ProformaInvoiceMatchingService;
                             $proformaResults = $proformaMatchService->matchProformasToInvoices();
 
                             Notification::make()
                                 ->title('Associazione completata')
-                                ->body('Le fatture di vendita sono state associate a mandanti, clienti e proforme. Proforme abbinate: ' . $proformaResults['matched_proformas'])
+                                ->body('Le fatture di vendita sono state associate a mandanti, clienti e proforme. Proforme abbinate: '.$proformaResults['matched_proformas'])
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
@@ -265,15 +256,15 @@ where p.id is null
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('Errore processamento Proforme')
-                                ->body('Errore durante il processamento: ' . $e->getMessage())
+                                ->body('Errore durante il processamento: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
-                    })
+                    }),
             ])
             ->recordActions([
                 Action::make('attach_to_model')
-                    ->visible(fn($record) => is_null($record->invoiceable_id))
+                    ->visible(fn ($record) => is_null($record->invoiceable_id))
                     ->label('Associa')
                     ->icon('heroicon-o-link')
                     ->color('success')
@@ -285,7 +276,7 @@ where p.id is null
                                     ->label('Azione')
                                     ->options([
                                         'select_existing' => 'Seleziona Cliente esistente',
-                                        'create_new' => 'Crea nuovo Cliente'
+                                        'create_new' => 'Crea nuovo Cliente',
                                     ])
                                     ->default('select_existing')
                                     ->reactive(),
@@ -298,7 +289,7 @@ where p.id is null
                                     )
                                     ->searchable()
                                     ->required()
-                                    ->visible(fn($get) => $get('action_type') === 'select_existing')
+                                    ->visible(fn ($get) => $get('action_type') === 'select_existing'),
                             ];
                         } else {
                             // Has VAT number - show Clienti options
@@ -307,7 +298,7 @@ where p.id is null
                                     ->label('Azione')
                                     ->options([
                                         'select_existing' => 'Seleziona Istituto esistente',
-                                        'create_new' => 'Crea nuovo Istituto'
+                                        'create_new' => 'Crea nuovo Istituto',
                                     ])
                                     ->default('select_existing')
                                     ->reactive(),
@@ -321,7 +312,7 @@ where p.id is null
                                     )
                                     ->searchable()
                                     ->required()
-                                    ->visible(fn($get) => $get('action_type') === 'select_existing')
+                                    ->visible(fn ($get) => $get('action_type') === 'select_existing'),
                             ];
                         }
                     })
@@ -337,17 +328,17 @@ where p.id is null
                                         'is_company' => $record->is_nopractice,
                                         'is_lead' => 0,
                                         'is_client' => 1,
-                                        'company_id' => Auth::user()->company_id
+                                        'company_id' => Auth::user()->company_id,
                                     ]);
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Client',
-                                        'invoiceable_id' => $client->id
+                                        'invoiceable_id' => $client->id,
                                     ]);
                                 } else {
                                     // Attach to existing Client
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Client',
-                                        'invoiceable_id' => $data['client_id']
+                                        'invoiceable_id' => $data['client_id'],
                                     ]);
                                 }
                             } else {
@@ -360,20 +351,20 @@ where p.id is null
                                         'nome' => $record->customer_name,
                                         'piva' => $record->vat_number,
                                         'is_active' => 1,
-                                        'company_id' => Auth::user()->company_id
+                                        'company_id' => Auth::user()->company_id,
                                     ]);
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Clienti',
-                                        'invoiceable_id' => $clienti->id
+                                        'invoiceable_id' => $clienti->id,
                                     ]);
                                 } else {
                                     // Attach to existing Clienti
                                     $record->update([
                                         'invoiceable_type' => 'App\Models\Clienti',
-                                        'invoiceable_id' => $data['clienti_id']
+                                        'invoiceable_id' => $data['clienti_id'],
                                     ]);
                                     Clienti::updateOrCreate([
-                                        'id' => $data['clienti_id']
+                                        'id' => $data['clienti_id'],
                                     ], [
                                         'name' => $record->customer_name,
                                         'piva' => $record->vat_number,
@@ -393,7 +384,7 @@ where p.id is null
                                 ->danger()
                                 ->send();
                         }
-                    })
+                    }),
             ], position: RecordActionsPosition::BeforeColumns)
             ->emptyStateActions([
                 //  CreateAction::make(),

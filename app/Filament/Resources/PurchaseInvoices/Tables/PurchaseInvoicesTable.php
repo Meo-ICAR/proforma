@@ -4,23 +4,20 @@ namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
 use App\Models\Client;
+use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
-use App\Services\PurchaseCreditNoteImportService;
 use App\Services\PurchaseInvoiceImportService;
 use App\Services\PurchaseInvoiceMatchingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
@@ -32,7 +29,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class PurchaseInvoicesTable
 {
@@ -95,11 +91,11 @@ class PurchaseInvoicesTable
                         $query
                             ->when(
                                 $data['registered_from'],
-                                fn($query, $date) => $query->whereDate('registration_date', '>=', $date)
+                                fn ($query, $date) => $query->whereDate('registration_date', '>=', $date)
                             )
                             ->when(
                                 $data['registered_until'],
-                                fn($query, $date) => $query->whereDate('registration_date', '<=', $date)
+                                fn ($query, $date) => $query->whereDate('registration_date', '<=', $date)
                             );
                     }),
                 TernaryFilter::make('closed')
@@ -109,7 +105,7 @@ class PurchaseInvoicesTable
                     ->options([
                         'App\Models\Fornitore' => 'Agente',
                         'App\Models\Client' => 'Consulente',
-                        null => 'Non associato'
+                        null => 'Non associato',
                     ]),
                 TernaryFilter::make('is_nopractice')
                     ->label('Non legato a provvigioni'),
@@ -124,7 +120,7 @@ class PurchaseInvoicesTable
             ])
             ->recordActions([
                 Action::make('attach_to_model')
-                    ->visible(fn($record) => is_null($record->invoiceable_id))
+                    ->visible(fn ($record) => is_null($record->invoiceable_id))
                     ->label('Associa')
                     ->icon('heroicon-o-link')
                     ->color('success')
@@ -136,7 +132,7 @@ class PurchaseInvoicesTable
                                     'create_new' => 'Crea nuovo Consulente',
                                     'select_existing' => 'Seleziona Consulente esistente',
                                     'attach_existing_agent' => 'Seleziona Agente esistente',
-                                    'create_agent' => 'Crea nuovo Agente'
+                                    'create_agent' => 'Crea nuovo Agente',
                                 ])
                                 ->default('create_new')
                                 ->live()
@@ -146,13 +142,13 @@ class PurchaseInvoicesTable
                                 ->options(Client::orderBy('name')->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
-                                ->visible(fn($get) => $get('action_type') === 'select_existing'),
+                                ->visible(fn ($get) => $get('action_type') === 'select_existing'),
                             Select::make('agent_id')
                                 ->label('Agente')
                                 ->options(Fornitore::orderBy('name')->pluck('name', 'id'))
                                 ->searchable()
                                 ->required()
-                                ->visible(fn($get) => $get('action_type') === 'attach_existing_agent')
+                                ->visible(fn ($get) => $get('action_type') === 'attach_existing_agent'),
                         ];
                     })
                     ->action(function ($record, $data) {
@@ -166,17 +162,17 @@ class PurchaseInvoicesTable
                                     'is_lead' => 0,
                                     'is_person' => 0,
                                     'is_client' => 0,
-                                    'company_id' => Auth::user()->company_id ?? \App\Models\Company::first()->id
+                                    'company_id' => Auth::user()->company_id ?? Company::first()->id,
                                 ]);
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Client',
-                                    'invoiceable_id' => $client->id
+                                    'invoiceable_id' => $client->id,
                                 ]);
                             } elseif ($data['action_type'] === 'select_existing') {
                                 // Attach to existing Client
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Client',
-                                    'invoiceable_id' => $data['client_id']
+                                    'invoiceable_id' => $data['client_id'],
                                 ]);
                             } elseif ($data['action_type'] === 'create_agent') {
                                 // Create new Agent
@@ -184,20 +180,20 @@ class PurchaseInvoicesTable
                                     'name' => $record->supplier,
                                     'piva' => $record->vat_number,
                                     'is_active' => 1,
-                                    'company_id' => Auth::user()->company_id ?? \App\Models\Company::first()->id
+                                    'company_id' => Auth::user()->company_id ?? Company::first()->id,
                                 ]);
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Fornitore',
-                                    'invoiceable_id' => $agent->id
+                                    'invoiceable_id' => $agent->id,
                                 ]);
                             } elseif ($data['action_type'] === 'attach_existing_agent') {
                                 // Attach to existing Agent
                                 $record->update([
                                     'invoiceable_type' => 'App\Models\Fornitore',
-                                    'invoiceable_id' => $data['agent_id']
+                                    'invoiceable_id' => $data['agent_id'],
                                 ]);
                                 Fornitore::updateOrCreate([
-                                    'id' => $data['agent_id']
+                                    'id' => $data['agent_id'],
                                 ], [
                                     'name' => $record->supplier,
                                     'piva' => $record->vat_number,
@@ -218,12 +214,14 @@ class PurchaseInvoicesTable
                     }),
             ], position: RecordActionsPosition::BeforeColumns)
             ->headerActions([
+
                 ExportAction::make()
                     ->exports([
                         DynamicGroupExport::make(),
                     ])
                     ->label('Excel')
                     ->color('success'),
+                QuickExcelExportAction::make(),
                 Action::make('import_purchase_invoices_excel')
                     ->label('Importa Fatture Acquisto Excel')
                     ->icon('heroicon-o-document-arrow-up')
@@ -240,13 +238,13 @@ class PurchaseInvoicesTable
                     ])
                     ->action(function (array $data) {
                         try {
-                            $filePath = storage_path('app/public/' . $data['import_file_excel']);
+                            $filePath = storage_path('app/public/'.$data['import_file_excel']);
                             // Get company_id from user or fallback to first company
-                            $companyId = Auth::user()->company_id ?? \App\Models\Company::first()->id;
+                            $companyId = Auth::user()->company_id ?? Company::first()->id;
                             $filename = basename($data['import_file_excel']);
 
-                            $importService = new \App\Services\PurchaseInvoiceImportService($filename);
-                            $results = $importService->import('public/' . $data['import_file_excel'], $companyId);
+                            $importService = new PurchaseInvoiceImportService($filename);
+                            $results = $importService->import('public/'.$data['import_file_excel'], $companyId);
 
                             Notification::make()
                                 ->title('Importazione Excel completata')
@@ -256,7 +254,7 @@ class PurchaseInvoicesTable
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('Errore importazione Excel')
-                                ->body('Errore durante importazione: ' . $e->getMessage())
+                                ->body('Errore durante importazione: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
@@ -268,8 +266,8 @@ class PurchaseInvoicesTable
                     ->action(function () {
                         try {
                             // Get company_id from user or fallback to first company
-                            $companyId = Auth::user()->company_id ?? \App\Models\Company::first()->id;
-                            $matchService = new PurchaseInvoiceMatchingService();
+                            $companyId = Auth::user()->company_id ?? Company::first()->id;
+                            $matchService = new PurchaseInvoiceMatchingService;
                             $matchService->setCompanyId($companyId);  // Usa il metodo setter
 
                             // Esegui solo le funzioni di matching per purchase invoices
@@ -331,11 +329,11 @@ class PurchaseInvoicesTable
                         } catch (\Exception $e) {
                             Notification::make()
                                 ->title('Errore processamento Proforme')
-                                ->body('Errore durante il processamento: ' . $e->getMessage())
+                                ->body('Errore durante il processamento: '.$e->getMessage())
                                 ->danger()
                                 ->send();
                         }
-                    })
+                    }),
             ])
             ->bulkActions([
                 BulkActionGroup::make([

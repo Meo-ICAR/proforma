@@ -2,7 +2,7 @@
 
 namespace App\Filament\Actions;
 
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -14,7 +14,7 @@ class QuickExcelExportAction
     {
         return Action::make($name)
             ->label('Backup')
-            ->icon('heroicon-m-arrow-down-tray')
+            ->icon('heroicon-m-circle-stack')
             ->color('success')
             ->action(function (Action $action): StreamedResponse {
                 /** @var Builder $query */
