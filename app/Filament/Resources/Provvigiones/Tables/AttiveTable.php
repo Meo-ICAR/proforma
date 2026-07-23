@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Provvigiones\Tables;
 
+use App\Filament\Actions\QuickExcelExportAction;
 use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Praticas\PraticaResource;
 use App\Models\Cliente;
@@ -24,8 +25,8 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
+use Illuminate\Database\Eloquent\Builder;  // ← Import corretto
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as Builderq;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
@@ -54,6 +55,7 @@ class AttiveTable
                     ])
                     ->label('Excel')
                     ->color('success'),
+                QuickExcelExportAction::make(),
                 BulkAction::make('emetti')
                     ->label('Associa a Proforma')
                     ->color('primary')

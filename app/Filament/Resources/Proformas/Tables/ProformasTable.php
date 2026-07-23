@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Proformas\Tables;
 
+use App\Filament\Actions\QuickExcelExportAction;
 use App\Filament\Exports\DynamicGroupExport;
 use Filament\Actions\BulkAction;
 use Filament\Actions\EditAction;
@@ -14,8 +15,8 @@ use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;  // ← Import corretto
+use Illuminate\Database\Eloquent\Builder;  // ← Import corretto
+use Illuminate\Database\Eloquent\Collection;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class ProformasTable
@@ -136,6 +137,7 @@ class ProformasTable
                     ])
                     ->label('Excel')
                     ->color('success'),
+                QuickExcelExportAction::make(),
             ])
             ->toolbarActions([
                 BulkAction::make('Invia')

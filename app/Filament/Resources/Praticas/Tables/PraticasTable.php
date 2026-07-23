@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Praticas\Tables;
 
+use App\Filament\Actions\QuickExcelExportAction;
 use App\Filament\Exports\DynamicGroupExport;
 use App\Models\PraticheStato;
 use App\Models\TipoProdotto;
@@ -14,7 +15,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class PraticasTable
 {
@@ -75,7 +75,7 @@ class PraticasTable
                                 'has_date' => 'Presente',
                                 'no_date' => 'Assente',
                             ])
-                            ->default('all')
+                            ->default('all'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         $hasPaymentDate = $data['has_erogated_date'] ?? 'all';
@@ -105,6 +105,7 @@ class PraticasTable
                     ])
                     ->label('Excel')
                     ->color('success'),
+                QuickExcelExportAction::make(),
             ])
             ->recordActions([
                 // ViewAction::make(),
