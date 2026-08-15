@@ -309,6 +309,7 @@ class ImportProvvigioniFromApi extends Command
                             if (empty($existing->n_fattura) && !empty($provvigioneData['n_fattura'])) {
                                 $existing->update([
                                     'stato' => 'Pagato',
+                                    'status_pagamento'  => 'Fatturato',
                                     'n_fattura' => $provvigioneData['n_fattura'] ?? null,
                                     'data_fattura' => $provvigioneData['data_fattura'] ?? null,
                                 ]);
@@ -350,7 +351,7 @@ class ImportProvvigioniFromApi extends Command
             $updatedCount = \DB::update(
                 "UPDATE provvigioni p
 
-                    SET  p.stato = 'Pagato', p.deleted_at = NULL
+                    SET  p.stato = 'Pagato', p.deleted_at = NULL, p.status_pagamento = 'Fatturato'
                     WHERE  p.data_fattura is not null"
             );
             $this->info("Updated {$updatedCount} records to stato Pagato from pratiche.");

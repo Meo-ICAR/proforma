@@ -30,6 +30,10 @@ use Illuminate\Database\Eloquent\Builder;  // ← Import corretto
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as Builderq;
+use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\HtmlString;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class ProvvigionesTable
@@ -49,6 +53,41 @@ class ProvvigionesTable
                 fn (Model $record): bool => $record->stato === 'Inserito' && $record->piva != null && ((strlen($record->piva) == 11) || (strlen($record->piva) == 16))
             )
             ->headerActions([
+                Action::make('importaDati')
+                    ->label('Import da MediaFacile')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->action(function () {
+                        $logs = [];
+
+                        // 1. Ascolta i log generati durante l'esecuzione
+                        Event::listen(MessageLogged::class, function (MessageLogged $log) use (&$logs) {
+                            $logs[] = '['.strtoupper($log->level)."] {$log->message}";
+                        });
+
+                        // 2. Esegue il comando
+                        Artisan::call('import:daily', [
+                            '--start-date' => '2025-09-01',
+                        ]);
+
+                        // 3. Prepara il testo del log
+                        $logOutput = count($logs) > 0
+                            ? implode("\n", $logs)
+                            : 'Nessun log generato durante l\'esecuzione.';
+
+                        // 4. Mostra una notifica persistente con i log formattati
+                        Notification::make()
+                            ->title('Importazione Completata')
+                            ->body(new HtmlString(
+                                '<pre class="p-3 text-xs text-green-400 bg-gray-900 rounded-lg max-h-60 overflow-y-auto whitespace-pre-wrap font-mono">'
+                                .e($logOutput).
+                                '</pre>'
+                            ))
+                            ->success()
+                            ->persistent() // La notifica non scompare finché l'utente non la chiude
+                            ->send();
+                    }),
                 ExportAction::make()
                     ->exports([
                         DynamicGroupExport::make()

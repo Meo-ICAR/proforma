@@ -36,7 +36,7 @@ class SalesInvoicesTable
         return $table
             ->reorderableColumns()
             ->selectable()
-            ->paginated(['all', 10, 25, 50, 100])
+            ->paginated([ 50, 100,500,1000])
             ->groups([
                 Group::make('customer_name')
                     ->label('Cliente')

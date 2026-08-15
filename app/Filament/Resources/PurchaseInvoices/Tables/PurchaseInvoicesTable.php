@@ -35,7 +35,7 @@ class PurchaseInvoicesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->paginated(['all', 10, 25, 50, 100])
+            ->paginated([ 50, 100,500,1000])
             ->reorderableColumns()
             ->groups([
                 Group::make('supplier')
