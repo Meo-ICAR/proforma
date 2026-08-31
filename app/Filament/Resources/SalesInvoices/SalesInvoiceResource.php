@@ -9,11 +9,11 @@ use App\Filament\Resources\SalesInvoices\RelationManagers\ProformasAfterRegistra
 use App\Filament\Resources\SalesInvoices\Schemas\SalesInvoiceForm;
 use App\Filament\Resources\SalesInvoices\Tables\SalesInvoicesTable;
 use App\Models\SalesInvoice;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class SalesInvoiceResource extends Resource

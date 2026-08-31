@@ -233,6 +233,7 @@ class ProvvigionesTable
                         1 => 'Si',
                         0 => 'No',
                     ])
+                    ->default(in_array(now()->month, [1, 4, 7, 10]) ? 1 : 0)
                     ->placeholder('Tutti'),
                 Filter::make('data_fattura')
                     ->form([
@@ -430,7 +431,7 @@ class ProvvigionesTable
                         return 'Erogato nel mese '.$dataScelta->translatedFormat('F Y');
                     }),
                 SelectFilter::make('trimestre_erogazione')
-                    ->label('Trimestre perfezionamento')
+                    ->label('Trimestre fatturazione')
                     ->options([
                         '1' => '1° Trimestre (Gen-Mar)',
                         '2' => '2° Trimestre (Apr-Giu)',
@@ -473,8 +474,8 @@ class ProvvigionesTable
                         }
 
                         return $query
-                            ->where('data_status', '>=', $dataInizio)
-                            ->where('data_status', '<=', $dataFine);
+                            ->where('data_fattura', '>=', $dataInizio)
+                            ->where('data_fattura', '<=', $dataFine);
                     })
                     ->indicateUsing(function (array $data): ?string {
                         if (empty($data['value'])) {
@@ -505,7 +506,7 @@ class ProvvigionesTable
                             $dataInizio->subYear();
                         }
 
-                        return 'Perfezionato '.$trimestre.' '.$dataInizio->year;
+                        return 'Fatturato '.$trimestre.' '.$dataInizio->year;
                     }),
                 Filter::make('data_fattura')
                     ->form([

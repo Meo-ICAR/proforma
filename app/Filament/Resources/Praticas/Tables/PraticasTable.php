@@ -60,8 +60,9 @@ class PraticasTable
                 SelectFilter::make('stato_pratica')
                     ->options(PraticheStato::pluck('stato_pratica', 'stato_pratica'))
                     ->multiple()
-                    ->label('Stato Pratica')
-                    ->default(['PERFEZIONATA', 'IN AMMORTAMENTO']),
+               //     ->default(['PERFEZIONATA', 'IN AMMORTAMENTO'])
+                    ->label('Stato Pratica'),
+
                 SelectFilter::make('tipo_prodotto')
                     ->options(TipoProdotto::pluck('tipo_prodotto', 'tipo_prodotto'))
                     ->multiple()

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\Tables;
 
+use App\Filament\Actions\QuickExcelExportAction;
 use App\Filament\Exports\DynamicGroupExport;
 use App\Models\Client;
 use App\Models\Company;
@@ -35,7 +36,7 @@ class PurchaseInvoicesTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->paginated([ 50, 100,500,1000])
+            ->paginated([50, 100, 500, 1000])
             ->reorderableColumns()
             ->groups([
                 Group::make('supplier')

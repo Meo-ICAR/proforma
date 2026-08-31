@@ -20,7 +20,7 @@ class ListVenasarcoTrimestres extends ListRecords
     {
         // $record = $this->getRecord();
 
-        return new HtmlString('Cliccare sul valore del trimestre per avere il dettaglio delle provvigioni perfezionate in quel periodo');
+        return new HtmlString('Cliccare sul valore del trimestre per avere il dettaglio delle provvigioni fatturate in quel periodo');
     }
 
     protected function getHeaderActions(): array
@@ -34,7 +34,7 @@ class ListVenasarcoTrimestres extends ListRecords
                 ->action(function () {
                     try {
                         // Delete existing records
-                        VenasarcoTrimestre::truncate();
+                        Venasarcotrimestre::truncate();
 
                         // Insert new records from view
                         DB::table('venasarcotrimestre')->insertUsing(
