@@ -167,7 +167,7 @@ class ProvvigionesTable
                     ->label('Provvigione')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
-                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn (Builderq $query) => $query->where('stato', 'Inserito')))
+                    ->summarize(Sum::make()->money('EUR')->label('')->query(fn (Builderq $query) => $query->whereIn('stato', ['Inserito', 'Pagato'])))
                     ->sortable(),
                 IconColumn::make('coordinamento')
                     ->boolean()
