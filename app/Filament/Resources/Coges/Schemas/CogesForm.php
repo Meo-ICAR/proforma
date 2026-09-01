@@ -11,10 +11,8 @@ class CogesForm
     {
         return $schema
             ->components([
-                TextInput::make('fonte')
-                    ->required(),
-                TextInput::make('entrata_uscita')
-                    ->required(),
+            
+                TextInput::make('annotazioni'),
                 TextInput::make('conto_dare')
                     ->required(),
                 TextInput::make('descrizione_dare')
@@ -23,7 +21,10 @@ class CogesForm
                     ->required(),
                 TextInput::make('descrizione_avere')
                     ->required(),
-                TextInput::make('annotazioni'),
+    
+                TextInput::make('fonte'),
+                TextInput::make('entrata_uscita'),
+
             ]);
     }
 }

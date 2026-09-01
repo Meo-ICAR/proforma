@@ -23,7 +23,7 @@ class Firr extends Model
         'massimo',
         'aliquota',
         'competenza',
-        'enasarco'
+        'enasarco',
     ];
 
     /**
@@ -36,7 +36,7 @@ class Firr extends Model
         'massimo' => 'decimal:2',
         'aliquota' => 'decimal:2',
         'competenza' => 'integer',
-        'enasarco' => 'string'
+        'enasarco' => 'string',
     ];
 
     /**
@@ -45,8 +45,8 @@ class Firr extends Model
      * @var array
      */
     protected $attributes = [
-        'competenza' => 2025,
-        'enasarco' => 'plurimandatario'
+        'competenza' => 2026,
+        'enasarco' => 'monomandatario',
     ];
 
     /**
@@ -79,6 +79,7 @@ class Firr extends Model
                 $remainingAmount -= $amountInBracket;
             }
         }
+
         return round($totalContribution, 2);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Coges\Tables;
 
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -13,9 +12,7 @@ class CogesTable
     {
         return $table
             ->columns([
-                TextColumn::make('fonte')
-                    ->searchable(),
-                TextColumn::make('entrata_uscita')
+                TextColumn::make('annotazioni')
                     ->searchable(),
                 TextColumn::make('conto_avere')
                     ->searchable(),
@@ -25,7 +22,10 @@ class CogesTable
                     ->searchable(),
                 TextColumn::make('descrizione_dare')
                     ->searchable(),
-                TextColumn::make('annotazioni')
+
+                TextColumn::make('fonte')
+                    ->searchable(),
+                TextColumn::make('entrata_uscita')
                     ->searchable(),
             ])
             ->filters([
