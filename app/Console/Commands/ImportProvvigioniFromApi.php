@@ -9,8 +9,9 @@ use App\Models\Pratica;
 use App\Models\Provvigione;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class ImportProvvigioniFromApi extends Command
 {
@@ -55,7 +56,7 @@ class ImportProvvigioniFromApi extends Command
                 ])
                 ->retry(3, 1000, function ($exception) {
                     // Retry on connection timeouts or server errors
-                    return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
+                    return $exception instanceof ConnectionException ||
                         ($exception->getCode() >= 500);
                 })
                 ->get($apiUrl, $queryParams);
@@ -70,12 +71,13 @@ class ImportProvvigioniFromApi extends Command
              *     'response_size' => strlen($response->body()),
              * ]);
              */
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 \Log::error('Provvigioni API Error', [
                     'status' => $response->status(),
                     'response' => substr($response->body(), 0, 1000),
                 ]);
-                $this->error('API request failed with status: ' . $response->status());
+                $this->error('API request failed with status: '.$response->status());
+
                 return 1;
             }
 
@@ -83,6 +85,7 @@ class ImportProvvigioniFromApi extends Command
 
             if (empty($responseBody)) {
                 $this->error('Empty response body from API');
+
                 return 1;
             }
 
@@ -98,6 +101,7 @@ class ImportProvvigioniFromApi extends Command
 
             if (count($lines) < 2) {  // Need at least header row + 1 data row
                 $this->info('No data rows found in API response');
+
                 return 0;
             }
 
@@ -126,25 +130,26 @@ class ImportProvvigioniFromApi extends Command
                 'Istituto finanziario',
                 'Partita IVA Agente',
                 'Codice Fiscale Agente',
-                'ANNULLATA'
+                'ANNULLATA',
             ];
 
             // Check if all required headers are present in the response
             $missingHeaders = array_diff($requiredHeaders, $headers);
-            if (!empty($missingHeaders)) {
+            if (! empty($missingHeaders)) {
                 $this->error('Missing required headers in API response:');
                 foreach ($missingHeaders as $missing) {
                     $this->error(" - $missing");
                 }
-                $this->error('Actual headers received: ' . implode(', ', $headers));
+                $this->error('Actual headers received: '.implode(', ', $headers));
+
                 return 1;
             }
 
             // Verify the order of headers matches exactly
             if ($headers !== $requiredHeaders) {
                 $this->warn('Warning: Headers are not in the expected order.');
-                $this->warn('Expected order: ' . implode('\t', $requiredHeaders));
-                $this->warn('Actual order:   ' . implode('\t', $headers));
+                $this->warn('Expected order: '.implode('\t', $requiredHeaders));
+                $this->warn('Actual order:   '.implode('\t', $headers));
 
                 // Reorder the headers to match the expected order
                 $reorderedHeaders = [];
@@ -191,20 +196,21 @@ class ImportProvvigioniFromApi extends Command
                     \Log::error('Error combining row data', [
                         'headers' => $headers,
                         'values' => $values,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
 
             if (empty($data)) {
                 $this->info('No records found in the specified date range');
-                $this->info('API Response Status: ' . $response->status());
-                $this->info('API Response Preview: ' . substr($response->body(), 0, 200));
+                $this->info('API Response Status: '.$response->status());
+                $this->info('API Response Preview: '.substr($response->body(), 0, 200));
+
                 return 0;
             }
 
             // Verify response headers match expected format
-            if (!empty($data)) {
+            if (! empty($data)) {
                 $firstItem = $data[0];
                 $expectedHeaders = [
                     'ID Compenso',
@@ -226,7 +232,7 @@ class ImportProvvigioniFromApi extends Command
                     'Istituto finanziario',
                     'Partita IVA Agente',
                     'Codice Fiscale Agente',
-                    'ANNULLATA'
+                    'ANNULLATA',
                 ];
 
                 $actualHeaders = array_keys($firstItem);
@@ -235,8 +241,8 @@ class ImportProvvigioniFromApi extends Command
                 $matchingHeaders = array_intersect($expectedHeaders, $actualHeaders);
                 if ($matchingHeaders !== $expectedHeaders) {
                     $this->warn('Warning: Headers are not in the expected order.');
-                    $this->warn('Expected order: ' . implode('\t', $expectedHeaders));
-                    $this->warn('Actual order:   ' . implode('\t', $matchingHeaders));
+                    $this->warn('Expected order: '.implode('\t', $expectedHeaders));
+                    $this->warn('Actual order:   '.implode('\t', $matchingHeaders));
                 }
             }
 
@@ -253,12 +259,13 @@ class ImportProvvigioniFromApi extends Command
                     $provvigioneData['upload_at'] = $adesso;
                     // Use 'Codice Pratica' as the identifier since that's what's in the API response
                     if (empty($item['ID Compenso'])) {
-                        $this->warn('Skipping item without ID Compenso: ' . json_encode($item));
+                        $this->warn('Skipping item without ID Compenso: '.json_encode($item));
                         $errors++;
+
                         continue;
                     }
                     $existingPratica = Pratica::where('id', $provvigioneData['id_pratica'])->first();
-                    if (!$existingPratica) {
+                    if (! $existingPratica) {
                         continue;
                     }
 
@@ -269,13 +276,13 @@ class ImportProvvigioniFromApi extends Command
                     $existing = Provvigione::where('id', $codprovvigione)->first();
                     if ($provvigioneData['tipo'] === 'Cliente') {
                         $client = Client::where('name', $provvigioneData['denominazione_riferimento'])->first();
-                        if (!$client) {
+                        if (! $client) {
                             $client = Client::create([
                                 'name' => $provvigioneData['denominazione_riferimento'],
                                 'company_id' => $companyId,
                                 'is_company' => 0,
                                 'is_lead' => 0,
-                                'is_client' => 1
+                                'is_client' => 1,
                             ]);
                         }
                     }
@@ -283,22 +290,24 @@ class ImportProvvigioniFromApi extends Command
                     $piva = trim($provvigioneData['piva']);
                     $pivanew = $piva;
                     $nameprod = $provvigioneData['denominazione_riferimento'];
-                    if ($provvigioneData['entrata_uscita'] == 'Uscita' && !(strlen($piva) === 11)) {
+                    if ($provvigioneData['entrata_uscita'] == 'Uscita' && ! (strlen($piva) === 11)) {
                         $fornitore = Fornitore::where('name', $nameprod)->first();
-                        if ($fornitore && ($fornitore->piva <> $piva)) {
+                        if ($fornitore && ($fornitore->piva != $piva)) {
                             $pivanew = $fornitore->piva;
                             if (strlen($pivanew) === 11) {
                                 $provvigioneData['piva'] = $pivanew;
                             }
                         }
-                        \Log::debug('Piva not valid:', ['piva' => $piva, 'nameprod' => $nameprod, 'pivanew' => $pivanew]);
+                        if ((strlen($piva) != 16)) {
+                            \Log::debug('Piva not valid:', ['piva' => $piva, 'nameprod' => $nameprod, 'pivanew' => $pivanew]);
+                        }
                     }
 
                     if ($existing) {
                         $existing->update(['upload_at' => $adesso, 'piva' => $pivanew]);
                         // Check if any of the timestamp fields are already set
                         if (empty($existing->stato)) {
-                            if (!empty($existingPratica->erogated_at) && empty($existing->erogated_at)) {
+                            if (! empty($existingPratica->erogated_at) && empty($existing->erogated_at)) {
                                 $provvigioneData['erogated_at'] = $existingPratica->erogated_at;
                                 $provvigioneData['importo_erogato'] = $existing->importo;
                             }
@@ -306,10 +315,10 @@ class ImportProvvigioniFromApi extends Command
                             $updated++;
                             // $this->info("Updated provvigione: {$provvigioneData['id']}");
                         } else {
-                            if (empty($existing->n_fattura) && !empty($provvigioneData['n_fattura'])) {
+                            if (empty($existing->n_fattura) && ! empty($provvigioneData['n_fattura'])) {
                                 $existing->update([
                                     'stato' => 'Pagato',
-                                    'status_pagamento'  => 'Fatturato',
+                                    'status_pagamento' => 'Fatturato',
                                     'n_fattura' => $provvigioneData['n_fattura'] ?? null,
                                     'data_fattura' => $provvigioneData['data_fattura'] ?? null,
                                 ]);
@@ -329,7 +338,7 @@ class ImportProvvigioniFromApi extends Command
                         // $this->info("Imported new provvigione: {$provvigioneData['id']}");
                     }
                 } catch (\Exception $e) {
-                    $this->error('Error processing item: ' . $e->getMessage());
+                    $this->error('Error processing item: '.$e->getMessage());
                     $errors++;
                 }
             }
@@ -392,24 +401,27 @@ class ImportProvvigioniFromApi extends Command
              */
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
+
             return 0;
-        } catch (\Illuminate\Http\Client\RequestException $e) {
-            $this->error('HTTP Request Error: ' . $e->getMessage());
+        } catch (RequestException $e) {
+            $this->error('HTTP Request Error: '.$e->getMessage());
             \Log::error('Provvigioni API Request Exception', [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'response' => $e->response ? [
                     'status' => $e->response->status(),
-                    'body' => substr((string) $e->response->body(), 0, 1000)
-                ] : null
+                    'body' => substr((string) $e->response->body(), 0, 1000),
+                ] : null,
             ]);
+
             return 1;
         } catch (\Throwable $e) {
-            $this->error('Unexpected Error: ' . $e->getMessage());
+            $this->error('Unexpected Error: '.$e->getMessage());
             \Log::error('Unexpected Error in Provvigioni Import', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return 1;
         }
     }
@@ -434,8 +446,9 @@ class ImportProvvigioniFromApi extends Command
     {
         // Helper function to parse dates from API
         $parseDate = function ($dateValue) {
-            if (empty($dateValue))
+            if (empty($dateValue)) {
                 return null;
+            }
 
             try {
                 // Handle DD/MM/YYYY format
@@ -447,8 +460,9 @@ class ImportProvvigioniFromApi extends Command
                     return Carbon::parse($dateValue);
                 }
             } catch (\Exception $e) {
-                $this->warn("Failed to parse date '" . $dateValue . "': " . $e->getMessage());
+                $this->warn("Failed to parse date '".$dateValue."': ".$e->getMessage());
             }
+
             return null;
         };
 
@@ -472,7 +486,7 @@ class ImportProvvigioniFromApi extends Command
             'Istituto finanziario',
             'Partita IVA Agente',
             'Codice Fiscale Agente',
-            'ANNULLATA'
+            'ANNULLATA',
         ];
 
         // Parse all date fields
@@ -499,14 +513,14 @@ class ImportProvvigioniFromApi extends Command
             'id_pratica' => $apiData['ID Pratica'] ?? null,
             'segnalatore' => $apiData['Agente'] ?? null,
             'istituto_finanziario' => $apiData['Istituto finanziario'] ?? null,
-            'piva' => !empty($apiData['Partita IVA Agente'])
+            'piva' => ! empty($apiData['Partita IVA Agente'])
                 ? $apiData['Partita IVA Agente']
-                : (!empty($apiData['Codice Fiscale Agente']) ? $apiData['Codice Fiscale Agente'] : null),
+                : (! empty($apiData['Codice Fiscale Agente']) ? $apiData['Codice Fiscale Agente'] : null),
             'cf' => $apiData['Codice Fiscale Agente'] ?? null,
             // 'annullato' => !empty($apiData['ANNULLATA']) && $apiData['ANNULLATA'] === 'SI',
             //  'invoice_number' => $apiData['ANNULLATA'] ?? null,
             'fonte' => 'mediafacile',
-            'coordinamento' => $apiData['Agente'] <> $apiData['Denominazione Riferimento'],
+            'coordinamento' => $apiData['Agente'] != $apiData['Denominazione Riferimento'],
             'iscliente' => (isset($apiData['Descrizione']) && str_contains($apiData['Descrizione'], 'liente')),
         ];
     }

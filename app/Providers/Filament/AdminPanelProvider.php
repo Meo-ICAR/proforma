@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Manuale;
+use App\Http\Middleware\CheckLastPurchaseMiddleware;
 use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
 use DutchCodingCompany\FilamentSocialite\Provider;
 use Filament\Http\Middleware\Authenticate;
@@ -9,22 +11,20 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
-use Filament\Pages\Dashboard;
-use Filament\Support\Colors\Color;
-use Filament\Support\Icons\Heroicon;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;  // Importante per usare Blade::render
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Blade;  // Importante per usare Blade::render
+use Illuminate\Support\Facades\Blade;  // Già che ci sei, servirà anche questo per Str::random
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;  // Già che ci sei, servirà anche questo per Str::random
+use Illuminate\Support\Str;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 use SocialiteProviders\Microsoft\MicrosoftExtendSocialite;
@@ -71,7 +71,7 @@ class AdminPanelProvider extends PanelProvider
                 //   FilamentInfoWidget::class,
             ])
             ->pages([
-                \App\Filament\Pages\Manuale::class,
+                Manuale::class,
                 // ... other pages
             ])
             ->middleware([
@@ -84,16 +84,18 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+
             ])
             ->authMiddleware([
                 Authenticate::class,
+                CheckLastPurchaseMiddleware::class,  // Aggiungi il middleware personalizzato qui
             ])
             ->plugins([
                 FilamentSocialitePlugin::make()
                     ->providers([
                         Provider::make('microsoft')
                             ->color('gray')  // or 'gray' for a lighter gray
-                            ->label('Microsoft')
+                            ->label('Microsoft'),
                     ])
                     ->registration(true)  // Abilita la registrazione automatica per nuovi utenti
                     // Questo forza il plugin a mostrare i bottoni in entrambe le pagine

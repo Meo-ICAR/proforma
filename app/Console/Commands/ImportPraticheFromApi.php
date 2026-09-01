@@ -3,13 +3,16 @@
 namespace App\Console\Commands;
 
 use App\Models\Clienti;
+use App\Models\Firr;
 use App\Models\Fornitore;
 use App\Models\Pratica;
+use App\Models\Venasarcotot;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ImportPraticheFromApi extends Command
@@ -50,17 +53,18 @@ class ImportPraticheFromApi extends Command
                 ])
                 ->retry(3, 1000, function ($exception) {
                     // Retry on connection timeouts or server errors
-                    return $exception instanceof \Illuminate\Http\Client\ConnectionException ||
+                    return $exception instanceof ConnectionException ||
                         ($exception->getCode() >= 500);
                 })
                 ->get($apiUrl, $queryParams);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 \Log::error('Pratiche API Error', [
                     'status' => $response->status(),
                     'response' => substr($response->body(), 0, 1000),
                 ]);
-                $this->error('API request failed with status: ' . $response->status());
+                $this->error('API request failed with status: '.$response->status());
+
                 return 1;
             }
 
@@ -73,6 +77,7 @@ class ImportPraticheFromApi extends Command
 
             if (empty($lines)) {
                 $this->error('No data received from API');
+
                 return 1;
             }
 
@@ -90,6 +95,7 @@ class ImportPraticheFromApi extends Command
 
             if (empty($data)) {
                 $this->info('No records found in the specified date range');
+
                 return 0;
             }
 
@@ -111,12 +117,13 @@ class ImportPraticheFromApi extends Command
                         //  ['piva' => $praticaData['partita_iva_agente']]
                     );
                     if (empty($praticaData['id'])) {
-                        $this->warn('Skipping item without id: ' . json_encode($item));
+                        $this->warn('Skipping item without id: '.json_encode($item));
                         $errors++;
+
                         continue;
                     }
 
-                    if ($praticaData['id'] === 'QT06585') {
+                    if ($praticaData['id'] === 'QT06585xx') {
                         \Log::info($item);
                     }
 
@@ -176,30 +183,58 @@ class ImportPraticheFromApi extends Command
                         //  $this->info("Imported new pratica: {$praticaData['id']}");
                     }
                 } catch (\Exception $e) {
-                    $this->error('Error processing item: ' . $e->getMessage());
+                    $this->error('Error processing item: '.$e->getMessage());
                     $errors++;
                 }
             }
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
+
+            try {
+                $this->info('Calculating FIRR contributions...');
+
+                Venasarcotot::truncate();
+
+                // Insert new records from view
+                DB::table('venasarcotot')->insertUsing(
+                    ['produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'],
+                    DB::table('vwenasarcotot')
+                );
+
+                $records = Venasarcotot::getModel()::get();  // where('status', 'active')->
+                foreach ($records as $record) {
+                    $totalAmount = $record->montante;
+                    $enasarco = $record->enasarco;
+                    $competenza = $record->competenza;
+                    $firr = Firr::calculateContributo($totalAmount, $enasarco, $competenza);
+                    $record->update([
+                        'firr' => $firr,
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->error('Error calculating FIRR contributions: '.$e->getMessage());
+            }
+
             return 0;
         } catch (RequestException $e) {
-            $this->error('HTTP Request Error: ' . $e->getMessage());
+            $this->error('HTTP Request Error: '.$e->getMessage());
             \Log::error('Pratiche API Request Exception', [
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
                 'response' => $e->response ? [
                     'status' => $e->response->status(),
-                    'body' => substr((string) $e->response->body(), 0, 1000)
-                ] : null
+                    'body' => substr((string) $e->response->body(), 0, 1000),
+                ] : null,
             ]);
+
             return 1;
         } catch (\Throwable $e) {
-            $this->error('Unexpected Error: ' . $e->getMessage());
+            $this->error('Unexpected Error: '.$e->getMessage());
             \Log::error('Unexpected Error in Pratiche Import', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return 1;
         }
     }
@@ -269,7 +304,8 @@ class ImportPraticheFromApi extends Command
             // If no format works, try Carbon's flexible parsing
             return new Carbon($dateValue);
         } catch (\Exception $e) {
-            $this->warn('Failed to parse date: ' . $dateValue);
+            $this->warn('Failed to parse date: '.$dateValue);
+
             return null;
         }
     }
@@ -295,7 +331,8 @@ class ImportPraticheFromApi extends Command
             // If no format works, try Carbon's flexible parsing
             return new Carbon($dateValue);
         } catch (\Exception $e) {
-            $this->warn('Failed to parse date: ' . $dateValue);
+            $this->warn('Failed to parse date: '.$dateValue);
+
             return null;
         }
     }
