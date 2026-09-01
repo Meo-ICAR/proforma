@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\PraticaResource\Pages;
+namespace App\Filament\Resources\Praticas\Pages;
 
 use App\Filament\Resources\PraticaResource;
 use Filament\Actions\Action;
