@@ -10,6 +10,7 @@ use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
 use App\Services\PurchaseInvoiceImportService;
 use App\Services\PurchaseInvoiceMatchingService;
+use App\Services\ProformaPurchaseInvoiceMatchingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -266,23 +267,25 @@ class PurchaseInvoicesTable
                     ->color('warning')
                     ->action(function () {
                         try {
-                            // Get company_id from user or fallback to first company
                             $companyId = Auth::user()->company_id ?? Company::first()->id;
-                            $matchService = new PurchaseInvoiceMatchingService;
-                            $matchService->setCompanyId($companyId);  // Usa il metodo setter
 
-                            // Esegui solo le funzioni di matching per purchase invoices
+                            // Step 1: associa fornitore alla fattura tramite P.IVA
+                            $matchService = new PurchaseInvoiceMatchingService;
+                            $matchService->setCompanyId($companyId);
                             $matchService->matchFornitoresByVatNumber();
-                            //  $importService->matchClientsByVatNumber();
+
+                            // Step 2: abbina proforma ↔ purchase invoice
+                            $proformaMatchService = new ProformaPurchaseInvoiceMatchingService;
+                            $stats = $proformaMatchService->matchProformasToInvoices();
 
                             Notification::make()
-                                ->title('Associazione completata')
-                                ->body('Le fatture di acquisto sono state associate a consulenti e agenti')
+                                ->title('Riconciliazione completata')
+                                ->body("Fatture associate a fornitori. Proforma abbinate: {$stats['matched_proformas']}.")
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {
                             Notification::make()
-                                ->title('Errore associazione')
+                                ->title('Errore riconciliazione')
                                 ->body($e->getMessage())
                                 ->danger()
                                 ->send();
