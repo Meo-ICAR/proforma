@@ -52,52 +52,71 @@ class ProformaPurchaseInvoiceMatchingService
     }
 
     /**
-     * Tenta di abbinare una PurchaseInvoice a una o più Proforma.
+     * Tenta di abbinare una PurchaseInvoice a una Proforma.
      *
-     * Passaggi:
-     *  1. Trova il Fornitore tramite PurchaseInvoice.vat_number = Fornitore.piva
-     *  2. Cerca le Proforma con fornitori_id = Fornitore.id, ancora non abbinate,
-     *     già inviate e con data di invio ≤ registration_date della fattura
-     *  3. Confronta l'importo della fattura con il totale della proforma (±0.01)
-     *  4. Se combaciano, associa proforma ↔ fattura
+     * Strategia A — tramite fornitori_id:
+     *   Trova il Fornitore (inclusi soft-deleted) per P.IVA, poi cerca le sue proforma.
+     *   Se nessuna combacia per importo → attiva la strategia B.
+     *
+     * Strategia B — fallback su vat_number denormalizzato:
+     *   Cerca le proforma direttamente per proforma.vat_number.
+     *   Copre i casi in cui la proforma ha un fornitori_id disallineato o il fornitore
+     *   non esiste più, ma il campo vat_number è corretto.
      */
     private function processPurchaseInvoice(PurchaseInvoice $purchaseInvoice, array &$stats): void
     {
-        // Passo 1: trova il Fornitore tramite P.IVA
-        $fornitore = Fornitore::where('piva', $purchaseInvoice->vat_number)->first();
+        // Strategia A: tramite Fornitore (inclusi soft-deleted)
+        $fornitore = Fornitore::withTrashed()
+            ->where('piva', $purchaseInvoice->vat_number)
+            ->first();
 
-        if (! $fornitore) {
-            Log::debug("[PurchaseMatching] Nessun fornitore trovato per P.IVA '{$purchaseInvoice->vat_number}' (fattura {$purchaseInvoice->id})");
-            return;
+        if ($fornitore) {
+            $proformas = Proforma::where('fornitori_id', $fornitore->id)
+                ->whereNull('invoiceable_id')
+                ->whereNotNull('sended_at')
+                ->where('sended_at', '<=', $purchaseInvoice->registration_date)
+                ->get();
+
+            if ($this->tryMatchByAmount($proformas, $purchaseInvoice, $stats)) {
+                return;
+            }
         }
 
-        // Passo 2: cerca le proforma del fornitore non ancora abbinate
-        $proformas = Proforma::where('fornitori_id', $fornitore->id)
+        // Strategia B: fallback su vat_number denormalizzato
+        Log::debug("[PurchaseMatching] Strategia B (vat_number) per fattura {$purchaseInvoice->id} (P.IVA: {$purchaseInvoice->vat_number})");
+
+        $proformasByVat = Proforma::where('vat_number', $purchaseInvoice->vat_number)
             ->whereNull('invoiceable_id')
             ->whereNotNull('sended_at')
             ->where('sended_at', '<=', $purchaseInvoice->registration_date)
             ->get();
 
-        if ($proformas->isEmpty()) {
-            Log::debug("[PurchaseMatching] Nessuna proforma disponibile per fornitore {$fornitore->id} (fattura {$purchaseInvoice->id})");
+        if ($proformasByVat->isEmpty()) {
+            Log::debug("[PurchaseMatching] Nessuna proforma per P.IVA '{$purchaseInvoice->vat_number}' (fattura {$purchaseInvoice->id})");
             return;
         }
 
-        // Passo 3 + 4: confronta importi e abbina
-        foreach ($proformas as $proforma) {
-            $proformaTotal = (float) $proforma->totale;
-            $invoiceAmount = (float) $purchaseInvoice->amount;
+        $this->tryMatchByAmount($proformasByVat, $purchaseInvoice, $stats);
+    }
 
-            if ($this->amountsMatch($invoiceAmount, $proformaTotal)) {
+    /**
+     * Scorre le proformas candidate e abbina la prima il cui totale combacia con l'importo fattura.
+     * Restituisce true se ha trovato e associato un match.
+     */
+    private function tryMatchByAmount(\Illuminate\Support\Collection $proformas, PurchaseInvoice $purchaseInvoice, array &$stats): bool
+    {
+        $invoiceAmount = (float) $purchaseInvoice->amount;
+
+        foreach ($proformas as $proforma) {
+            if ($this->amountsMatch($invoiceAmount, (float) $proforma->totale)) {
                 $this->associateProformaWithInvoice($proforma, $purchaseInvoice);
                 $stats['matched_proformas']++;
-
                 Log::info("[PurchaseMatching] Proforma {$proforma->id} ↔ PurchaseInvoice {$purchaseInvoice->id} — importo: {$invoiceAmount}");
-
-                // Una sola proforma per fattura; la fattura viene chiusa: usciamo dal loop.
-                break;
+                return true;
             }
         }
+
+        return false;
     }
 
     /**

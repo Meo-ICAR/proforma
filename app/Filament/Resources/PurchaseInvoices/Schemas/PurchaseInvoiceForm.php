@@ -26,31 +26,31 @@ class PurchaseInvoiceForm
     {
         return $schema
             ->components([
-                Section::make('Invoice Information')
+                Section::make('Informazioni fattura')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('number')
-                                    ->label('Invoice Number')
+                                    ->label('Numero fattura')
                                     ->required()
                                     ->maxLength(255),
                                 DatePicker::make('registration_date')
-                                    ->label('Registration Date'),
+                                    ->label('Data registrazione'),
                             ]),
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('supplier')
-                                    ->label('Supplier Name')
+                                    ->label('Fornitore')
                                     ->required()
                                     ->maxLength(255),
                                 TextInput::make('amount')
-                                    ->label('Amount')
+                                    ->label('Importo')
                                     ->numeric()
                                     ->prefix('€')
                                     ->step(0.01),
                             ]),
                     ]),
-                Section::make('Status')
+                Section::make('Stato')
                     ->schema([
                         Grid::make(2)
                             ->schema([
@@ -60,9 +60,6 @@ class PurchaseInvoiceForm
                                         $record->update(['closed' => $state]);
                                     })
                                     ->default(false)
-                                    /*
-                                     * ->disabled(fn($record) => $record && $record->proformas()->count() > 0)
-                                     */
                                     ->helperText('Fattura non relativa a finanziamenti'),
                                 Toggle::make('closed')
                                     ->label('Riconciliata')
@@ -75,40 +72,40 @@ class PurchaseInvoiceForm
                                     ->default(false),
                             ]),
                     ]),
-                Section::make('Supplier Details')
+                Section::make('Dati fornitore')
                     ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('vat_number')
-                                    ->label('VAT Number')
+                                    ->label('Partita IVA')
                                     ->maxLength(255),
                                 TextInput::make('fiscal_code')
-                                    ->label('Fiscal Code')
+                                    ->label('Codice fiscale')
                                     ->maxLength(255),
                                 TextInput::make('document_type')
-                                    ->label('Document Type')
+                                    ->label('Tipo documento')
                                     ->maxLength(255),
                                 TextInput::make('location_code')
-                                    ->label('Location Code')
+                                    ->label('Codice ubicazione')
                                     ->maxLength(255),
                             ]),
                     ]),
-                Section::make('Financial Information')
+                Section::make('Dati finanziari')
                     ->collapsed()
                     ->schema([
                         Grid::make(3)
                             ->schema([
                                 TextInput::make('supplier_number')
-                                    ->label('Supplier Number')
+                                    ->label('Numero fornitore')
                                     ->maxLength(255),
                                 TextInput::make('amount_including_vat')
-                                    ->label('Amount Including VAT')
+                                    ->label('Importo IVA inclusa')
                                     ->numeric()
                                     ->prefix('€')
                                     ->step(0.01),
                                 TextInput::make('residual_amount')
-                                    ->label('Residual Amount')
+                                    ->label('Importo residuo')
                                     ->numeric()
                                     ->prefix('€')
                                     ->step(0.01),
@@ -116,55 +113,55 @@ class PurchaseInvoiceForm
                         Grid::make(3)
                             ->schema([
                                 TextInput::make('currency_code')
-                                    ->label('Currency Code')
+                                    ->label('Codice valuta')
                                     ->maxLength(3)
                                     ->default('EUR'),
                                 TextInput::make('exchange_rate')
-                                    ->label('Exchange Rate')
+                                    ->label('Tasso di cambio')
                                     ->numeric()
                                     ->step(0.0001)
                                     ->default(1.0),
                                 TextInput::make('supplier_category')
-                                    ->label('Supplier Category')
+                                    ->label('Categoria fornitore')
                                     ->maxLength(255),
                             ]),
                     ]),
-                Section::make('Dates')
+                Section::make('Date')
                     ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('supplier_invoice_number')
-                                    ->label('Supplier Invoice Number')
+                                    ->label('Numero fattura fornitore')
                                     ->maxLength(255),
                                 DatePicker::make('document_date')
-                                    ->label('Document Date'),
+                                    ->label('Data documento'),
                                 DatePicker::make('due_date')
-                                    ->label('Due Date'),
+                                    ->label('Data scadenza'),
                             ]),
                     ]),
-                Section::make('Payment & Address Information')
+                Section::make('Pagamento e indirizzo')
                     ->collapsed()
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextInput::make('payment_condition_code')
-                                    ->label('Payment Condition Code')
+                                    ->label('Codice condizione pagamento')
                                     ->maxLength(255),
                                 TextInput::make('payment_method_code')
-                                    ->label('Payment Method Code')
+                                    ->label('Codice metodo pagamento')
                                     ->maxLength(255),
                                 TextInput::make('pay_to_address')
-                                    ->label('Payment Address')
+                                    ->label('Indirizzo pagamento')
                                     ->maxLength(255),
                                 TextInput::make('pay_to_city')
-                                    ->label('Payment City')
+                                    ->label('Città pagamento')
                                     ->maxLength(255),
                                 TextInput::make('pay_to_cap')
-                                    ->label('Payment CAP')
+                                    ->label('CAP pagamento')
                                     ->maxLength(10),
                                 TextInput::make('pay_to_country_code')
-                                    ->label('Payment Country Code')
+                                    ->label('Codice paese pagamento')
                                     ->maxLength(2),
                             ]),
                     ]),

@@ -30,20 +30,26 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
         return $schema
             ->components([
                 TextInput::make('emailsubject')
+                    ->label('Oggetto email')
                     ->disabled()
                     ->columnSpanFull(),
                 DateTimePicker::make('sended_at')
+                    ->label('Data invio')
                     ->disabled(),
                 TextInput::make('compenso')
+                    ->label('Compenso')
                     ->disabled()
                     ->numeric(),
                 TextInput::make('contributo')
+                    ->label('Contributo')
                     ->disabled()
                     ->numeric(),
                 TextInput::make('anticipo')
+                    ->label('Anticipo')
                     ->disabled()
                     ->numeric(),
                 Textarea::make('annotation')
+                    ->label('Note')
                     ->disabled()
                     ->columnSpanFull(),
                 TextInput::make('delta')
@@ -54,8 +60,12 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ->label('Giustificativo differenza')
                     ->required(fn ($get) => $get('delta') != 0)
                     ->columnSpanFull(),
-                TextInput::make('id')->disabled(),
-                TextInput::make('invoiceable_id')->disabled(),
+                TextInput::make('id')
+                    ->label('ID')
+                    ->disabled(),
+                TextInput::make('invoiceable_id')
+                    ->label('ID fattura abbinata')
+                    ->disabled(),
             ]);
     }
 
@@ -69,34 +79,43 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
             ->defaultSort('sended_at', 'desc')
             ->columns([
                 TextColumn::make('sended_at')
+                    ->label('Data invio')
                     ->dateTime()
                     ->sortable(),
                 TextColumn::make('totale')
-                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->label('Totale')
+                    ->money('EUR')
                     ->alignEnd()
                     ->sortable(),
                 TextColumn::make('compenso')
-                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->label('Compenso')
+                    ->money('EUR')
                     ->alignEnd()
-                    ->summarize(Sum::make())
+                    ->summarize(Sum::make()->label('Totale'))
                     ->sortable(),
                 TextColumn::make('contributo')
-                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->label('Contributo')
+                    ->money('EUR')
                     ->alignEnd()
                     ->sortable(),
                 TextColumn::make('anticipo')
-                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->label('Anticipo')
+                    ->money('EUR')
                     ->alignEnd()
                     ->sortable(),
                 TextColumn::make('stato')
+                    ->label('Stato')
                     ->searchable(),
                 TextColumn::make('delta')
-                    ->money('EUR')  // Forza Euro e formato italiano
+                    ->label('Differenza')
+                    ->money('EUR')
                     ->alignEnd()
                     ->sortable(),
                 TextColumn::make('emailsubject')
+                    ->label('Oggetto email')
                     ->searchable(),
-                TextColumn::make('purchaseInvoice.sended_at'),
+                TextColumn::make('purchaseInvoice.sended_at')
+                    ->label('Data fattura abbinata'),
             ])
             ->filters([
                 Filter::make('sended_at_range')
@@ -128,12 +147,11 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
             ])
             ->headerActions([
                 BulkAction::make('riconcilia')
-                    ->label('Riconcilia Proforma con fattura')
+                    ->label('Riconcilia proforma con fattura')
                     ->color('success')
                     ->accessSelectedRecords()
                     ->before(function (BulkAction $action, Collection $records) {
                         $purchaseInvoice = $this->getOwnerRecord();
-                        $purchaseInvoiceId = $purchaseInvoice->id;
                         $purchaseAmount = $purchaseInvoice->amount;
                         $sum = $records->sum('totale');
                         $delta = $sum - $purchaseAmount;
@@ -141,19 +159,17 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                             Notification::make()
                                 ->warning()
                                 ->title('Differenza importi troppo grande!')
-                                ->body('Totale proforma '.$sum.' non corrisponde al totale della fattura '.$purchaseAmount.' (delta: '.$delta.'). Modifica il delta su proforma e riprovare.')
+                                ->body('Totale proforma '.$sum.' non corrisponde al totale della fattura '.$purchaseAmount.' (differenza: '.$delta.'). Modifica la differenza sulla proforma e riprova.')
                                 ->persistent()
                                 ->send();
 
                             $action->halt();
                         }
                     })
-                    //  ->requiresConfirmation()
                     ->action(function (Collection $records) {
                         $purchaseInvoice = $this->getOwnerRecord();
                         $purchaseInvoiceId = $purchaseInvoice->id;
 
-                        // Process each record with a visible loop
                         $records->each(function ($record) use ($purchaseInvoiceId) {
                             $record->update([
                                 'invoiceable_type' => 'App\Models\PurchaseInvoice',
@@ -166,24 +182,32 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                         $purchaseInvoice->update([
                             'closed' => true,
                         ]);
-                        // Show success notification with count
                         Notification::make()
-                            ->title(count($records).' proforme riconciliate con fattura')
+                            ->title(count($records).' proforma riconciliate con la fattura')
                             ->success()
                             ->send();
                     }),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->label('Modifica'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
+                    DissociateBulkAction::make()
+                        ->label('Dissocia selezionati'),
                 ]),
             ])
-            ->modifyQueryUsing(fn (Builder $query) => $query
-                ->withoutGlobalScopes([
-                    SoftDeletingScope::class,
-                ]));
+            ->modifyQueryUsing(function (Builder $query) {
+                $query->withoutGlobalScopes([SoftDeletingScope::class]);
+
+                $purchaseInvoice = $this->getOwnerRecord();
+
+                // Se la fattura è già riconciliata mostra solo le proforma ad essa abbinate
+                if ($purchaseInvoice->closed) {
+                    $query->where('invoiceable_type', \App\Models\PurchaseInvoice::class)
+                          ->where('invoiceable_id', $purchaseInvoice->id);
+                }
+            });
     }
 }
