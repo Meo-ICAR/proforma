@@ -93,7 +93,7 @@ class VenasarcototsTable
                     ->exports([
                         DynamicGroupExport::make()
                             //   ->groupBy('produttore')  // Campo per il raggruppamento
-                            ->sumColumns(['montante', 'contributo', 'imposta', 'credito', 'firr', 'RACES', 'Conguaglio']),  // Campi da sommare
+                            ->sumColumns(['montante', 'contributo', 'imposta', 'Credito prod.',  'R a c e s', 'Conguaglio', 'Versato', 'firr']),  // Campi da sommare
                     ])
                     ->label('Excel')
                     ->color('success'),
