@@ -3,23 +3,11 @@
 namespace App\Filament\Resources\PurchaseInvoices\RelationManagers;
 
 use App\Models\Proforma;
-use App\Models\PurchaseInvoice;
-use Filament\Actions\Action;
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Actions\ForceDeleteAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -28,12 +16,10 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\HtmlString;
 
 class ProformasAfterRegistrationRelationManager extends RelationManager
 {
@@ -66,7 +52,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ->numeric(),
                 Textarea::make('delta_annotation')
                     ->label('Giustificativo differenza')
-                    ->required(fn($get) => $get('delta') != 0)
+                    ->required(fn ($get) => $get('delta') != 0)
                     ->columnSpanFull(),
                 TextInput::make('id')->disabled(),
                 TextInput::make('invoiceable_id')->disabled(),
@@ -77,7 +63,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
     {
         return $table
             ->checkIfRecordIsSelectableUsing(
-                fn(Proforma $record): bool => $record->invoiceable_id === null
+                fn (Proforma $record): bool => $record->invoiceable_id === null
             )
             ->recordTitleAttribute('name')
             ->defaultSort('sended_at', 'desc')
@@ -110,7 +96,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('emailsubject')
                     ->searchable(),
-                TextColumn::make('purchaseInvoice.sended_at')
+                TextColumn::make('purchaseInvoice.sended_at'),
             ])
             ->filters([
                 Filter::make('sended_at_range')
@@ -123,8 +109,8 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['sended_from'], fn(Builder $query, $date) => $query->where('sended_at', '>=', $date))
-                            ->when($data['sended_to'], fn(Builder $query, $date) => $query->where('sended_at', '<=', $date));
+                            ->when($data['sended_from'], fn (Builder $query, $date) => $query->where('sended_at', '>=', $date))
+                            ->when($data['sended_to'], fn (Builder $query, $date) => $query->where('sended_at', '<=', $date));
                     })
                     ->indicateUsing(function (array $data): string {
                         if ($data['sended_from'] && $data['sended_to']) {
@@ -136,6 +122,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                         if ($data['sended_to']) {
                             return "A: {$data['sended_to']}";
                         }
+
                         return '';
                     }),
             ])
@@ -154,7 +141,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                             Notification::make()
                                 ->warning()
                                 ->title('Differenza importi troppo grande!')
-                                ->body('Totale proforma ' . $sum . ' non corrisponde al totale della fattura ' . $purchaseAmount . ' (delta: ' . $delta . '). Modifica il delta su proforma e riprovare.')
+                                ->body('Totale proforma '.$sum.' non corrisponde al totale della fattura '.$purchaseAmount.' (delta: '.$delta.'). Modifica il delta su proforma e riprovare.')
                                 ->persistent()
                                 ->send();
 
@@ -172,16 +159,16 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                                 'invoiceable_type' => 'App\Models\PurchaseInvoice',
                                 'invoiceable_id' => $purchaseInvoiceId,
                             ]);
-                                $record->provvigioni()->where('proforma_id', $proforma->id)->update([
-                'stato' => 'Pagato',
-            ]);
+                            $record->provvigioni()->where('proforma_id', $record->id)->update([
+                                'stato' => 'Pagato',
+                            ]);
                         });
                         $purchaseInvoice->update([
                             'closed' => true,
                         ]);
                         // Show success notification with count
                         Notification::make()
-                            ->title(count($records) . ' proforme riconciliate con fattura')
+                            ->title(count($records).' proforme riconciliate con fattura')
                             ->success()
                             ->send();
                     }),
@@ -194,7 +181,7 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     DissociateBulkAction::make(),
                 ]),
             ])
-            ->modifyQueryUsing(fn(Builder $query) => $query
+            ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ]));
