@@ -26,8 +26,10 @@ class ProformaPurchaseInvoiceMatchingService
             'errors'             => [],
         ];
 
-        // Carica solo le PurchaseInvoice non chiuse e con vat_number valorizzato.
+        // Solo fatture non chiuse, di tipo Fornitore, non is_nopractice, con vat_number e importo valorizzati.
         $purchaseInvoices = PurchaseInvoice::where('closed', false)
+            ->where('invoiceable_type', Fornitore::class)
+            ->where('is_nopractice', false)
             ->whereNotNull('vat_number')
             ->whereNotNull('amount')
             ->whereNotNull('registration_date')
