@@ -3,16 +3,11 @@
 namespace App\Filament\Resources\Fornitores\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
-use App\Filament\Resources\Praticas\PraticaResource;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\ForceDeleteBulkAction;
-use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -31,6 +26,13 @@ class FornitoresTable
                     ->label('Produttore')
                     ->searchable()
                     ->sortable(),
+                IconColumn::make('is_active')
+                    ->boolean()
+                    ->sortable()
+                    ->trueIcon(Heroicon::OutlinedCheckBadge)
+                    ->falseIcon(Heroicon::OutlinedMinus)
+                    ->falseColor('white')
+                    ->label('Attivo'),
                 TextColumn::make('anticipo_residuo')
                     ->money('EUR')
                     ->alignEnd()
@@ -78,9 +80,9 @@ class FornitoresTable
                     ->trueLabel('Con Email')
                     ->falseLabel('Senza Email')
                     ->queries(
-                        true: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('isdipendente', false))->whereNotNull('email')->where('email', '!=', ''),
-                        false: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('isdipendente', false))->whereNull('email')->orWhere('email', ''),
-                        blank: fn(Builder $query) => $query,
+                        true: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('isdipendente', false))->whereNotNull('email')->where('email', '!=', ''),
+                        false: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('isdipendente', false))->whereNull('email')->orWhere('email', ''),
+                        blank: fn (Builder $query) => $query,
                     ),
                 TernaryFilter::make('enasarco')
                     ->label('Enasarco')
@@ -88,9 +90,9 @@ class FornitoresTable
                     ->trueLabel('Con Enasarco')
                     ->falseLabel('Senza Enasarco')
                     ->queries(
-                        true: fn(Builder $query) => $query->whereNotNull('enasarco')->where('enasarco', '!=', ''),
-                        false: fn(Builder $query) => $query->whereNull('enasarco')->orWhere('enasarco', ''),
-                        blank: fn(Builder $query) => $query,
+                        true: fn (Builder $query) => $query->whereNotNull('enasarco')->where('enasarco', '!=', ''),
+                        false: fn (Builder $query) => $query->whereNull('enasarco')->orWhere('enasarco', ''),
+                        blank: fn (Builder $query) => $query,
                     ),
                 TernaryFilter::make('dismissed_at')
                     ->label('Data Fine')
@@ -98,9 +100,9 @@ class FornitoresTable
                     ->trueLabel('Con Data Fine')
                     ->falseLabel('Senza Data Fine')
                     ->queries(
-                        true: fn(Builder $query) => $query->whereNotNull('dismissed_at'),
-                        false: fn(Builder $query) => $query->whereNull('dismissed_at'),
-                        blank: fn(Builder $query) => $query,
+                        true: fn (Builder $query) => $query->whereNotNull('dismissed_at'),
+                        false: fn (Builder $query) => $query->whereNull('dismissed_at'),
+                        blank: fn (Builder $query) => $query,
                     ),
             ])
             ->recordActions([

@@ -10,6 +10,7 @@ use App\Filament\Resources\Fornitores\Schemas\FornitoreForm;
 use App\Filament\Resources\Fornitores\Schemas\FornitoreInfoList;
 use App\Filament\Resources\Fornitores\Tables\FornitoresTable;
 use App\Models\Fornitore;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +19,6 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BackedEnum;
 use UnitEnum;
 
 class FornitoreResource extends Resource
@@ -35,6 +35,7 @@ class FornitoreResource extends Resource
             Fornitore::where('isdipendente', false)
                 ->where(function ($query) {
                     $query
+                        ->where('is_active', true)
                         ->whereNull('email')
                         ->orWhere('email', '');
                 })
@@ -42,6 +43,7 @@ class FornitoreResource extends Resource
         if ($n > 0) {
             return $n;
         }
+
         return null;
     }
 

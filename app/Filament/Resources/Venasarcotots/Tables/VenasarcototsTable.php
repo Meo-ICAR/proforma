@@ -27,10 +27,10 @@ class VenasarcototsTable
                 TextColumn::make('montante')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
+                    ->sortable()
                     ->url(fn ($record) => ProvvigioneResource::getUrl('index').'?filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all'
-                      .'filters[stato][values][0]=Pagato'.'&filters[denominazione_riferimento][denominazione_riferimento]='.$record->produttore)
-                    ->openUrlInNewTab(true)
-                    ->sortable(),
+                        .'&filters[denominazione_riferimento][denominazione_riferimento]='.$record->produttore.'&filters[stato][values][0]=Pagato')
+                    ->openUrlInNewTab(true),
                 TextColumn::make('contributo')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
