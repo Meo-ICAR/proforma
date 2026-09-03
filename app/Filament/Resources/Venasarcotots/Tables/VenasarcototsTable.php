@@ -2,21 +2,23 @@
 
 namespace App\Filament\Resources\Venasarcotots\Tables;
 
+use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\Provvigiones\ProvvigioneResource;
 use App\Models\Venasarcotot;
-use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Columns\Column;
 
 class VenasarcototsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query) => $query->withSum('trimestri', 'contributo'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->withSum('trimestri', 'contributo'))
             ->reorderableColumns()
             ->columns([
                 TextColumn::make('produttore')
@@ -25,6 +27,9 @@ class VenasarcototsTable
                 TextColumn::make('montante')
                     ->money('EUR')  // Forza Euro e formato italiano
                     ->alignEnd()
+                    ->url(fn ($record) => ProvvigioneResource::getUrl('index').'?filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all'
+                      .'filters[stato][values][0]=Pagato'.'&filters[denominazione_riferimento][denominazione_riferimento]='.$record->produttore)
+                    ->openUrlInNewTab(true)
                     ->sortable(),
                 TextColumn::make('contributo')
                     ->money('EUR')  // Forza Euro e formato italiano
@@ -36,7 +41,7 @@ class VenasarcototsTable
                     ->sortable(),
                 TextColumn::make('credito')
                     ->label('Credito prod.')
-                    ->state(fn($record) => $record->imposta - $record->contributo == 0 ? null : $record->imposta - $record->contributo)
+                    ->state(fn ($record) => $record->imposta - $record->contributo == 0 ? null : $record->imposta - $record->contributo)
                     ->alignEnd()
                     ->money('EUR'),  // Puoi concatenare formattatori nativi
                 TextColumn::make('RACES')
@@ -83,6 +88,16 @@ class VenasarcototsTable
                     })
                     ->default(now()->subDays(20)->format('Y')),
             ], layout: FiltersLayout::AboveContent)
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        DynamicGroupExport::make()
+                            //   ->groupBy('produttore')  // Campo per il raggruppamento
+                            ->sumColumns(['montante', 'contributo', 'imposta', 'credito', 'firr', 'RACES', 'Conguaglio']),  // Campi da sommare
+                    ])
+                    ->label('Excel')
+                    ->color('success'),
+            ])
             ->recordActions([])
             ->toolbarActions([]);
     }

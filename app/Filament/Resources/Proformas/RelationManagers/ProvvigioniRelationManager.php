@@ -4,21 +4,13 @@ namespace App\Filament\Resources\Proformas\RelationManagers;
 
 use App\Filament\Resources\Praticas\PraticaResource;
 use Filament\Actions\Action;
-use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
 use Filament\Tables\Table;
@@ -76,11 +68,15 @@ class ProvvigioniRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('istituto_finanziario')
                     ->searchable(),
+                TextColumn::make('data_fattura')
+                    ->label('Fattura del')
+                    ->date()
+                    ->sortable(),
                 TextColumn::make('id_pratica')
                     ->label('Pratica')
                     ->color('info')
-                    ->url(fn($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
-                    ->openUrlInNewTab()
+                    ->url(fn ($record) => PraticaResource::getUrl('view', ['record' => $record->id_pratica]))
+                    ->openUrlInNewTab(),
             ])
             ->filters([
                 //
@@ -98,11 +94,11 @@ class ProvvigioniRelationManager extends RelationManager
                         if ($compenso > $record->importo) {
                             $compenso -= $record->importo;
                             $record->proforma->update([
-                                'compenso' => $compenso
+                                'compenso' => $compenso,
                             ]);
                             $record->update([
                                 'stato' => 'Inserito',
-                                'proforma_id' => null
+                                'proforma_id' => null,
                             ]);
                             Notification::make()
                                 ->title('Provvigione rimossa dal proforma')

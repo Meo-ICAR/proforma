@@ -88,7 +88,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                CheckLastPurchaseMiddleware::class,  // Aggiungi il middleware personalizzato qui
+                //  CheckLastPurchaseMiddleware::class,  // Aggiungi il middleware personalizzato qui
             ])
             ->plugins([
                 FilamentSocialitePlugin::make()

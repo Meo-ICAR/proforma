@@ -4,30 +4,14 @@ namespace App\Filament\Resources\VenasarcoTrimestres\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
 use App\Filament\Resources\Provvigiones\ProvvigioneResource;
-use App\Models\Venasarcotot;
 use App\Models\VenasarcoTrimestre;
-use Filament\Actions\Action;
-use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Notifications\Notification;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Columns\Summarizers\Sum;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
-use Filament\Tables\Enums\RecordActionsPosition;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
-use Filament\Forms;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
-use pxlrbt\FilamentExcel\Columns\Column;
 
 class VenasarcoTrimestresTable
 {
@@ -46,7 +30,7 @@ class VenasarcoTrimestresTable
             ->filters([
                 SelectFilter::make('competenza')
                     ->options(
-                        fn() => VenasarcoTrimestre::query()
+                        fn () => VenasarcoTrimestre::query()
                             ->select('competenza')
                             ->distinct()
                             ->orderBy('competenza', 'desc')
@@ -67,7 +51,7 @@ class VenasarcoTrimestresTable
             ], layout: FiltersLayout::AboveContent)
             ->columns([
                 TextColumn::make('Trimestre')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         '1' => '1° Trimestre',
                         '2' => '2° Trimestre',
                         '3' => '3° Trimestre',
@@ -80,13 +64,13 @@ class VenasarcoTrimestresTable
                     ->sortable(),
                 TextColumn::make('enasarco')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'no' => 'gray',
                         'monomandatario' => 'info',
                         'plurimandatario' => 'success',
                         'societa' => 'warning',
                     })
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'no' => 'No',
                         'monomandatario' => 'Monomandatario',
                         'plurimandatario' => 'Plurimandatario',
@@ -98,8 +82,8 @@ class VenasarcoTrimestresTable
                     ->money('EUR')
                     ->alignRight()
                     ->sortable()
-                    ->url(fn($record) => ProvvigioneResource::getUrl('index') . '?filters[status_compenso][values][0]=Pratica+perfezionata&filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all'
-                        . '&filters[trimestre_erogazione][value]=' . $record->Trimestre . '&filters[denominazione_riferimento][denominazione_riferimento]=' . $record->produttore)
+                    ->url(fn ($record) => ProvvigioneResource::getUrl('index').'?filters[data_fattura][has_invoice_date]=all&filters[erogated_at][has_erogated_date]=all'
+                        .'&filters[trimestre_erogazione][value]='.$record->Trimestre.'&filters[denominazione_riferimento][denominazione_riferimento]='.$record->produttore)
                     ->openUrlInNewTab(true),
                 TextColumn::make('contributo')
                     ->summarize(Sum::make()->money('EUR')->label(''))
@@ -108,7 +92,7 @@ class VenasarcoTrimestresTable
                     ->sortable(),
                 TextColumn::make('azienda')
                     ->label('di cui RACES')
-                    ->state(fn($record): float => $record->contributo / 2)
+                    ->state(fn ($record): float => $record->contributo / 2)
                     ->money('EUR')
                     ->prefix('€ ')
                     ->alignRight(),
