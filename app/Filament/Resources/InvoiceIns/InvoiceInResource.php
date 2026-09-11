@@ -7,19 +7,18 @@ use App\Filament\Resources\InvoiceIns\Pages\ListInvoiceIns;
 use App\Filament\Resources\InvoiceIns\Schemas\InvoiceInForm;
 use App\Filament\Resources\InvoiceIns\Tables\InvoiceInsTable;
 use App\Models\InvoiceIn;
-use Filament\Navigation\NavigationItem;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class InvoiceInResource extends Resource
 {
     protected static ?string $model = InvoiceIn::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowDownOnSquareStack;
 
     protected static ?string $navigationLabel = 'Fatture passive';
 

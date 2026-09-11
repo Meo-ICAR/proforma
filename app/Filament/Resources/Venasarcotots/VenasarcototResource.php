@@ -10,18 +10,18 @@ use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototForm;
 use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototInfolist;
 use App\Filament\Resources\Venasarcotots\Tables\VenasarcototsTable;
 use App\Models\Venasarcotot;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class VenasarcototResource extends Resource
 {
     protected static ?string $model = Venasarcotot::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;
 
     protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
 

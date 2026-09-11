@@ -10,18 +10,18 @@ use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoForm;
 use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoInfolist;
 use App\Filament\Resources\ProvvigioniStatos\Tables\ProvvigioniStatosTable;
 use App\Models\ProvvigioniStato;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class ProvvigioniStatoResource extends Resource
 {
     protected static ?string $model = ProvvigioniStato::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;
 
     protected static ?string $navigationLabel = 'Provvigioni Stato';
 

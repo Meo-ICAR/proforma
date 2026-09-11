@@ -13,14 +13,23 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class PrimaNotaEntryResource extends Resource
 {
     protected static ?string $model = PrimaNotaEntry::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $navigationLabel = 'Prima Nota';
+
+    protected static ?string $modelLabel = 'Voce Prima Nota';
+
+    protected static ?string $pluralModelLabel = 'Prima Nota';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Contabilita';
+
+    protected static ?string $recordTitleAttribute = 'conto_dare';
 
     public static function form(Schema $schema): Schema
     {

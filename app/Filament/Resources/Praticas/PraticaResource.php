@@ -3,25 +3,23 @@
 namespace App\Filament\Resources\Praticas;
 
 // use App\Filament\Resources\Praticas\Pages\CreatePratica;
-use App\Filament\Resources\Praticas\Pages\EditPratica;
 use App\Filament\Resources\Praticas\Pages\ListPraticas;
 use App\Filament\Resources\Praticas\Pages\ViewPratica;
 use App\Filament\Resources\Praticas\Schemas\PraticaForm;
 use App\Filament\Resources\Praticas\Tables\PraticasTable;
 use App\Models\Pratica;
-use Filament\Resources\RelationManagers\RelationManager;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class PraticaResource extends Resource
 {
     protected static ?string $model = Pratica::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';  // Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
 
     protected static ?string $navigationLabel = 'Pratiche';
 

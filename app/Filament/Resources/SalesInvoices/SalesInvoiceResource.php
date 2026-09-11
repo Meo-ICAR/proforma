@@ -20,7 +20,7 @@ class SalesInvoiceResource extends Resource
 {
     protected static ?string $model = SalesInvoice::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';  // Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyEuro;
 
     protected static ?string $navigationLabel = 'Fatture attive';
 

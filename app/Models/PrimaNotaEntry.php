@@ -16,6 +16,9 @@ class PrimaNotaEntry extends Model
         'conto_avere',
         'record_type',
         'record_id',
+        'synced_at',
+        'sync_error',
+        'is_active',
     ];
 
     protected function casts(): array
@@ -23,6 +26,8 @@ class PrimaNotaEntry extends Model
         return [
             'data' => 'date',
             'importo' => 'decimal:2',
+            'synced_at' => 'datetime',
+            'is_active' => 'boolean',
         ];
     }
 

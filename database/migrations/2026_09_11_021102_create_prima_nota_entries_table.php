@@ -20,8 +20,17 @@ return new class extends Migration
             $table->string('conto_dare');
             $table->string('conto_avere');
 
-            // Relazione polimorfica: crea 'record_type' e 'record_id'
-            $table->nullableMorphs('record');
+            // Relazione polimorfica: 'record_type' e 'record_id'.
+            // record_id è string (non i bigint di nullableMorphs) perché Pratica, Provvigione
+            // e Fornitore usano chiavi primarie non incrementali (codici pratica, UUID).
+            $table->string('record_type')->nullable();
+            $table->string('record_id')->nullable();
+            $table->index(['record_type', 'record_id']);
+            $table->timestamp('synced_at')->nullable();
+            $table->text('sync_error')->nullable();
+
+            // Consente di escludere manualmente una voce dall'invio a Business Central.
+            $table->boolean('is_active')->default(true);
 
             $table->timestamps();
         });

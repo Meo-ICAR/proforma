@@ -6,46 +6,83 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BpmBridgeController extends Controller
 {
-    public function handle(Request $request, $subject_id)
+    /**
+     * Messaggio generico mostrato per qualunque fallimento dell'accesso via BPM,
+     * per non rivelare a un chiamante non autorizzato se il token è invalido
+     * oppure se l'utente semplicemente non è censito in questa applicazione.
+     */
+    protected const GENERIC_ERROR = 'Accesso non consentito.';
+
+    public function handle(Request $request, string $subject_id)
     {
         $token = $request->query('token');
         $userEmail = $request->query('user_email');
 
         if (! $token || ! $userEmail) {
-            abort(403, 'Parametri di sicurezza mancanti.');
+            Log::warning('Accesso BPM rifiutato: parametri mancanti.', [
+                'ip' => $request->ip(),
+                'subject_id' => $subject_id,
+            ]);
+
+            abort(403, self::GENERIC_ERROR);
         }
 
-        // Recuperiamo l'URL di base del BPM dalla configurazione
         $bpmBaseUrl = config('services.bpm.url');
 
-        // 1. VERIFICA DEL TOKEN (Sicurezza)
-        // La chiamata HTTP è ora completamente dinamica
-        $response = Http::post("{$bpmBaseUrl}/api/verify-token", [
-            'token' => $token,
-            'email' => $userEmail,
-        ]);
+        if (! $bpmBaseUrl) {
+            Log::error('Accesso BPM fallito: BPM_URL non configurato.');
 
-        if ($response->failed() || ! $response->json('valid')) {
-            abort(403, 'Token BPM non valido o scaduto.');
+            abort(403, self::GENERIC_ERROR);
         }
 
-        // 2. AUTENTICAZIONE DELL'UTENTE
-        // Cerchiamo l'utente nell'applicazione esterna usando l'email passata dal BPM
+        try {
+            $response = Http::timeout(5)->post("{$bpmBaseUrl}/api/verify-token", [
+                'token' => $token,
+                'email' => $userEmail,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Accesso BPM fallito: errore di comunicazione con il BPM.', [
+                'ip' => $request->ip(),
+                'error' => $e->getMessage(),
+            ]);
+
+            abort(403, self::GENERIC_ERROR);
+        }
+
+        if ($response->failed() || ! $response->json('valid')) {
+            Log::warning('Accesso BPM rifiutato: token non valido o scaduto.', [
+                'ip' => $request->ip(),
+                'user_email' => $userEmail,
+                'subject_id' => $subject_id,
+            ]);
+
+            abort(403, self::GENERIC_ERROR);
+        }
+
         $user = User::where('email', $userEmail)->first();
 
         if (! $user) {
-            abort(404, 'Utente non censito in questa applicazione.');
+            Log::warning('Accesso BPM rifiutato: utente non censito in questa applicazione.', [
+                'ip' => $request->ip(),
+                'user_email' => $userEmail,
+                'subject_id' => $subject_id,
+            ]);
+
+            abort(403, self::GENERIC_ERROR);
         }
 
-        // Eseguiamo il login automatico della sessione per questo utente
         Auth::login($user);
 
-        // 3. REINDIRIZZAMENTO ALLA PAGINA CORRETTA
-        // Ora che l'utente è loggato, lo mandiamo direttamente sulla schermata del soggetto
-        return redirect()->route('agents.show', ['agent' => $subject_id])
+        Log::info('Accesso BPM completato.', [
+            'user_id' => $user->id,
+            'subject_id' => $subject_id,
+        ]);
+
+        return redirect()->route('filament.admin.resources.fornitores.view', ['record' => $subject_id])
             ->with('message', 'Accesso effettuato tramite BPM');
     }
 }

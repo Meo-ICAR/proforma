@@ -10,18 +10,18 @@ use App\Filament\Resources\PraticheStatos\Schemas\PraticheStatoForm;
 use App\Filament\Resources\PraticheStatos\Schemas\PraticheStatoInfolist;
 use App\Filament\Resources\PraticheStatos\Tables\PraticheStatosTable;
 use App\Models\PraticheStato;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class PraticheStatoResource extends Resource
 {
     protected static ?string $model = PraticheStato::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;
 
     protected static ?string $navigationLabel = 'Pratiche Stato';
 

@@ -8,6 +8,7 @@ use App\Filament\Resources\Clientis\Pages\ListClientis;
 use App\Filament\Resources\Clientis\Schemas\ClientiForm;
 use App\Filament\Resources\Clientis\Tables\ClientisTable;
 use App\Models\Clienti;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -16,14 +17,13 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BackedEnum;
 use UnitEnum;
 
 class ClientiResource extends Resource
 {
     protected static ?string $model = Clienti::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
     protected static ?string $navigationLabel = 'Istituti';
 
@@ -65,6 +65,7 @@ class ClientiResource extends Resource
         if ($n > 0) {
             return $n;
         }
+
         return null;
     }
 
@@ -79,7 +80,7 @@ class ClientiResource extends Resource
         return Action::make('filter_no_piva')
             ->label('Filtra senza partita IVA')
             ->icon('heroicon-o-funnel')
-            ->url(fn() => static::getUrl('index', [
+            ->url(fn () => static::getUrl('index', [
                 'filters' => [
                     'piva' => [
                         'value' => 0,

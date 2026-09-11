@@ -7,24 +7,23 @@ use App\Filament\Resources\Provvigiones\Pages\ListProvvigiones;
 use App\Filament\Resources\Provvigiones\Pages\ListProvvigioniAttive;
 use App\Filament\Resources\Provvigiones\Pages\ViewProvvigione;
 use App\Filament\Resources\Provvigiones\Schemas\ProvvigioneForm;
-use App\Filament\Resources\Provvigiones\Tables\AttiveTable;
 use App\Filament\Resources\Provvigiones\Tables\ProvvigionesTable;
 use App\Models\Provvigione;
-use Filament\Navigation\NavigationItem;  // Add this import at the top
+use BackedEnum;  // Add this import at the top
+use Filament\Navigation\NavigationItem;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BackedEnum;
 use UnitEnum;
 
 class ProvvigioneResource extends Resource
 {
     protected static ?string $model = Provvigione::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-banknotes';  // Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;
 
     protected static ?string $navigationLabel = 'Provvigioni';
 

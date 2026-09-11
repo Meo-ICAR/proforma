@@ -8,18 +8,18 @@ use App\Filament\Resources\Firrs\Pages\ListFirrs;
 use App\Filament\Resources\Firrs\Schemas\FirrForm;
 use App\Filament\Resources\Firrs\Tables\FirrsTable;
 use App\Models\Firr;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class FirrResource extends Resource
 {
     protected static ?string $model = Firr::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPercentBadge;
 
     protected static ?string $navigationLabel = 'Aliquote FIRR';
 

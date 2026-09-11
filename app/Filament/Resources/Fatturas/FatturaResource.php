@@ -8,20 +8,20 @@ use App\Filament\Resources\Fatturas\Pages\ListFatturas;
 use App\Filament\Resources\Fatturas\Schemas\FatturaForm;
 use App\Filament\Resources\Fatturas\Tables\FatturasTable;
 use App\Models\Fattura;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use BackedEnum;
 use UnitEnum;
 
 class FatturaResource extends Resource
 {
     protected static ?string $model = Fattura::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;
 
     protected static ?string $navigationLabel = 'Provv. Maturate';
 

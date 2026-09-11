@@ -8,18 +8,18 @@ use App\Filament\Resources\ClientTypes\Pages\ListClientTypes;
 use App\Filament\Resources\ClientTypes\Schemas\ClientTypeForm;
 use App\Filament\Resources\ClientTypes\Tables\ClientTypesTable;
 use App\Models\ClientType;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class ClientTypeResource extends Resource
 {
     protected static ?string $model = ClientType::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $navigationLabel = 'Tipo consulenti';
 

@@ -10,20 +10,20 @@ use App\Filament\Resources\Coges\Schemas\CogesForm;
 use App\Filament\Resources\Coges\Schemas\CogesInfolist;
 use App\Filament\Resources\Coges\Tables\CogesTable;
 use App\Models\Coges;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use BackedEnum;
 use UnitEnum;
 
 class CogesResource extends Resource
 {
     protected static ?string $model = Coges::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-list-bullet';  // Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrench;
 
-    protected static ?string $navigationLabel = 'Primenote';
+    protected static ?string $navigationLabel = 'Primenote mensili';
 
     protected static ?string $modelLabel = 'Primenote';
 

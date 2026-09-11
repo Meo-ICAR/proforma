@@ -7,19 +7,19 @@ use App\Filament\Resources\Vcoges\Schemas\VcogeForm;
 use App\Filament\Resources\Vcoges\Schemas\VcogeInfolist;
 use App\Filament\Resources\Vcoges\Tables\VcogesTable;
 use App\Models\Vcoge;
+use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use BackedEnum;
 use UnitEnum;
 
 class VcogeResource extends Resource
 {
     protected static ?string $model = Vcoge::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;
 
     // protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 

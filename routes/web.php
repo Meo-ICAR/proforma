@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BpmBridgeController;
-use App\Models\Document;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Mail\ProformaMail;
+use App\Models\User;
+use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/admin');
 
@@ -17,11 +17,12 @@ Route::get('/admin/manuale', function () {
  * });
  */
 Route::get('/mail-preview', function () {
-    $user = \App\Models\User::first();
-    return new App\Mail\ProformaMail($user);
-});
+    $user = User::first();
 
+    return new ProformaMail($user);
+});
 
 // La rotta riceve l'ID del soggetto (es: l'agente) e il token di sicurezza nei parametri
 Route::get('/bpm-landing/{subject_id}', [BpmBridgeController::class, 'handle'])
+    ->middleware('throttle:10,1')
     ->name('bpm.landing');

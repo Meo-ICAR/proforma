@@ -33,6 +33,16 @@ return [
         'client_id' => env('MICROSOFT_CLIENT_ID'),
         'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
         'redirect' => env('MICROSOFT_REDIRECT_URI'),
-        'proxy' => env('PROXY')  // Optional, will be used for all requests
+        'proxy' => env('PROXY'),  // Optional, will be used for all requests
+    ],
+    'bpm' => [
+        'url' => env('BPM_URL'),
+    ],
+    'business_central' => [
+        // Verso contabile da usare per le righe di prima nota inviate a Business Central:
+        // 1  => riga "Dare" con importo positivo, riga "Avere" con importo negativo (standard contabile).
+        // -1 => riga "Dare" con importo negativo, riga "Avere" con importo positivo. Convenzione adottata,
+        //       coerente con le righe "Entrata" di coge:sync-monthly (vedi BC_PRIMANOTA_DARE_SIGN in .env).
+        'primanota_dare_sign' => env('BC_PRIMANOTA_DARE_SIGN') !== null ? (int) env('BC_PRIMANOTA_DARE_SIGN') : null,
     ],
 ];
