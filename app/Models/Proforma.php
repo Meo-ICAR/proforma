@@ -2,17 +2,10 @@
 
 namespace App\Models;
 
-use App\Mail\ProformaMail;
-use App\Models\Clienti;
-use App\Models\Company;
-use App\Models\Fornitore;
-use App\Models\Provvigione;
-use App\Models\PurchaseInvoice;
-use App\Models\SalesInvoice;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Mail;
 
@@ -133,7 +126,7 @@ class Proforma extends Model
             // Update all related provvigioni
             $proforma->provvigioni()->update([
                 'stato' => 'Inserito',
-                'proforma_id' => null
+                'proforma_id' => null,
             ]);
         });
     }
@@ -141,8 +134,8 @@ class Proforma extends Model
     /**
      * Scope a query to only include sent proformas.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeSent($query)
     {
@@ -152,8 +145,8 @@ class Proforma extends Model
     /**
      * Scope a query to only include paid proformas.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopePaid($query)
     {
@@ -163,9 +156,9 @@ class Proforma extends Model
     /**
      * Scope a query to only include proformas with a specific status.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder  $query
      * @param  string  $status
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeWithStatus($query, $status)
     {
@@ -174,9 +167,6 @@ class Proforma extends Model
 
     /**
      * Create a new proforma from a fornitore
-     *
-     * @param string $fornitori_id
-     * @return \App\Models\Proforma
      */
     public static function createFromFornitore(string $fornitori_id, bool $coordinamento): Proforma
     {
@@ -192,7 +182,7 @@ class Proforma extends Model
             'compenso_descrizione' => $fornitore->company->compenso_descrizione ?? 'Compenso',
             'contributo' => $fornitore->contributo,
             'contributo_descrizione' => $fornitore->contributo_description,
-            'emailsubject' => 'Proforma - ' . $fornitore->name,
+            'emailsubject' => 'Proforma - '.$fornitore->name,
             'emailto' => $fornitore->email,
             'emailfrom' => $fornitore->company->emailfrom ?? 'proforma@hassisto.eu',
             'stato' => 'Inserito',
@@ -210,7 +200,7 @@ class Proforma extends Model
         if ($fornitore->company) {
             $proformaData['company_id'] = $fornitore->company->id;
             // Use company's email subject if available
-            if (!empty($fornitore->company->emailsubject)) {
+            if (! empty($fornitore->company->emailsubject)) {
                 $proformaData['emailfrom'] = $fornitore->company->emailfrom;
             }
         }
@@ -232,7 +222,7 @@ class Proforma extends Model
             'sended_at' => $del,
             //  'tipo' =>'Entrata',
             'vat_number' => $fornitore->piva,
-            'emailsubject' => 'Proforma - ' . $istituto_finanziario . ' - Del ' . $del,
+            'emailsubject' => 'Proforma - '.$istituto_finanziario.' - Del '.$del,
             //  'emailto' => $fornitore->email,
             'emailfrom' => $fornitore->company->emailfrom ?? 'proforma@hassisto.eu',
             'stato' => 'Inserito',
@@ -244,20 +234,22 @@ class Proforma extends Model
             'updated_at' => now(),
         ];
         $proforma = self::create($proformaData);
+
         return $proforma;
     }
 
     /**
      * Find or create a proforma for a fornitore by P.IVA and return its ID
      *
-     * @param string $piva The VAT number to search for
+     * @param  string  $piva  The VAT number to search for
      * @return string The ID of the found or created proforma
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no fornitore is found with the given P.IVA
+     *
+     * @throws ModelNotFoundException If no fornitore is found with the given P.IVA
      */
     public static function findOrCreateByPiva(string $piva, float $importo, bool $coordinamento): string
     {
         try {
-            \Log::info('Finding or creating proforma for P.IVA: ' . $piva);
+            \Log::info('Finding or creating proforma for P.IVA: '.$piva);
             // Clean up the P.IVA
             $cleanedPiva = str_replace(' ', '', $piva);
 
@@ -271,9 +263,9 @@ class Proforma extends Model
                 })
                 ->first();
 
-            if (!$fornitore) {
+            if (! $fornitore) {
                 \Log::error("No fornitore found with P.IVA: {$piva} (cleaned: {$cleanedPiva})");
-                throw new \Illuminate\Database\Eloquent\ModelNotFoundException(
+                throw new ModelNotFoundException(
                     "No query results for model [App\Models\Fornitore] with P.IVA: {$piva}"
                 );
             }
@@ -289,7 +281,7 @@ class Proforma extends Model
                 ->where('stato', 'Inserito')
                 ->first();
 
-            if (!$existingProforma) {
+            if (! $existingProforma) {
                 $existingProforma = self::createFromFornitore($fornitore->id, $coordinamento);
             }
 
@@ -299,24 +291,26 @@ class Proforma extends Model
                 'compenso' => $importo + $compenso,
             ]);
 
-            \Log::info('Returning proforma ID: ' . $existingProforma->id);
+            \Log::info('Returning proforma ID: '.$existingProforma->id);
+
             return $existingProforma->id;
         } catch (\Exception $e) {
-            \Log::error('Error in findOrCreateByPiva: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            \Log::error('Error in findOrCreateByPiva: '.$e->getMessage());
+            \Log::error('Stack trace: '.$e->getTraceAsString());
             throw $e;  // Re-throw to maintain the same behavior
         }
     }
 
     public function getProformanomeAttribute()
     {
-        return $this->emailsubject . ' #' . $this->id;
+        return $this->emailsubject.' #'.$this->id;
     }
 
     /**
      * Send the proforma via email
      *
      * @return bool
+     *
      * @throws \Exception
      */
     public function inviaEmail($preview = false)
@@ -331,12 +325,12 @@ class Proforma extends Model
             $debug = true;
             $message = '';
 
-            if (!$preview) {
+            if (! $preview) {
                 // Get the recipient email from the related fornitore
                 $toEmail = $this->fornitore->email;
 
                 if (empty($toEmail)) {
-                    throw new \Exception('Indirizzo email assente per il fornitore ' . $this->fornitore->name);
+                    throw new \Exception('Indirizzo email assente per il fornitore '.$this->fornitore->name);
                 }
                 // Get the first company record for CC
                 $company = Company::first();
@@ -348,58 +342,58 @@ class Proforma extends Model
                 // Get the logged-in user's email
                 $loggedInUserEmail = auth()->user()?->email;
                 $toEmail = $loggedInUserEmail ?? 'hassistosrl@gmail.com';
-                $message .= 'Simulazione email da inviarsi a email: ' . $this->emailto . $cr;
+                $message .= 'Simulazione email da inviarsi a email: '.$this->emailto.$cr;
             }
 
             // Prepare email details
             $subject = "Proforma #{$this->id} - {$this->fornitore->name}";
             $message .= "Proforma #{$this->id}";
 
-            if ($this->compenso <> 0) {
+            if ($this->compenso != 0) {
                 $n = 0;
-                $message .= $cr . $this->compenso_descrizione . ': €' . number_format($this->compenso, 2);
+                $message .= $cr.$this->compenso_descrizione.': €'.number_format($this->compenso, 2);
                 //   $somma += $this->compenso;
 
                 foreach ($this->provvigioni as $provvigione) {
                     $n++;
-                    $message .= "\n- " . $n
-                        . '.  ' . $provvigione->id_pratica
-                        . ' - ' . $provvigione->id
-                        . ' - ' . (optional($provvigione->pratica)->cognome_cliente ?? 'N/A')
-                        . ' - ' . (optional($provvigione->pratica)->nome_cliente ?? 'N/A')
-                        . ': €' . number_format($provvigione->importo, 2);
+                    $message .= "\n- ".$n
+                        .'.  '.$provvigione->id_pratica
+                        .' - '.$provvigione->id
+                        .' - '.(optional($provvigione->pratica)->cognome_cliente ?? 'N/A')
+                        .' - '.(optional($provvigione->pratica)->nome_cliente ?? 'N/A')
+                        .': €'.number_format($provvigione->importo, 2);
                     $somma += $provvigione->importo;
                 }
             }
-            if ($this->anticipo <> 0) {
+            if ($this->anticipo != 0) {
                 $anticipo2 = $this->anticipo;
                 $somma -= $this->anticipo;
                 if ($anticipo2 < 0) {
                     $anticipo2 = -$anticipo2;
                 }
-                $message .= $cr . $this->anticipo_descrizione . ': €' . number_format($anticipo2, 2);
+                $message .= $cr.$this->anticipo_descrizione.': €'.number_format($anticipo2, 2);
             }
 
-            if ($this->contributo <> 0) {
-                $message .= $cr . $this->contributo_descrizione . ': €' . number_format($this->contributo, 2);
+            if ($this->contributo != 0) {
+                $message .= $cr.$this->contributo_descrizione.': €'.number_format($this->contributo, 2);
                 $somma += $this->contributo;
             }
 
-            $message .= $cr . 'TOTALE LORDO € ' . number_format($somma, 2);
+            $message .= $cr.'TOTALE LORDO € '.number_format($somma, 2);
 
-            if (!empty($this->annotation)) {
-                $message .= $cr . 'Note: ' . $this->annotation;
+            if (! empty($this->annotation)) {
+                $message .= $cr.'Note: '.$this->annotation;
             }
             if ($this->anticipo < 0) {
-                $subject = "Anticipo #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+                $subject = "Anticipo #{$this->id} - {$this->fornitore->name} - Totale: € ".number_format($somma, 2);
             } else {
-                $subject = "Proforma #{$this->id} - {$this->fornitore->name} - Totale: € " . number_format($somma, 2);
+                $subject = "Proforma #{$this->id} - {$this->fornitore->name} - Totale: € ".number_format($somma, 2);
             }
 
             // Send the email
             $mail = Mail::to($toEmail);
 
-            if (!$preview) {
+            if (! $preview) {
                 if ($ccEmail) {
                     $mail->cc($ccEmail);
                 }
@@ -420,13 +414,13 @@ class Proforma extends Model
                 'proforma' => $this,
                 'content' => $message,
                 'somma' => $somma,
-                'preview' => $preview
+                'preview' => $preview,
             ], function ($message) use ($toEmail, $subject, $ccEmail, $bccEmail, $preview) {
                 $message
                     ->to($toEmail)
                     ->subject($subject);
 
-                if (!$preview) {
+                if (! $preview) {
                     if ($ccEmail) {
                         $message->cc($ccEmail);
                     }
@@ -436,7 +430,7 @@ class Proforma extends Model
                 }
             });
 
-            if (!$preview) {
+            if (! $preview) {
                 // \Log::info('Updating proforma status after email send for ID: ' . $this->id);
                 $this->update([
                     'sended_at' => now(),
@@ -446,20 +440,21 @@ class Proforma extends Model
                 // Update fornitore's anticipo_residuo
                 if ($this->fornitore) {
                     $this->fornitore->increment('anticipo_residuo', -$this->anticipo);
-                    \Log::info('Updated anticipo_residuo for fornitore ID: ' . $this->fornitore->id
-                        . ' by ' . $this->anticipo
-                        . '. New value: ' . $this->fornitore->anticipo_residuo);
+                    \Log::info('Updated anticipo_residuo for fornitore ID: '.$this->fornitore->id
+                        .' by '.$this->anticipo
+                        .'. New value: '.$this->fornitore->anticipo_residuo);
                 }
             }
             if ($preview) {
-                \Log::info('NOT updated anticipo_residuo for fornitore ID: ' . $this->fornitore->name
-                    . ' by ' . $this->anticipo
-                    . '. New value: ' . $this->fornitore->anticipo_residuo - $this->anticipo);
+                \Log::info('NOT updated anticipo_residuo for fornitore ID: '.$this->fornitore->name
+                    .' by '.$this->anticipo
+                    .'. New value: '.$this->fornitore->anticipo_residuo - $this->anticipo);
             }
 
             return true;
         } catch (\Exception $e) {
-            \Log::error("Errore durante l'invio del proforma #{$this->id}: " . $e->getMessage());
+            \Log::error("Errore durante l'invio del proforma #{$this->id}: ".$e->getMessage());
+
             return false;
         }
     }
@@ -467,9 +462,9 @@ class Proforma extends Model
     /**
      * Send email
      *
-     * @param string $email Recipient email address
-     * @param string|null $subject Optional custom subject
-     * @param string|null $message Optional custom message
+     * @param  string  $email  Recipient email address
+     * @param  string|null  $subject  Optional custom subject
+     * @param  string|null  $message  Optional custom message
      * @return bool
      */
     public function sendEmail($email, $subject = null, $message = null)
@@ -489,7 +484,8 @@ class Proforma extends Model
 
             return true;
         } catch (\Exception $e) {
-            \Log::error("Errore nell'invio dell'email per la proforma #{$this->id}: " . $e->getMessage());
+            \Log::error("Errore nell'invio dell'email per la proforma #{$this->id}: ".$e->getMessage());
+
             return false;
         }
     }
@@ -497,16 +493,16 @@ class Proforma extends Model
     /**
      * Send the proforma via email
      *
-     * @param string $email Recipient email address
-     * @param string|null $subject Optional custom subject
-     * @param string|null $message Optional custom message
+     * @param  string  $email  Recipient email address
+     * @param  string|null  $subject  Optional custom subject
+     * @param  string|null  $message  Optional custom message
      * @return bool
      */
     public function testEmail($email = null, $subject = null, $message = null)
     {
         try {
             // Ensure relationships are loaded
-            if (!$this->relationLoaded('fornitore')) {
+            if (! $this->relationLoaded('fornitore')) {
                 $this->load('fornitore');
             }
             $email = 'piergiuseppe.meo@gmail.com';
@@ -521,10 +517,17 @@ class Proforma extends Model
                     ->subject($subject);
             });
             \Log::info("Test email sent successfully to {$email}");
+
             return true;
         } catch (\Exception $e) {
-            \Log::error('Failed to send test email: ' . $e->getMessage());
+            \Log::error('Failed to send test email: '.$e->getMessage());
+
             return false;
         }
+    }
+
+    public function primaNotaEntries(): MorphMany
+    {
+        return $this->morphMany(PrimaNotaEntry::class, 'record');
     }
 }

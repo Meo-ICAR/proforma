@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provvigione extends Model
@@ -203,8 +204,8 @@ class Provvigione extends Model
     /**
      * Scope a query to only include active (not cancelled) provvigioni.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeActive($query)
     {
@@ -214,8 +215,8 @@ class Provvigione extends Model
     /**
      * Scope a query to only include paid provvigioni.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopePaid($query)
     {
@@ -225,8 +226,8 @@ class Provvigione extends Model
     /**
      * Scope a query to only include sent provvigioni.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeSent($query)
     {
@@ -236,8 +237,8 @@ class Provvigione extends Model
     /**
      * Scope a query to only include received provvigioni.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @param  Builder  $query
+     * @return Builder
      */
     public function scopeReceived($query)
     {
@@ -247,9 +248,9 @@ class Provvigione extends Model
     /**
      * Scope a query to only include provvigioni with a specific status.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder  $query
      * @param  string  $status
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeWithStatus($query, $status)
     {
@@ -278,6 +279,7 @@ class Provvigione extends Model
                and p1.status_compenso <> "Stornata"
 
         ';
+
         return \DB::delete($sql);
     }
 
@@ -297,6 +299,12 @@ class Provvigione extends Model
             and p1.status_compenso <> "Stornata"
 
         ';
+
         return \DB::delete($sql);
+    }
+
+    public function primaNotaEntries(): MorphMany
+    {
+        return $this->morphMany(PrimaNotaEntry::class, 'record');
     }
 }

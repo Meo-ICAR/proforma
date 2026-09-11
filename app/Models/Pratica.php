@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Pratica extends Model
 {
@@ -115,5 +116,10 @@ class Pratica extends Model
     public function provvigioni()
     {
         return $this->HasMany(Provvigione::class, 'id_pratica', 'id');
+    }
+
+    public function primaNotaEntries(): MorphMany
+    {
+        return $this->morphMany(PrimaNotaEntry::class, 'record');
     }
 }

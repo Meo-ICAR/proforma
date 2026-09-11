@@ -1,12 +1,12 @@
 <?php
+
 // app/Models/Fornitore.php
+
 namespace App\Models;
 
-use App\Models\Proforma;
-use App\Models\Provvigione;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
@@ -15,8 +15,11 @@ class Fornitore extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'fornitoris';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected static function boot()
@@ -88,7 +91,7 @@ class Fornitore extends Model
         'citta',
         'company_id',
         'contributoperiodicita',
-        'contributodalmese'
+        'contributodalmese',
     ];
 
     protected $casts = [
@@ -132,5 +135,10 @@ class Fornitore extends Model
     public function addresses(): MorphMany
     {
         return $this->morphMany(Address::class, 'addressable');
+    }
+
+    public function primaNotaEntries(): MorphMany
+    {
+        return $this->morphMany(PrimaNotaEntry::class, 'record');
     }
 }
