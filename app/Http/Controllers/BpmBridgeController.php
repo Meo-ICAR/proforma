@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Fornitore;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -82,7 +83,13 @@ class BpmBridgeController extends Controller
             'subject_id' => $subject_id,
         ]);
 
-        return redirect()->route('filament.admin.resources.fornitores.view', ['record' => $subject_id])
-            ->with('message', 'Accesso effettuato tramite BPM');
+        // $subject_id punta a un Fornitore solo quando l'accesso arriva da un contesto
+        // specifico (es. scheda agente su BPM); un accesso generico ("passa a
+        // quest'app" dalla dashboard di BPM) non ha un record da aprire.
+        $fornitore = Fornitore::find($subject_id);
+
+        return $fornitore
+            ? redirect()->route('filament.admin.resources.fornitores.view', ['record' => $fornitore])->with('message', 'Accesso effettuato tramite BPM')
+            : redirect('/admin')->with('message', 'Accesso effettuato tramite BPM');
     }
 }
