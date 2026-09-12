@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\AssistenteAi;
 use App\Filament\Pages\Manuale;
 use App\Http\Middleware\CheckLastPurchaseMiddleware;
 use DutchCodingCompany\FilamentSocialite\FilamentSocialitePlugin;
@@ -72,6 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->pages([
                 Manuale::class,
+                AssistenteAi::class,
                 // ... other pages
             ])
             ->middleware([
