@@ -35,7 +35,7 @@ class BpmBridgeController extends Controller
         $bpmBaseUrl = config('services.bpm.url');
 
         if (! $bpmBaseUrl) {
-            Log::error('Accesso BPM fallito: BPM_URL non configurato.');
+            Log::error('Accesso BPM fallito: BPM_API_URL non configurato.');
 
             abort(403, self::GENERIC_ERROR);
         }

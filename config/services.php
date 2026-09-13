@@ -36,7 +36,7 @@ return [
         'proxy' => env('PROXY'),  // Optional, will be used for all requests
     ],
     'bpm' => [
-        'url' => env('BPM_URL'),
+        'url' => env('BPM_API_URL'),
     ],
     'business_central' => [
         // Verso contabile da usare per le righe di prima nota inviate a Business Central:

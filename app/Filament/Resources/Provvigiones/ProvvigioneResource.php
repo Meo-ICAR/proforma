@@ -15,7 +15,9 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
@@ -35,11 +37,27 @@ class ProvvigioneResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $recordTitleAttribute = 'denominazione_riferimento';
+    protected static ?string $recordTitleAttribute = 'descrizione';
 
     public static function form(Schema $schema): Schema
     {
         return ProvvigioneForm::configure($schema);
+    }
+
+    /**
+     * Il nome cliente vive sulla pratica collegata (Provvigione::pratica), non su un attributo
+     * diretto: getAttribute() del $recordTitleAttribute di Filament non risolve le relazioni con
+     * la dot-notation, quindi va risolto esplicitamente qui.
+     */
+    public static function getRecordTitle(?Model $record): string|Htmlable|null
+    {
+        if (! $record) {
+            return static::getModelLabel();
+        }
+
+        $cliente = trim(($record->pratica?->cognome_cliente ?? '').' '.($record->pratica?->nome_cliente ?? ''));
+
+        return $cliente !== '' ? $cliente : ($record->descrizione ?? static::getModelLabel());
     }
 
     public static function table(Table $table): Table

@@ -3,16 +3,13 @@
 namespace App\Filament\Resources\Provvigiones\Schemas;
 
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 
 class ProvvigioneForm
@@ -23,7 +20,7 @@ class ProvvigioneForm
             ->components([
                 Tabs::make('Provvigione')
                     ->tabs([
-                        Tabs\Tab::make('Anagrafica')
+                        Tab::make('Anagrafica')
                             ->schema([
                                 TextInput::make('id')
                                     ->label('ID Provvigione')
@@ -48,7 +45,7 @@ class ProvvigioneForm
                                     ->columnSpanFull(),
                             ])
                             ->columns(2),
-                        Tabs\Tab::make('Importi')
+                        Tab::make('Importi')
                             ->schema([
                                 TextInput::make('importo')
                                     ->disabled()
@@ -57,7 +54,7 @@ class ProvvigioneForm
                                 TextInput::make('quota'),
                             ])
                             ->columns(2),
-                        Tabs\Tab::make('Date')
+                        Tab::make('Date')
                             ->schema([
                                 DatePicker::make('data_inserimento_compenso')
                                     ->label('Data Inserimento')
@@ -70,7 +67,7 @@ class ProvvigioneForm
                                 DatePicker::make('data_status_pratica'),
                             ])
                             ->columns(2),
-                        Tabs\Tab::make('Documenti')
+                        Tab::make('Documenti')
                             ->schema([
                                 TextInput::make('n_fattura')
                                     ->disabled()
@@ -81,7 +78,7 @@ class ProvvigioneForm
                                     ->label('Numero Fattura'),
                             ])
                             ->columns(2),
-                        Tabs\Tab::make('Stato')
+                        Tab::make('Stato')
                             ->schema([
                                 Select::make('stato')
                                     ->options([
@@ -103,10 +100,20 @@ class ProvvigioneForm
                                 Toggle::make('coordinamento'),
                             ])
                             ->columns(2),
-                        Tabs\Tab::make('Altro')
+                        Tab::make('Altro')
                             ->schema([
-                                TextInput::make('pratica.cognome_cliente')->disabled(),
-                                TextInput::make('pratica.nome_cliente')->disabled(),
+                                Group::make()
+                                    ->relationship('pratica')
+                                    ->columnSpanFull()
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('cognome_cliente')
+                                            ->label('Cognome Cliente')
+                                            ->disabled(),
+                                        TextInput::make('nome_cliente')
+                                            ->label('Nome Cliente')
+                                            ->disabled(),
+                                    ]),
                                 TextInput::make('denominazione_riferimento')->disabled(),
                                 TextInput::make('entrata_uscita')->disabled(),
                                 TextInput::make('proforma_id')
@@ -115,7 +122,7 @@ class ProvvigioneForm
                             ])
                             ->columns(2),
                     ])
-                    ->columnSpanFull()
+                    ->columnSpanFull(),
             ]);
     }
 }
