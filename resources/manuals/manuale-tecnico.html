@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proforma — Manuale Tecnico</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#161922; --panel-2:#1c202c; --text:#e6e8ee; --muted:#9aa3b5;
+    --accent:#e0a437; --accent-2:#5fb0ff; --border:#2a2f3d; --code-bg:#11141c;
+    --ok:#4caf7d; --warn:#e0a437; --danger:#e0625f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
+  a{color:var(--accent-2)}
+  .layout{display:flex;min-height:100vh}
+  nav.toc{
+    width:290px;flex:0 0 290px;background:var(--panel);border-right:1px solid var(--border);
+    padding:24px 16px;position:sticky;top:0;height:100vh;overflow-y:auto;font-size:13.5px
+  }
+  nav.toc h2{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 0 6px}
+  nav.toc h2:first-child{margin-top:0}
+  nav.toc ul{list-style:none;margin:0;padding:0}
+  nav.toc li a{display:block;padding:4px 8px;border-radius:6px;color:var(--text);text-decoration:none}
+  nav.toc li a:hover{background:var(--panel-2);color:var(--accent-2)}
+  main{flex:1;padding:40px 48px;max-width:980px}
+  header.title{border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:32px}
+  header.title h1{font-size:30px;margin:0 0 8px}
+  header.title p{color:var(--muted);margin:4px 0}
+  .badge{display:inline-block;background:var(--panel-2);border:1px solid var(--border);color:var(--muted);
+    padding:2px 9px;border-radius:999px;font-size:12px;margin-right:6px}
+  section{margin-bottom:44px;scroll-margin-top:16px}
+  h2{font-size:22px;border-left:4px solid var(--accent);padding-left:12px;margin:0 0 16px}
+  h3{font-size:17px;color:var(--accent-2);margin:28px 0 10px}
+  h4{font-size:14.5px;color:var(--text);margin:18px 0 8px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+  p{margin:0 0 12px}
+  ul,ol{margin:0 0 14px;padding-left:22px}
+  li{margin-bottom:4px}
+  code{background:var(--code-bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;color:#f1c377}
+  pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;overflow-x:auto;font-size:13px;line-height:1.5}
+  pre code{background:none;border:none;padding:0;color:#dbe2f0}
+  table{width:100%;border-collapse:collapse;margin:12px 0 20px;font-size:13.5px}
+  th,td{border:1px solid var(--border);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--panel-2);color:var(--muted);font-weight:600}
+  tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  .note,.warn,.danger{border-radius:8px;padding:12px 16px;margin:14px 0;border:1px solid var(--border)}
+  .note{background:rgba(95,176,255,.08);border-color:rgba(95,176,255,.3)}
+  .warn{background:rgba(224,164,55,.08);border-color:rgba(224,164,55,.35)}
+  .danger{background:rgba(224,98,95,.08);border-color:rgba(224,98,95,.4)}
+  .note strong,.warn strong,.danger strong{display:block;margin-bottom:4px}
+  .file{font-family:ui-monospace,monospace;color:var(--accent-2);font-size:.92em}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:16px 0}
+  .flow .step{background:var(--panel-2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px}
+  .flow .arrow{color:var(--muted)}
+  hr{border:none;border-top:1px solid var(--border);margin:32px 0}
+  footer{color:var(--muted);font-size:12px;margin-top:60px;border-top:1px solid var(--border);padding-top:16px}
+  @media (max-width:900px){
+    .layout{flex-direction:column}
+    nav.toc{position:relative;width:100%;height:auto;flex-basis:auto}
+    main{padding:24px}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav class="toc">
+  <h2>Manuale Tecnico</h2>
+  <ul>
+    <li><a href="#intro">1. Introduzione</a></li>
+    <li><a href="#stack">2. Stack e architettura</a></li>
+    <li><a href="#struttura">3. Struttura del progetto</a></li>
+  </ul>
+  <h2>Dominio dati</h2>
+  <ul>
+    <li><a href="#schema">4. Schema dati e modelli</a></li>
+    <li><a href="#ciclo">5. Ciclo Provvigioni → Proforma</a></li>
+    <li><a href="#storno">6. Storno provvigioni</a></li>
+    <li><a href="#primanota">7. Primanota e sync COGE/BC</a></li>
+    <li><a href="#enasarco">8. Calcolo ENASARCO e FIRR</a></li>
+    <li><a href="#riconciliazione">9. Riconciliazione fatture</a></li>
+    <li><a href="#import">10. Import da MediaFacile</a></li>
+  </ul>
+  <h2>Integrazione e sistema</h2>
+  <ul>
+    <li><a href="#api">11. API REST (bridge BPM)</a></li>
+    <li><a href="#api-commands">12. API di scheduling comandi</a></li>
+    <li><a href="#auth">13. Autenticazione e pannello</a></li>
+    <li><a href="#scheduling">14. Scheduling</a></li>
+    <li><a href="#comandi">15. Comandi Artisan</a></li>
+  </ul>
+  <h2>Riferimento</h2>
+  <ul>
+    <li><a href="#debiti">16. Debiti tecnici (stato)</a></li>
+    <li><a href="#appendice">17. Appendice: configurazione</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<header class="title">
+  <h1>Proforma — Manuale Tecnico</h1>
+  <p>Documentazione per sviluppatori e sistemisti che devono manutenere o estendere l'applicativo.</p>
+  <p>
+    <span class="badge">Laravel 12</span>
+    <span class="badge">Filament 4</span>
+    <span class="badge">PHP 8.4</span>
+    <span class="badge">MySQL</span>
+  </p>
+</header>
+
+<section id="intro">
+  <h2>1. Introduzione</h2>
+  <p>
+    <strong>Proforma</strong> è l'applicativo gestionale del mediatore creditizio che copre l'intero ciclo delle
+    provvigioni: importazione delle pratiche e delle provvigioni dal sistema di istruttoria esterno
+    <strong>MediaFacile</strong>, emissione delle note proforma verso i produttori (agenti), riconciliazione delle
+    fatture attive e passive, generazione automatica della primanota contabile e calcolo dei contributi
+    <strong>ENASARCO</strong> (trimestrali, conguaglio annuale e FIRR).
+  </p>
+  <p>
+    Questo documento descrive <em>come</em> il sistema realizza queste funzioni a livello di codice — modelli,
+    tabelle, servizi, comandi Artisan — a complemento del manuale utente (<span class="file">resources/manuals/Manuale
+    Proforma.pdf</span>, consultabile anche dal pannello in <span class="file">/admin/manuale</span>), che descrive
+    l'uso dell'interfaccia dal punto di vista della contabilità.
+  </p>
+  <div class="note">
+    <strong>A chi è rivolto</strong>
+    Sviluppatori che devono correggere bug, aggiungere funzionalità, o rispondere a un'anomalia contabile
+    (es. "perché questo produttore ha un contributo ENASARCO diverso da quanto atteso"). Presuppone familiarità
+    con Laravel e Filament.
+  </div>
+</section>
+
+<section id="stack">
+  <h2>2. Stack e architettura</h2>
+  <table>
+    <tr><th>Componente</th><th>Versione / Dettaglio</th></tr>
+    <tr><td>Linguaggio</td><td>PHP 8.4</td></tr>
+    <tr><td>Framework</td><td>Laravel 12 (struttura file "streamlined": nessun <span class="file">Kernel.php</span>, middleware in <span class="file">bootstrap/app.php</span>)</td></tr>
+    <tr><td>Pannello amministrativo</td><td>Filament 4.13 — unico panel <code>admin</code>, path <span class="file">/admin</span></td></tr>
+    <tr><td>Database</td><td>MySQL — la maggior parte delle tabelle di dominio (provvigioni, pratiche, proformas, fornitoris, clientis, ecc.) sono <strong>tabelle legacy senza migration Laravel</strong>: lo schema esiste già a DB e i Model vi si agganciano direttamente. Solo <span class="file">prima_nota_configs</span> e <span class="file">prima_nota_entries</span> hanno una migration reale in <span class="file">database/migrations/</span> (funzionalità sviluppata più di recente).</td></tr>
+    <tr><td>Autenticazione</td><td>Laravel auth standard + Socialite (Microsoft OAuth) via <code>dutchcodingcompany/filament-socialite</code></td></tr>
+    <tr><td>Import Excel</td><td><code>eightynine/filament-excel-import</code>, export via <code>pxlrbt/filament-excel</code></td></tr>
+    <tr><td>Parsing PDF</td><td><code>smalot/pdfparser</code></td></tr>
+    <tr><td>Assistente AI (RAG)</td><td><code>neuron-core/neuron-ai</code> — vedi <span class="file">app/Neuron/</span> (agente che risponde usando il manuale operativo)</td></tr>
+    <tr><td>Integrazione contabile esterna</td><td>Microsoft Dynamics 365 <strong>Business Central</strong> (OAuth2 client-credentials + REST/OData)</td></tr>
+    <tr><td>Sistema sorgente pratiche</td><td><strong>MediaFacile</strong> — API HTTP proprietaria (risposta tab-delimited, non JSON)</td></tr>
+    <tr><td>Bridge esterno</td><td><strong>UnicoBPM</strong> — sistema BPM che consuma API REST generiche esposte da questa app (§11)</td></tr>
+  </table>
+</section>
+
+<section id="struttura">
+  <h2>3. Struttura del progetto</h2>
+  <p>Il progetto segue la struttura standard Laravel 12. Le cartelle rilevanti per il dominio applicativo:</p>
+  <table>
+    <tr><th>Percorso</th><th>Contenuto</th></tr>
+    <tr><td><span class="file">app/Models/</span></td><td>Eloquent model del dominio (Provvigione, Proforma, Pratica, Fornitore, Clienti, Enasarco, Firr, Venasarcotot/VenasarcoTrimestre, PrimaNota*, Coges/Vcoge, Invoice*, ecc.)</td></tr>
+    <tr><td><span class="file">app/Filament/Resources/</span></td><td>Risorse Filament (liste, form, azioni bulk/riga) — è qui che vive gran parte della logica di business "Emetti Proforma", "Storna", "Ricalcola contributi", ecc., non in Service dedicati</td></tr>
+    <tr><td><span class="file">app/Console/Commands/</span></td><td>Comandi Artisan: import da MediaFacile, generazione primanota, sync verso Business Central, riconciliazione fatture</td></tr>
+    <tr><td><span class="file">app/Services/</span></td><td>Servizi di riconciliazione fatture/proforma e integrazione Business Central</td></tr>
+    <tr><td><span class="file">app/Mail/</span></td><td>Mailable per l'invio delle email di proforma</td></tr>
+    <tr><td><span class="file">app/Http/Controllers/Api/</span></td><td>Controller generici del bridge REST usato da UnicoBPM</td></tr>
+    <tr><td><span class="file">app/Neuron/</span></td><td>Agente RAG che risponde a domande operative usando il manuale come base di conoscenza</td></tr>
+    <tr><td><span class="file">resources/manuals/</span></td><td>Manuale utente PDF e questo manuale tecnico, serviti da <span class="file">/admin/manuale</span> e <span class="file">/admin/manuale-tecnico</span></td></tr>
+    <tr><td><span class="file">database/seeders/</span></td><td>Dati di riferimento/configurazione (tipologie, stati, aliquote) per ricostruire un ambiente da zero — vedi nota sotto</td></tr>
+  </table>
+  <div class="note">
+    <strong>Seeder per i dati di riferimento</strong>
+    <span class="file">DatabaseSeeder</span> richiama, in quest'ordine, <code>CompanySeeder</code> (l'azienda di
+    default referenziata come <code>company_id</code> da <code>clientis</code>/<code>clients</code>/<code>fornitoris</code>,
+    va seedata per prima), <code>AddressTypeSeeder</code>, <code>ClientTypeSeeder</code>,
+    <code>TipoProdottoSeeder</code>, <code>PraticheStatoSeeder</code>, <code>ProvvigioniStatoSeeder</code>,
+    <code>FornitoriRoleSeeder</code>, <code>EnasarcoSeeder</code>, <code>FirrSeeder</code>. Sono tutti scritti con
+    <code>updateOrCreate</code>/<code>updateOrInsert</code> (idempotenti: rieseguibili senza creare duplicati) e
+    verificati eseguendoli su un database MySQL vuoto, confrontando i conteggi riga con il dump sorgente.
+    <code>PraticheStatoSeeder</code> e <code>FornitoriRoleSeeder</code> usano il query builder invece di un model
+    Eloquent: nessun model copre <code>pratiches_statos</code>/<code>fornitoriroles</code>, e non ne è stato
+    introdotto uno solo per un upsert di poche righe.
+  </div>
+  <div class="warn">
+    <strong>Due model disallineati dallo schema, scoperti scrivendo questi seeder</strong>
+    <code>Enasarco::$fillable</code> elencava <code>aliquota</code> (colonna inesistente) e non includeva
+    <code>minimale</code>, <code>massimale</code>, <code>aliquota_soc</code>, <code>aliquota_agente</code> — le
+    colonne che il calcolo ENASARCO usa davvero (§8): qualunque <code>Enasarco::create()</code>/<code>update()</code>
+    le avrebbe silenziosamente ignorate. <code>ProvvigioniStato</code> non disattivava <code>$timestamps</code>
+    nonostante la tabella <code>provvigioni_statos</code> non abbia colonne <code>created_at</code>/<code>updated_at</code>:
+    un <code>create()</code> falliva con <code>SQLSTATE[42S22]: Column not found</code>. Entrambi corretti; vedi §16.
+  </div>
+  <div class="note">
+    <strong>Migration baseline aggiunte</strong>
+    Le tabelle legacy erano storicamente prive di migration Laravel (le migration originali che le avevano create
+    risultano perse: la tabella <code>migrations</code> in produzione conserva righe per file non più presenti nel
+    repository). <span class="file">database/migrations/2026_09_14_090000_*</span> …
+    <span class="file">2026_09_14_090600_create_reporting_views.php</span> ricostruiscono fedelmente l'intero
+    schema (tabelle, viste, FK, commenti) da un dump dello schema live, verificate rieseguendole su un database
+    MySQL vuoto e confrontando <code>SHOW CREATE TABLE</code> con la sorgente. Sul database esistente sono già
+    marcate come eseguite (inserite direttamente nella tabella <code>migrations</code>): servono per ricostruire
+    l'ambiente da zero (CI, nuovo sviluppatore), non vanno rilanciate su un DB che ha già queste tabelle. Quando si
+    altera una di queste tabelle, scrivere comunque una migration incrementale nuova (mai modificare le baseline)
+    e includere sempre tutte le colonne esistenti nell'<code>ALTER</code> (MySQL le droppa altrimenti).
+  </div>
+  <div class="warn">
+    <strong>Deploy in produzione: <code>MarkBaselineMigrationsAsRanSeeder</code></strong>
+    Produzione ha le stesse tabelle già popolate con dati reali (non è mai stata ricostruita da zero come l'ambiente
+    di sviluppo in cui sono state verificate le baseline). Eseguire lì <code>php artisan migrate</code> per la prima
+    volta dopo il deploy di queste migration tenterebbe le <code>CREATE TABLE</code>/<code>CREATE VIEW</code> su
+    tabelle già esistenti, fallendo. <span class="file">database/seeders/MarkBaselineMigrationsAsRanSeeder.php</span>
+    risolve il problema: per ciascuna delle 9 migration di baseline (incluse
+    <code>prima_nota_configs</code>/<code>prima_nota_entries</code>, già presenti anche in produzione) verifica che
+    la tabella/vista corrispondente esista già e, solo in tal caso, inserisce la riga in <code>migrations</code>
+    <em>senza eseguire la migration</em>; se la tabella non esiste la salta (resterà "Pending" e verrà creata
+    normalmente da <code>migrate</code> — comportamento corretto su un ambiente che invece ne fosse privo). Non fa
+    parte di <code>DatabaseSeeder::run()</code> — va lanciato esplicitamente, una tantum, sull'ambiente di
+    destinazione, <strong>prima</strong> di <code>php artisan migrate</code>:
+    <pre><code>php artisan db:seed --class=MarkBaselineMigrationsAsRanSeeder --force
+php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre>
+    Verificato end-to-end importando lo schema grezzo (senza le migration baseline) su un database MySQL vuoto per
+    simulare lo stato di produzione, lanciando il seeder, e confermando che <code>migrate</code> risulta "Nothing
+    to migrate" (exit code 0) senza toccare le tabelle esistenti; è inoltre idempotente (un secondo lancio salta
+    tutte le righe già presenti).
+  </div>
+</section>
+
+<hr>
+
+<section id="schema">
+  <h2>4. Schema dati e modelli principali</h2>
+
+  <h3>4.1 Provvigione — la tabella centrale</h3>
+  <p>Tabella <code>provvigioni</code>, PK <code>id</code> <code>char(36)</code> (stringa, non auto-incrementante — proviene da MediaFacile). Rappresenta sia le provvigioni <strong>passive</strong> (uscita verso il produttore) sia quelle <strong>attive</strong> (entrata da istituto/cliente), distinte dalla colonna <code>entrata_uscita</code>.</p>
+  <table>
+    <tr><th>Colonna</th><th>Tipo</th><th>Note</th></tr>
+    <tr><td><code>id_pratica</code></td><td>varchar, NOT NULL</td><td>FK verso <code>pratiches.id</code></td></tr>
+    <tr><td><code>entrata_uscita</code></td><td>varchar</td><td><code>Entrata</code> (da banca/cliente) / <code>Uscita</code> (verso produttore)</td></tr>
+    <tr><td><code>importo</code>, <code>importo_effettivo</code>, <code>importo_erogato</code></td><td>decimal(15,2)</td><td>lordo / netto dopo storni / erogato</td></tr>
+    <tr><td><code>stato</code></td><td>varchar</td><td><code>Inserito</code>, <code>Sospeso</code>, <code>Proforma</code>, <code>Pagato</code>, <code>Annullato</code>, <code>Escluso</code>, <code>Fatturato</code></td></tr>
+    <tr><td><code>status_compenso</code></td><td>varchar</td><td>stato di maturazione lato MediaFacile: Pratica deliberata / erogata / in lavorazione / perfezionata</td></tr>
+    <tr><td><code>piva</code>, <code>cf</code></td><td>varchar</td><td>identificano il produttore (agente)</td></tr>
+    <tr><td><code>istituto_finanziario</code></td><td>varchar</td><td>join logico verso <code>clientis.name</code></td></tr>
+    <tr><td><code>proforma_id</code></td><td>bigint unsigned, indicizzata</td><td>FK verso <code>proformas.id</code> quando la riga è stata aggregata in un proforma</td></tr>
+    <tr><td><code>coordinamento</code></td><td>tinyint(1)</td><td>flag per compensi da attività di gestione rete/team</td></tr>
+    <tr><td><code>quota</code></td><td>varchar</td><td>riusata come importo di storno (vedi §6)</td></tr>
+    <tr><td><code>fattura_id</code></td><td>bigint unsigned</td><td>collega la provvigione a una riga di fattura riconciliata</td></tr>
+  </table>
+  <p>Relazioni principali (<span class="file">app/Models/Provvigione.php</span>): <code>belongsTo(Pratica, 'id_pratica')</code>, <code>belongsTo(Fornitore, 'piva', 'piva')</code>, <code>belongsTo(Clienti, 'istituto_finanziario', 'name')</code>, <code>belongsTo(Proforma)</code>, <code>morphMany(PrimaNotaEntry, 'record')</code>.</p>
+
+  <h3>4.2 Proforma</h3>
+  <p>Tabella <code>proformas</code>, PK bigint auto-incrementante. Un proforma è il documento intermedio verso un produttore (o istituto/cliente) che <strong>aggrega più righe di Provvigione</strong>.</p>
+  <table>
+    <tr><th>Colonna</th><th>Note</th></tr>
+    <tr><td><code>fornitori_id</code></td><td>FK verso <code>clientis.id</code> (produttore)</td></tr>
+    <tr><td><code>stato</code></td><td>default <code>Inserito</code>; poi <code>Inviato</code>, <code>Pagato</code>, <code>Annullato</code></td></tr>
+    <tr><td><code>compenso</code>, <code>anticipo</code>, <code>contributo</code>, <code>delta</code>, <code>anticipo_residuo</code></td><td>decimal(15,2) — componenti dell'importo totale</td></tr>
+    <tr><td><code>emailsubject/emailto/emailbody/emailfrom</code></td><td>contenuto dell'email effettivamente inviata (editabile prima dell'invio)</td></tr>
+    <tr><td><code>sended_at</code>, <code>paid_at</code></td><td>date di invio e pagamento</td></tr>
+    <tr><td><code>invoiceable_type/id</code></td><td>polimorfismo manuale verso la fattura (attiva o passiva) che ha saldato il proforma</td></tr>
+  </table>
+  <p><code>getTotaleAttribute()</code> calcola l'importo complessivo come <code>compenso + anticipo + contributo + delta</code>. Relazioni: <code>belongsTo(Fornitore, 'fornitori_id')</code>, <code>hasMany(Provvigione, 'proforma_id')</code>.</p>
+
+  <h3>4.3 Pratica</h3>
+  <p>Tabella <code>pratiches</code>, PK <code>id</code> stringa (codice pratica MediaFacile). Contiene i dati del finanziamento (<code>rata</code>, <code>erogato</code>, <code>amount</code>, <code>net</code>, <code>nrate</code>) e le date chiave del ciclo di vita (<code>sended_at</code>, <code>approved_at</code>, <code>erogated_at</code>, <code>rejected_at</code>). <code>belongsTo(Fornitore, 'partita_iva_agente', 'piva')</code> come <code>agente()</code>; <code>hasMany(Provvigione, 'id_pratica')</code>.</p>
+
+  <h3>4.4 Anagrafiche</h3>
+  <ul>
+    <li><strong>Fornitore</strong> (<code>fornitoris</code>, PK UUID) — i produttori/agenti. Campi di compliance (<code>oam</code>, <code>ivass</code>, <code>numero_iscrizione_rui</code>), <code>enasarco</code> (enum <code>no</code>/<code>monomandatario</code>/<code>plurimandatario</code>/<code>societa</code>, default <code>plurimandatario</code>), <code>anticipo</code>/<code>anticipo_residuo</code>/<code>contributo</code> e relative descrizioni, <code>contributoperiodicita</code>/<code>contributodalmese</code>. Il model ha due hook in <code>boot()</code>: se cambia <code>piva</code>, propaga il nuovo valore a tutte le <code>Provvigione</code> collegate; se cambia <code>email</code>, aggiorna <code>emailto</code> su tutti i Proforma ancora <code>Inserito</code> del fornitore.</li>
+    <li><strong>Clienti</strong> (tabella <code>clientis</code>, PK UUID) — anagrafica istituti/mandanti, con campi normativi estesi (<code>ivass_section</code>, <code>status</code>, <code>principal_type</code>). È qui che si registra la Partita IVA usata per la riconciliazione delle fatture attive (§9) e gli "istituti fittizi" citati nel manuale utente.</li>
+    <li><strong>Client</strong> (tabella <code>clients</code>) — clienti/consulenti finali, con campi privacy/GDPR (<code>is_pep</code>, consensi, <code>blacklist_at</code>).</li>
+    <li><strong>Company</strong> — anagrafica delle società del gruppo; include, in chiaro, credenziali di connessione a database esterni per-tenant (<code>db_host/db_port/db_database/db_username/db_password</code>) — <strong>da trattare come dato sensibile</strong>.</li>
+  </ul>
+
+  <h3>4.5 Contabilità e riconciliazione</h3>
+  <ul>
+    <li><strong>PrimaNotaConfig</strong> / <strong>PrimaNotaEntry</strong> (uniche tabelle con migration reale) — vedi §7.</li>
+    <li><strong>Coges</strong> — mapping conto dare/avere per fonte (<code>mediafacile</code>) e tipo movimento (Entrata/Uscita), usato da <code>coge:sync-monthly</code>.</li>
+    <li><strong>Vcoge</strong> (tabella <code>vcoge</code>) — aggregato mensile precalcolato (<code>entrata</code>, <code>uscita</code>, <code>storno_entrata</code>, <code>storno_uscita</code>), alimentato dalla vista <code>vwcoge</code>; è la fonte usata da <code>coge:sync-monthly</code> per la primanota mensile.</li>
+    <li><strong>Invoice / PurchaseInvoice / SalesInvoice / Fattura / InvoiceIn</strong> — rappresentazioni delle fatture (import Excel o SDI) usate nella riconciliazione con i proforma; si veda §9.</li>
+  </ul>
+
+  <h3>4.6 ENASARCO</h3>
+  <p>Vedi il dettaglio completo in §8. Tabelle coinvolte: <code>enasarcos</code> (aliquote/massimali per anno e tipologia), <code>firrs</code> (scaglioni FIRR), <code>venasarcotrimestre</code>, <code>venasarcotot</code>.</p>
+</section>
+
+<section id="ciclo">
+  <h2>5. Ciclo Provvigioni → Proforma</h2>
+
+  <div class="flow">
+    <div class="step">Provvigioni <code>Inserito</code></div>
+    <span class="arrow">→</span>
+    <div class="step">Bulk action "Emetti Proforma"</div>
+    <span class="arrow">→</span>
+    <div class="step">Raggruppamento per P.IVA fornitore</div>
+    <span class="arrow">→</span>
+    <div class="step">Proforma <code>Inserito</code></div>
+    <span class="arrow">→</span>
+    <div class="step">Invio email → <code>Inviato</code></div>
+    <span class="arrow">→</span>
+    <div class="step">Riconciliazione fattura → <code>Pagato</code></div>
+  </div>
+
+  <h3>5.1 Emissione ("Emetti Proforma")</h3>
+  <p>
+    Il trigger è una <code>BulkAction</code> nella tabella delle provvigioni:
+    <span class="file">app/Filament/Resources/Provvigiones/Tables/ProvvigionesTable.php</span>. Per ogni riga
+    selezionata valida la Partita IVA (11 o 16 caratteri) e delega l'aggregazione a
+    <code>Proforma::findOrCreateByPiva()</code>:
+  </p>
+  <pre><code>$records->each(function ($record) {
+    $piva = $record->piva;
+    if (($piva != null) && ((strlen($piva) == 11) || (strlen($piva) == 16))) {
+        $proformaId = Proforma::findOrCreateByPiva($piva, $record->importo, $record->coordinamento);
+        $record->update(['stato' => 'Proforma', 'proforma_id' => $proformaId]);
+    } else {
+        // Notification::danger — piva mancante o non valida, riga esclusa
+    }
+});</code></pre>
+  <p>
+    <code>findOrCreateByPiva()</code> (<span class="file">app/Models/Proforma.php</span>) normalizza la P.IVA
+    (rimuove spazi), cerca il <code>Fornitore</code> corrispondente (anche fra i soft-deleted, che vengono
+    ripristinati), e cerca un proforma già aperto (<code>stato = 'Inserito'</code>) per quel fornitore. Se esiste,
+    <strong>accumula</strong> l'importo nel proforma esistente invece di creare una riga per ogni provvigione:
+  </p>
+  <pre><code>$existingProforma->update(['compenso' => $importo + $compenso]);</code></pre>
+  <p>
+    Tutte le provvigioni selezionate con la stessa P.IVA confluiscono quindi in un unico Proforma aperto; ogni
+    provvigione resta comunque tracciabile singolarmente tramite <code>proforma_id</code>.
+  </p>
+
+  <h3>5.2 Separazione "coordinamento"</h3>
+  <p>
+    In <code>createFromFornitore()</code>, se la provvigione è marcata <code>coordinamento</code>, il
+    <code>contributo</code> fisso del nuovo proforma viene azzerato:
+  </p>
+  <pre><code>$proformaData = [..., 'contributo' => $fornitore->contributo, 'compenso' => 0, ...];
+if ($coordinamento) {
+    $proformaData['contributo'] = 0;
+}</code></pre>
+  <p>Il contributo fisso mensile configurato in anagrafica fornitore, quindi, si applica solo ai compensi standard, non a quelli di coordinamento — coerente con la logica descritta nel manuale utente.</p>
+
+  <h3>5.3 Anticipi</h3>
+  <p>
+    Alla creazione, <code>anticipo</code>, <code>anticipo_residuo</code> e le relative descrizioni sono copiati
+    dal <code>Fornitore</code>: sono impostazioni "standing" per produttore, non calcolate dinamicamente. Il
+    recupero avviene solo quando il proforma viene <strong>effettivamente inviato</strong>
+    (<code>inviaEmail()</code>, non in fase di creazione):
+  </p>
+  <pre><code>$this->fornitore->increment('anticipo_residuo', -$this->anticipo);</code></pre>
+  <p>Un valore di anticipo negativo su un proforma rappresenta quindi l'erogazione di un nuovo anticipo (incrementa il residuo invece di ridurlo), coerentemente con quanto documentato per l'utente finale.</p>
+
+  <h3>5.4 Invio email / simulazione</h3>
+  <p>
+    Tutta la logica di invio è nel metodo <code>Proforma::inviaEmail(bool $preview = false)</code>. Punti chiave
+    per chi deve fare debug su un'email non recapitata o su un anticipo non scalato:
+  </p>
+  <ul>
+    <li>Se <code>$preview === true</code> (simulazione): il destinatario è forzato a <code>auth()->user()->email</code>
+      (fallback <code>hassistosrl@gmail.com</code>), l'oggetto/testo viene prefissato con "Simulazione email da
+      inviarsi a...", e <strong>l'aggiornamento di <code>sended_at</code>, <code>stato</code> e
+      <code>anticipo_residuo</code> viene saltato</strong>.</li>
+    <li>Se <code>$preview === false</code> (invio reale): destinatario = <code>fornitore->email</code> (lancia
+      eccezione se vuoto), CC/BCC presi da <code>Company::first()->email_cc/email_bcc</code>. Aggiorna
+      <code>sended_at</code>, <code>stato = 'Inviato'</code>, <code>data_invio</code> e decrementa
+      <code>anticipo_residuo</code> del fornitore.</li>
+    <li>L'invio usa sempre <code>Mail::send('emails.proforma', [...])</code> (chiamata diretta, non passa per la
+      classe <code>App\Mail\ProformaMail</code>, che risulta usata solo dalla rotta di debug
+      <span class="file">/mail-preview</span>).</li>
+  </ul>
+  <div class="warn">
+    <strong>Codice morto da verificare prima di riusarlo</strong>
+    Esiste un metodo separato <code>Proforma::sendEmail()</code> che referenzia una classe
+    <code>ProformaEmail</code> non presente in <span class="file">app/Mail/</span>: non è il percorso usato
+    dall'interfaccia (che chiama <code>inviaEmail()</code>) e con ogni probabilità è inutilizzato/rotto. Non
+    basarsi su di esso senza prima verificarne lo stato.
+  </div>
+</section>
+
+<section id="storno">
+  <h2>6. Storno provvigioni (rivalsa)</h2>
+  <p>
+    Implementato come <code>Action::make('storna')</code> in
+    <span class="file">app/Filament/Resources/Praticas/RelationManagers/ProvvigioniRelationManager.php</span>,
+    visibile solo su righe <strong>Entrata</strong>, tipo <strong>Istituto</strong>, non ancora stornate
+    (<code>quota == 0</code>). L'utente inserisce l'importo da stornare (<code>quota</code>, limitato
+    all'importo originale); il codice esegue tre operazioni:
+  </p>
+  <ol>
+    <li><strong>Storno attivo</strong>: crea una nuova riga (id = <code>{id originale}-</code>) con
+      <code>importo</code> negativo pari a <code>-quota</code>, <code>stato = 'Inserito'</code>,
+      <code>proforma_id = null</code>, così può rientrare nel prossimo ciclo di riconciliazione/primanota.</li>
+    <li>Segna la riga Entrata originale come parzialmente/totalmente stornata impostando
+      <code>quota</code> sul valore stornato.</li>
+    <li><strong>Storno passivo proporzionale</strong>: per ogni riga <strong>Uscita</strong> collegata alla stessa
+      pratica (esclusi i clienti, esclusi gli <code>Annullato</code>), replica la riga con importo scalato dal
+      rapporto <code>quotaPercent = -quota / importoEntrataOriginale</code>:</li>
+  </ol>
+  <pre><code>$quotaPercent = -$quota / $record->importo;
+foreach ($provvigioniUscitaDellaPratica as $uscita) {
+    $newRecord = $uscita->replicate();
+    $newRecord->importo = $uscita->importo * $quotaPercent;
+    $newRecord->status_compenso = 'Pratica stornata';
+    $newRecord->stato = 'Inserito';
+    $newRecord->proforma_id = null;
+    $newRecord->save();
+}</code></pre>
+  <p>
+    Questo genera automaticamente le rivalse sugli agenti coinvolti, proporzionali allo storno subito
+    dall'istituto — esattamente la logica descritta nel manuale utente. Esiste anche un'azione
+    <code>annulla</code> ("Annulla storno") che azzera <code>quota</code> sulle righe Uscita non ancora incluse in
+    un proforma; il codice contiene un <code>TODO</code> che segnala che la riga di storno stessa non viene
+    eliminata in quel percorso — da tenere presente in caso di anomalie sui totali dopo un "annulla storno".
+  </p>
+</section>
+
+<section id="primanota">
+  <h2>7. Primanota e sincronizzazione COGE / Business Central</h2>
+
+  <h3>7.1 Generazione della primanota (config-driven)</h3>
+  <p>
+    <span class="file">app/Console/Commands/GeneratePrimaNotaCommand.php</span> (<code>primanota:generate</code>,
+    schedulato ogni sera alle 20:00) è completamente guidato dalla configurazione, senza logica hardcoded per
+    modello: per ogni riga attiva di <code>PrimaNotaConfig</code> (<code>event_label</code>,
+    <code>model_type</code> come FQCN, <code>value_field</code>, <code>date_field</code>, <code>conto_dare</code>,
+    <code>conto_avere</code>, <code>effective_from</code>) interroga dinamicamente
+    <code>$config->model_type::query()</code> per i record con <code>value_field &gt; 0</code>, filtrando
+    opzionalmente su <code>date_field &lt;= oggi</code> e <code>updated_at &gt;= effective_from</code>. Crea una
+    <code>PrimaNotaEntry</code> solo se non ne esiste già una per quel record+config
+    (<code>whereDoesntHave('primaNotaEntries', ...)</code>), copiando <code>conto_dare</code>/<code>conto_avere</code>
+    direttamente dalla configurazione.
+  </p>
+  <div class="note">
+    <strong>Per aggiungere un nuovo evento contabile</strong>
+    Non serve toccare il comando: basta creare una riga in <code>PrimaNotaConfig</code> (Settings → Primenote nel
+    pannello, o via <span class="file">app/Filament/Resources/PrimaNotaConfigs</span>) che punti al modello e al
+    campo importo desiderati.
+  </div>
+  <p>
+    Nota sul modello <code>PrimaNotaEntry</code>: la relazione polimorfica <code>record_type</code>/<code>record_id</code>
+    è dichiarata con colonne <strong>string</strong> esplicite (non <code>nullableMorphs</code> standard),
+    perché modelli come <code>Pratica</code>, <code>Provvigione</code> e <code>Fornitore</code> hanno PK
+    non-incrementali (stringa/UUID) — dettaglio documentato nel commento della migration.
+  </p>
+
+  <h3>7.2 Sync verso Business Central</h3>
+  <p>Due comandi distinti, entrambi appoggiati a <code>BusinessCentralService::inviaPrimaNota()</code>:</p>
+  <ul>
+    <li><code>coge:sync-primenote</code> (<span class="file">SyncPrimenoteEntry2Coge.php</span>, schedulato alle
+      20:15, opzioni <code>--limit=200</code> / <code>--id=</code>) — prende le <code>PrimaNotaEntry</code> non
+      ancora sincronizzate (<code>synced_at IS NULL</code>, <code>is_active = true</code>) e costruisce, per
+      ciascuna, una coppia dare/avere con segno (<code>$dareSign = -1</code>, hardcoded), documento
+      <code>PRIMANOTA-{id}</code>. Segna <code>synced_at</code> al successo o valorizza <code>sync_error</code> al
+      fallimento (utile primo punto di controllo in caso di righe che restano "in sospeso").</li>
+    <li><code>coge:sync-monthly</code> (<span class="file">SyncCogeMonthly.php</span>, schedulato il 1° di ogni
+      mese all'1:00, opzione <code>--month=YYYY-MM</code>, default mese precedente) — legge l'aggregato del mese
+      dalla tabella <code>vcoge</code> e costruisce 4 righe di dettaglio (Entrata dare/avere + Uscita dare/avere),
+      usando i conti configurati in <code>Coges</code> (fonte <code>mediafacile</code>) con fallback letterali se
+      la configurazione manca. Documento <code>ENTRATA-{mese}</code> / <code>USCITA-{mese}</code>.</li>
+  </ul>
+  <p><span class="file">BusinessCentralService</span> esegue un flusso OAuth2 client-credentials contro
+    <code>https://login.microsoftonline.com/{BC_TENANT_ID}/oauth2/v2.0/token</code>, poi invia i documenti via
+    <code>POST</code> a
+    <code>https://api.businesscentral.dynamics.com/v2.0/{BC_TENANT_ID}/{BC_ENVIRONMENT}/ODataV4/ANCWS_SendExtCoge?Company={BC_COMPANY_ID}</code>.
+  </p>
+  <div class="note">
+    <strong>Contratto di ritorno consolidato</strong>
+    <code>inviaPrimaNota()</code> restituisce sempre una <code>Illuminate\Http\Client\Response</code> (dichiarato
+    a livello di tipo) — se il recupero del token OAuth2 fallisce, lancia una <code>RuntimeException</code>
+    invece di restituire <code>false</code>. Prima di questa modifica <code>coge:sync-monthly</code> chiamava
+    <code>$dataResponse-&gt;status()</code> senza controllare che non fosse <code>false</code>, andando in errore
+    fatale ("Call to a member function status() on bool") proprio nello scenario in cui le credenziali BC sono
+    mancanti/scadute — cioè il caso che più avrebbe avuto bisogno di un log chiaro. Entrambi i comandi hanno già
+    un <code>try/catch</code> attorno alla chiamata, quindi l'eccezione viene ora gestita in modo uniforme
+    (log + <code>Command::FAILURE</code> +, per <code>coge:sync-primenote</code>, <code>sync_error</code>
+    valorizzato sulle entry).
+  </div>
+  <div class="note">
+    <strong>Credenziali centralizzate in <code>config/services.php</code></strong>
+    <code>BusinessCentralService</code> e i comandi di import MediaFacile leggono ora
+    <code>config('services.business_central.*')</code> e <code>config('services.mediafacile.*')</code> invece di
+    chiamare <code>env()</code> direttamente (blocchi aggiunti in <span class="file">config/services.php</span>,
+    valorizzati dalle stesse variabili <span class="file">.env</span> di sempre: <code>BC_TENANT_ID</code>,
+    <code>BC_CLIENT_ID</code>, <code>BC_CLIENT_SECRET</code>, <code>BC_SCOPE</code>, <code>BC_ENVIRONMENT</code>,
+    <code>BC_COMPANY_ID</code>, <code>MEDIAFACILE_BASE_URL</code>, <code>MEDIAFACILE_HEADER_KEY</code>). Questo
+    rende l'app compatibile con <code>php artisan config:cache</code>: qualunque nuova integrazione dovrebbe
+    seguire lo stesso schema invece di richiamare <code>env()</code> fuori da un file di config.
+  </div>
+</section>
+
+<section id="enasarco">
+  <h2>8. Calcolo ENASARCO, conguaglio e FIRR</h2>
+  <p>
+    Il calcolo si basa su due <strong>viste SQL</strong> che aggregano <code>provvigioni</code> (filtrate su
+    <code>entrata_uscita = 'Uscita'</code>, <code>stato &lt;&gt; 'Annullato'</code>,
+    <code>data_fattura IS NOT NULL</code>) raggruppando per produttore/trimestre, e poi da una fase di
+    <strong>post-processing in PHP</strong> per FIRR e conguaglio.
+  </p>
+
+  <h3>8.1 Contributo trimestrale</h3>
+  <p>Vista <code>vwenasarcotrimestre</code> / <code>vwenasarco</code>, join di <code>provvigioni</code> con
+  <code>fornitoris.enasarco</code> (tipologia) e <code>enasarcos</code> (aliquote per anno+tipologia):</p>
+  <pre><code>montante  = sum(p.importo)
+contributo = (sum(p.importo) * (e.aliquota_agente + e.aliquota_soc)) / 100</code></pre>
+  <p>Il risultato alimenta <code>venasarcotrimestre</code>. Vista Filament: pulsante "Ricalcola" in
+  <span class="file">Trimestrali ENASARCO</span>.</p>
+
+  <h3>8.2 Conguaglio annuale</h3>
+  <p>Vista <code>vwenasarcotot</code> (join di <code>vwenasarco</code> con <code>enasarcos</code>) applica il
+  clamp fra minimale e massimale annuo e marca se il contributo grezzo ha toccato uno dei due limiti:</p>
+  <pre><code>X       = CONCAT( IF(LEAST(massimo, contributo)=massimo, '+', ''),
+                  IF(GREATEST(minimale, contributo)=minimale, '-', '') )
+imposta = LEAST(massimo, GREATEST(minimale, contributo))   -- contributo "clampato"</code></pre>
+  <p>
+    Il ricalcolo (header action "Ricalcola" in <span class="file">Venasarcotots</span>, e come effetto
+    collaterale di <code>pratiche:import-api</code>) tronca e ricostruisce <code>venasarcotot</code> dalla vista, poi
+    calcola il FIRR riga per riga:
+  </p>
+  <pre><code>Venasarcotot::truncate();
+DB::table('venasarcotot')->insertUsing([...], DB::table('vwenasarcotot'));
+foreach (Venasarcotot::get() as $record) {
+    $firr = Firr::calculateContributo($record->montante, $record->enasarco, $record->competenza);
+    $record->update(['firr' => $firr]);
+}</code></pre>
+
+  <h3>8.3 FIRR — calcolo a scaglioni progressivi</h3>
+  <p>
+    <code>Firr::calculateContributo()</code> (<span class="file">app/Models/Firr.php</span>) applica gli scaglioni
+    della tabella <code>firrs</code> (filtrati per tipologia ENASARCO e anno di competenza, ordinati per
+    <code>minimo</code> crescente) con una logica identica a un calcolo IRPEF a scaglioni:
+  </p>
+  <pre><code>foreach ($brackets as $bracket) {
+    $bracketMin = (float) $bracket->minimo;
+    $bracketMax = $bracket->massimo ? (float) $bracket->massimo : PHP_FLOAT_MAX;
+    $amountInBracket = min($remainingAmount, $bracketMax - $bracketMin);
+    if ($amountInBracket > 0) {
+        $totalContribution += $amountInBracket * ($bracket->aliquota / 100);
+        $remainingAmount -= $amountInBracket;
+    }
+}</code></pre>
+  <p>Scaglioni tipici (valori di seed, uguali per mono/pluri salvo la prima soglia): 0–6.200€ (plurimandatario) /
+  0–12.400€ (monomandatario) → 4%; scaglione successivo → 2%; oltre → 1%.</p>
+
+  <h3>8.4 RACES e Conguaglio — calcolati a runtime, non persistiti</h3>
+  <p>
+    La colonna finale mostrata all'utente non viene salvata a DB: è calcolata nella tabella Filament
+    (<span class="file">app/Filament/Resources/Venasarcotots/Tables/VenasarcototsTable.php</span>) al momento
+    della visualizzazione:
+  </p>
+  <pre><code>'credito'    => $record->imposta - $record->contributo,
+'RACES'      => $record->contributo / 2 + $record->imposta - $record->contributo,
+'Versato'    => $record->trimestri_sum_contributo,   // somma contributo dei primi 3 trimestri
+'Conguaglio' => $record->contributo / 2 + $record->imposta - $record->contributo
+                - $record->trimestri_sum_contributo / 2,</code></pre>
+  <p>
+    <code>trimestri_sum_contributo</code> proviene da <code>withSum('trimestri', 'contributo')</code>, dove la
+    relazione <code>Venasarcotot::trimestri()</code> esclude deliberatamente il quarto trimestre
+    (<code>where('trimestre', '&lt;', 4)</code>, in <span class="file">app/Models/Venasarcotot.php</span>): il
+    "Versato" rappresenta quindi solo gli acconti dei primi tre trimestri, coerentemente con il fatto che il
+    conguaglio di fine anno regola anche la quota del quarto trimestre più eventuali scostamenti dal
+    minimale/massimale.
+  </p>
+  <div class="warn">
+    <strong>Se un importo di conguaglio sembra sbagliato</strong>
+    Verificare, in ordine: (1) l'aliquota e i massimali configurati per l'anno di competenza in
+    <code>enasarcos</code>, (2) che <code>fornitore.enasarco</code> sia impostato correttamente (un valore
+    <code>no</code> o mancante esclude il produttore dal contributo), (3) che il ricalcolo sia stato eseguito
+    dopo l'ultima modifica alle provvigioni del trimestre (le viste non sono materializzate/aggiornate
+    automaticamente ad ogni scrittura).
+  </div>
+</section>
+
+<section id="riconciliazione">
+  <h2>9. Riconciliazione fatture ↔ proforma</h2>
+  <p>Due servizi indipendenti in <span class="file">app/Services/</span>, entrambi eseguiti da comando Artisan o azione manuale in Filament.</p>
+
+  <h3>9.1 Fatture attive — <code>ProformaInvoiceMatchingService</code></h3>
+  <p>
+    Per ogni <code>SalesInvoice</code> non chiusa con importo e data registrazione valorizzati, cerca i Proforma
+    dello stesso fornitore (per P.IVA) con <code>sended_at &lt;= registration_date</code> e non ancora abbinati
+    (<code>invoiceable_id IS NULL</code>). Match quando:
+  </p>
+  <pre><code>abs(salesInvoice.amount - (compenso + anticipo + contributo)) <= 10   // tolleranza fissa, 10€</code></pre>
+  <p>Al match: imposta <code>invoiceable_type/id</code> sul Proforma, <code>stato = 'Pagato'</code>, chiude la fattura (<code>closed = 1</code>), tutto in transazione.</p>
+
+  <h3>9.2 Fatture passive — <code>ProformaPurchaseInvoiceMatchingService</code></h3>
+  <p>Filtra <code>PurchaseInvoice</code> non chiuse, non annullate, non "no pratica", con P.IVA/importo/data
+  valorizzati. Doppia strategia di risoluzione del fornitore:</p>
+  <ol>
+    <li><strong>Strategia A</strong>: risolve <code>Fornitore</code> dalla P.IVA della fattura, poi cerca i
+      Proforma per <code>fornitori_id</code>.</li>
+    <li><strong>Strategia B (fallback)</strong>: se A non trova un fornitore o nessun importo compatibile, cerca
+      direttamente sui Proforma per la colonna denormalizzata <code>vat_number</code>.</li>
+  </ol>
+  <p>In entrambi i casi i candidati sono ristretti a proforma non ancora abbinati, con <code>sended_at</code>
+  valorizzata e <code>&lt;= registration_date</code> della fattura. Soglia di tolleranza:</p>
+  <pre><code>abs(invoiceAmount - proforma.totale) <= 5   // — è la soglia dei "5 euro" citata nel manuale utente</code></pre>
+  <p>Al match: <code>invoiceable_type/id</code> sul Proforma, tutte le <code>provvigioni</code> collegate
+  passano a <code>stato = 'Pagato'</code>, la fattura viene chiusa.</p>
+  <div class="note">
+    <strong>Riconciliazione manuale</strong>
+    Non esiste nel codice un flag/servizio dedicato per l'associazione manuale con giustificazione del delta:
+    l'operatore agisce direttamente dall'interfaccia Filament (form della fattura), che scrive comunque sugli
+    stessi campi (<code>invoiceable_type/id</code>) letti da questi due servizi — non c'è quindi una tabella
+    "eccezioni" separata da controllare in caso di anomalie.
+  </div>
+</section>
+
+<section id="import">
+  <h2>10. Import da MediaFacile</h2>
+  <p>
+    Entrambi i comandi (<code>pratiche:import-api</code> → <span class="file">ImportPraticheFromApi.php</span>,
+    <code>provvigioni:import-api</code> → <span class="file">ImportProvvigioniFromApi.php</span>) chiamano lo
+    stesso endpoint: <code>env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php')</code>,
+    con query <code>table=pratiche|compensi</code> e range date, autenticato via header
+    <code>X-Api-Key: env('MEDIAFACILE_HEADER_KEY')</code>.
+  </p>
+  <div class="warn">
+    <strong>Formato risposta non standard</strong>
+    La risposta è <strong>testo delimitato da tabulazioni</strong>, non JSON: prima riga = intestazioni, righe
+    successive parse con <code>explode("\t", $line)</code>. Verificare in trace di eventuali "0 record importati"
+    che l'header non sia cambiato lato MediaFacile. La chiamata disabilita la verifica SSL e prevede 3 retry con
+    backoff di 1s su errori di connessione/5xx.
+  </div>
+  <ul>
+    <li><strong>Pratiche</strong>: dedupe per <code>id</code> (update se esiste, altrimenti crea/associa
+      <code>Fornitore</code> e <code>Clienti</code> via <code>firstOrCreate</code> per nome, poi crea la
+      <code>Pratica</code>). Al termine, ricostruisce interamente <code>Venasarcotot</code> (§8.2).</li>
+    <li><strong>Provvigioni</strong>: dedupe per <code>id</code>. Se già esistente e senza <code>stato</code>,
+      aggiorna i campi (ereditando <code>erogated_at</code>/<code>importo_erogato</code> dalla Pratica padre se
+      mancanti); se già esistente con <code>stato</code> valorizzato ma senza <code>n_fattura</code> e l'API ora
+      fornisce un numero fattura, marca <code>stato = 'Pagato'</code>. Se non esiste, crea la riga (e il
+      <code>Fornitore</code> se mancante, per le righe Uscita). Al termine esegue
+      <code>Provvigione::deleteOldDuplicates()</code>/<code>deleteOldDuplicates2()</code> — query SQL con
+      self-join che eliminano duplicati più vecchi con stessa pratica/tipo/riferimento/descrizione, solo se non
+      ancora fatturati né in un proforma.</li>
+  </ul>
+  <div class="danger">
+    <strong>Rischio duplicati noto</strong>
+    Il manuale utente segnala esplicitamente che una pratica ripresentata presso un altro istituto può lasciare
+    provvigioni "orfane" collegate al vecchio istituto: la deduplica sopra copre i duplicati esatti per chiave,
+    non questo scenario. In caso di provvigioni doppie su istituti diversi per la stessa pratica, va investigata
+    manualmente prima di intervenire sui dati.
+  </div>
+</section>
+
+<hr>
+
+<section id="api">
+  <h2>11. API REST esposte (bridge BPM)</h2>
+  <p>
+    <span class="file">routes/api.php</span> espone un piccolo set di endpoint generici, consumati dal sistema
+    esterno <strong>UnicoBPM</strong> per configurare processi e leggere/scrivere singoli campi senza integrazione
+    dedicata:
+  </p>
+  <table>
+    <tr><th>Metodo</th><th>Rotta</th><th>Controller</th><th>Scopo</th></tr>
+    <tr><td>GET</td><td><code>/api/models/{model}/fields</code></td><td><code>ModelFieldsApiController@show</code></td><td>Elenca i campi realmente presenti su un modello (per popolare le select di configurazione lato BPM)</td></tr>
+    <tr><td>GET</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@show</code></td><td>Restituisce un record limitato alle colonne reali del modello</td></tr>
+    <tr><td>PATCH</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@update</code></td><td>Scrive un singolo campo su un record</td></tr>
+    <tr><td>GET</td><td><code>/api/users/lookup</code></td><td><code>UserLookupApiController@show</code></td><td>Verifica se un utente loggato su UnicoBPM ha un account anche qui</td></tr>
+  </table>
+  <p>
+    <code>ModelFieldValueApiController</code> è generico e "schema-driven": risolve la stringa <code>{model}</code>
+    a una classe Eloquent tramite <code>App\Services\ModelFieldIntrospector</code>, poi:
+  </p>
+  <ul>
+    <li><code>show()</code> — <code>$record-&gt;only($columnNames)</code>, esponendo tutte le colonne reali del
+      modello risolto.</li>
+    <li><code>update()</code> — valida <code>field</code> + <code>value</code>, verifica che <code>field</code>
+      sia una colonna reale, e se il campo è una FK "lookup" (es. <code>Pratica::agente()</code>) risolve il
+      valore ricevuto al valore FK effettivo (es. converte in <code>Fornitore.piva</code>) prima di scrivere.</li>
+  </ul>
+  <div class="note">
+    <strong>Autenticazione: chiave condivisa (header <code>X-Api-Key</code>)</strong>
+    Tutte le rotte sotto <span class="file">routes/api.php</span> sono ora dentro
+    <code>Route::middleware('bpm.auth')</code>, alias di
+    <span class="file">App\Http\Middleware\VerifyBpmApiKey</span> registrato in
+    <span class="file">bootstrap/app.php</span>. Il middleware confronta l'header <code>X-Api-Key</code> della
+    richiesta con <code>config('services.bpm.api_key')</code> (env <code>BPM_BRIDGE_API_KEY</code>) usando
+    <code>hash_equals()</code>; risponde <code>503</code> se la chiave non è configurata e <code>401</code> se non
+    combacia. La chiave va comunicata a UnicoBPM fuori banda (non committarla). Prima di questa modifica gli
+    endpoint erano raggiungibili senza alcuna autenticazione — vedi §16 per lo storico del problema.
+  </div>
+  <p>
+    Correlata: <span class="file">app/Http/Controllers/BpmBridgeController.php</span>
+    (<code>GET /bpm-landing/{subject_id}</code>, throttled 10 richieste/minuto) verifica un token contro
+    <code>{BPM_API_URL}/api/verify-token</code> prima di consentire l'accesso "landing" da un link generato dal
+    BPM — meccanismo di autenticazione separato e preesistente, non toccato da questa modifica.
+  </p>
+</section>
+
+<section id="api-commands">
+  <h2>12. API di scheduling comandi</h2>
+  <p>
+    Oltre al bridge sui modelli, <span class="file">routes/api.php</span> espone due rotte che permettono a un
+    sistema esterno di scheduling di lanciare on-demand i comandi Artisan/servizi di questa app, senza accesso SSH
+    al server. Sono protette dallo stesso middleware <code>bpm.auth</code> (§11).
+  </p>
+  <table>
+    <tr><th>Metodo</th><th>Rotta</th><th>Controller</th><th>Scopo</th></tr>
+    <tr><td>GET</td><td><code>/api/commands</code></td><td><code>CommandDispatchApiController@index</code></td><td>Elenca i comandi schedulabili e le opzioni accettate per ciascuno</td></tr>
+    <tr><td>POST</td><td><code>/api/commands/{command}</code></td><td><code>CommandDispatchApiController@store</code></td><td>Accoda l'esecuzione di un comando whitelisted</td></tr>
+  </table>
+  <p>
+    <strong>Whitelist</strong>: solo i comandi elencati in
+    <span class="file">config/schedulable_commands.php</span> possono essere eseguiti, e solo con le opzioni lì
+    dichiarate per ciascuno (es. <code>pratiche:import-api</code> accetta solo <code>start-date</code>/<code>end-date</code>).
+    Qualunque nome di comando non in whitelist risponde <code>404</code>; un'opzione non dichiarata per quel
+    comando, o con un valore non scalare (array/oggetto invece di stringa/numero/booleano), risponde
+    <code>422</code> con l'elenco delle opzioni ammesse. Questo evita sia che l'endpoint diventi una porta
+    d'ingresso per eseguire comandi Artisan arbitrari, sia un errore di tipo poco leggibile lato
+    <code>Artisan::call()</code> quando arriva un valore malformato.
+  </p>
+  <p><strong>Corpo della richiesta POST</strong> (opzionale, tutte le opzioni sotto la chiave <code>options</code>):</p>
+  <pre><code>POST /api/commands/coge:sync-monthly
+X-Api-Key: &lt;chiave condivisa&gt;
+Content-Type: application/json
+
+{ "options": { "month": "2026-08" } }</code></pre>
+  <p>
+    Il controller traduce ogni voce di <code>options</code> in un'opzione Artisan (<code>--month=2026-08</code>) e
+    mette in coda <code>App\Jobs\RunArtisanCommandJob</code> (<code>RunArtisanCommandJob::dispatch($command, $options)</code>),
+    rispondendo subito <code>202 Accepted</code>: gli import da MediaFacile e i sync verso Business Central possono
+    richiedere più tempo di quanto sia ragionevole attendere in una richiesta HTTP sincrona. Il job:
+  </p>
+  <ul>
+    <li>acquisisce un <code>Cache::lock()</code> scoped sul nome del comando (indipendentemente dalle opzioni):
+      se un'esecuzione dello stesso comando è già in corso, questa viene saltata (loggata a livello
+      <code>info</code>) invece di sovrapporsi — stesso principio di
+      <code>Schedule::withoutOverlapping()</code> usato per i comandi schedulati via cron (§14);</li>
+    <li>esegue <code>Artisan::call()</code> e, se l'exit code non è <code>0</code>, lancia un'eccezione così che
+      il meccanismo di retry della coda intervenga: <code>$tries = 3</code> con backoff crescente
+      (<code>30s, 120s, 300s</code>) — utile per errori transitori come un timeout verso l'API di MediaFacile o
+      Business Central;</li>
+    <li>dopo l'ultimo tentativo fallito, <code>failed()</code> registra l'errore definitivo nei log.</li>
+  </ul>
+  <p>
+    Non esiste ancora un endpoint per interrogare lo stato di un'esecuzione già accodata (oltre ai log
+    applicativi e alla tabella <code>failed_jobs</code> per i tentativi esauriti).
+  </p>
+  <div class="warn">
+    <strong>Richiede un worker di coda attivo</strong>
+    <code>QUEUE_CONNECTION=database</code>: se non gira <code>php artisan queue:work</code> (o equivalente
+    supervisor/systemd) sul server, i comandi restano accodati nella tabella <code>jobs</code> e non vengono mai
+    eseguiti. Verificarlo prima di dare per scontato che una chiamata "andata a buon fine" (202) abbia
+    effettivamente prodotto l'effetto atteso.
+  </div>
+</section>
+
+<section id="auth">
+  <h2>13. Autenticazione e pannello Filament</h2>
+  <p>
+    Panel unico <code>admin</code> (<span class="file">app/Providers/Filament/AdminPanelProvider.php</span>),
+    path <span class="file">/admin</span>, <code>authGuard('web')</code>. Login classico Laravel +
+    <strong>Socialite Microsoft</strong> via <code>dutchcodingcompany/filament-socialite</code>:
+  </p>
+  <ul>
+    <li>Un solo provider configurato: <code>Provider::make('microsoft')</code>, con registrazione automatica
+      abilitata.</li>
+    <li><code>createUserUsing()</code> crea uno <code>User</code> dal profilo OAuth con
+      <code>email_verified_at = now()</code> e una password casuale di 32 caratteri (l'account resta tecnicamente
+      loggabile con password, ma nessuno ne conosce il valore).</li>
+    <li><code>Event::listen(SocialiteWasCalled::class, [MicrosoftExtendSocialite::class, 'handle'])</code> registra
+      il provider tramite <code>socialiteproviders/microsoft</code>.</li>
+  </ul>
+  <p>Credenziali OAuth Microsoft in <code>config('services.microsoft')</code> (standard, centralizzato in
+  <span class="file">config/services.php</span> a differenza delle credenziali Business Central/MediaFacile, vedi §7 e §10).</p>
+</section>
+
+<section id="scheduling">
+  <h2>14. Scheduling</h2>
+  <p>Definito in <span class="file">routes/console.php</span> (caricato da <span class="file">bootstrap/app.php</span>):</p>
+  <pre><code>Schedule::command('coge:sync-monthly')->monthlyOn(1, '01:00');
+Schedule::command('primanota:generate')->dailyAt('20:00')->withoutOverlapping();
+Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping();</code></pre>
+  <div class="warn">
+    <strong>Import MediaFacile non schedulati qui</strong>
+    <code>pratiche:import-api</code> e <code>provvigioni:import-api</code> (così come
+    <code>ImportDailyData</code>, <code>SyncManualAssistant</code>, <code>ParseProductDescription</code>) non
+    compaiono in <span class="file">routes/console.php</span>. Se il manuale utente li descrive come
+    "schedulati", la schedulazione va cercata a livello di crontab di sistema/hosting (fuori da questo
+    repository) — verificarlo con l'amministratore del server prima di assumere che girino automaticamente.
+  </div>
+</section>
+
+<section id="comandi">
+  <h2>15. Riepilogo comandi Artisan custom</h2>
+  <table>
+    <tr><th>Comando</th><th>File</th><th>Opzioni</th><th>Funzione</th><th>Schedulabile via API</th></tr>
+    <tr><td><code>pratiche:import-api</code></td><td>ImportPraticheFromApi.php</td><td><code>--start-date</code>, <code>--end-date</code></td><td>Importa pratiche da MediaFacile, ricostruisce ENASARCO annuale</td><td>Sì</td></tr>
+    <tr><td><code>provvigioni:import-api</code></td><td>ImportProvvigioniFromApi.php</td><td><code>--start-date</code>, <code>--end-date</code></td><td>Importa/aggiorna provvigioni da MediaFacile, deduplica</td><td>Sì</td></tr>
+    <tr><td><code>import:daily</code></td><td>ImportDailyData.php</td><td><code>--start-date</code>, <code>--end-date</code></td><td>Import giornaliero combinato pratiche + provvigioni</td><td>Sì</td></tr>
+    <tr><td><code>primanota:generate</code></td><td>GeneratePrimaNotaCommand.php</td><td>—</td><td>Genera <code>PrimaNotaEntry</code> dalle regole in <code>PrimaNotaConfig</code></td><td>Sì</td></tr>
+    <tr><td><code>coge:sync-primenote</code></td><td>SyncPrimenoteEntry2Coge.php</td><td><code>--limit</code>, <code>--id</code></td><td>Invia le <code>PrimaNotaEntry</code> non sincronizzate a Business Central</td><td>Sì</td></tr>
+    <tr><td><code>coge:sync-monthly</code></td><td>SyncCogeMonthly.php</td><td><code>--month</code></td><td>Invia l'aggregato mensile (da <code>vcoge</code>) a Business Central</td><td>Sì</td></tr>
+    <tr><td><code>proformas:match-invoices</code></td><td>MatchProformasToInvoices.php</td><td><code>--force</code>, <code>--stats-only</code></td><td>Riconciliazione automatica fatture attive ↔ proforma</td><td>Sì</td></tr>
+    <tr><td><code>proformas:match-purchase-invoices</code></td><td>MatchProformasToPurchaseInvoices.php</td><td><code>--force</code>, <code>--stats-only</code></td><td>Riconciliazione automatica fatture passive ↔ proforma</td><td>Sì</td></tr>
+    <tr><td><code>sales-invoices:match</code></td><td>MatchSalesInvoices.php</td><td><code>--dry-run</code>, <code>--clear</code></td><td>Riconciliazione fatture di vendita (variante)</td><td>Sì</td></tr>
+    <tr><td><code>parse:product-description</code></td><td>ParseProductDescription.php</td><td>—</td><td>Normalizza le descrizioni prodotto delle pratiche importate</td><td>Sì</td></tr>
+    <tr><td><code>manual:sync</code></td><td>SyncManualAssistant.php</td><td>—</td><td>Reindicizza <span class="file">Manual.md</span>/<span class="file">Istruction.md</span> nel vector store dell'assistente AI</td><td>Sì</td></tr>
+  </table>
+  <p>Uso generale: <code>php artisan &lt;comando&gt; --help</code> per le opzioni; <code>php artisan list</code> per l'elenco completo. I nomi comando e le opzioni della colonna "Schedulabile via API" corrispondono esattamente alle chiavi di <span class="file">config/schedulable_commands.php</span> usato da <code>POST /api/commands/{command}</code> (§12): se si rinomina un comando o gli si aggiunge un'opzione, aggiornare anche quel file, altrimenti la nuova opzione verrà rifiutata con <code>422</code> dal bridge API.</p>
+</section>
+
+<hr>
+
+<section id="debiti">
+  <h2>16. Debiti tecnici (stato)</h2>
+  <p>Punti emersi durante l'analisi del codice. I primi sei sono stati risolti; restano elencati perché il
+  ragionamento che li ha fatti emergere resta utile per non ricadere nello stesso errore altrove nel codice.</p>
+  <ul>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>Fornitore::provvigioni()</code></strong> effettuava il join su una colonna
+      <code>provvigioni.vat_number</code> inesistente (la colonna si chiama <code>piva</code>), rendendo la
+      relazione inutilizzabile. Corretto in <code>hasMany(Provvigione::class, 'piva', 'piva')</code>
+      (<span class="file">app/Models/Fornitore.php</span>).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>Proforma::sendEmail()</code></strong> referenziava una classe <code>ProformaEmail</code>
+      assente in <span class="file">app/Mail/</span> ed era irraggiungibile da qualunque punto dell'interfaccia.
+      Rimosso: il flusso di invio realmente usato resta <code>Proforma::inviaEmail()</code> (§5.4).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Credenziali sparse in <code>env()</code></strong>: Business Central e MediaFacile ora passano da
+      <code>config('services.business_central.*')</code>/<code>config('services.mediafacile.*')</code> (§7.2,
+      §17.3), compatibili con <code>config:cache</code>.</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>API REST del bridge BPM senza autenticazione</strong>: protette da <code>bpm.auth</code> /
+      <code>VerifyBpmApiKey</code> (§11).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Azzeramento storno incompleto</strong>: l'azione "Annulla storno" ora elimina anche la riga di
+      storno passivo generata da "Storna" (<code>Provvigione::where('id', $record-&gt;id.'-')-&gt;delete()</code>
+      prima di azzerare <code>quota</code>, in <span class="file">ProvvigioniRelationManager.php</span>).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Tabelle di dominio senza migration</strong>: baseline aggiunte in
+      <span class="file">database/migrations/2026_09_14_*</span> (§3), verificate ricreando l'intero schema su un
+      database MySQL vuoto e confrontandolo con lo schema live.</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Riga id "-" nello storno multiplo</strong>: nell'azione "Storna" (§6),
+      <code>$newRecord-&gt;id = $relatedUscite-&gt;id.'-'</code> leggeva <code>id</code> su una <em>Collection</em>
+      (non sul singolo record <code>$uscita</code> nel ciclo), producendo sempre la stringa letterale
+      <code>"-"</code> come PK per ogni riga di storno passivo generata nello stesso evento — con più di una
+      provvigione Uscita da stornare sulla stessa pratica, la seconda riga falliva l'insert per PK duplicata (o
+      sovrascriveva silenziosamente la prima, a seconda del motore). Corretto in
+      <code>$newRecord-&gt;id = $uscita-&gt;id.'-'</code>, coerente con la convenzione già usata per lo storno
+      attivo. Questo fix rende anche affidabile l'azione "Annulla storno" per pratiche con più righe Uscita
+      stornate nello stesso evento (prima poteva cancellare la riga di storno sbagliata, per la stessa collisione
+      di id).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>RunArtisanCommandJob</code> senza retry né protezione da sovrapposizioni</strong>: un
+      fallimento transitorio (es. MediaFacile momentaneamente irraggiungibile) veniva solo loggato, senza
+      possibilità di retry, e nulla impediva a due chiamate ravvicinate di eseguire lo stesso comando in
+      parallelo. Aggiunti <code>$tries = 3</code> con backoff crescente (30s/120s/300s) e un
+      <code>Cache::lock()</code> scoped sul nome del comando per saltare le esecuzioni sovrapposte (§12).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>BusinessCentralService::inviaPrimaNota()</code> restituiva <code>false</code> su fallimento
+      del token OAuth2</strong>: <code>coge:sync-monthly</code> chiamava <code>-&gt;status()</code> sul risultato
+      senza controllarlo prima, andando in errore fatale proprio quando le credenziali BC sono mancanti/scadute.
+      Ora il metodo lancia <code>RuntimeException</code> in quel caso, gestita dal <code>try/catch</code> già
+      presente in entrambi i comandi chiamanti (§7.2).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>.env.example</code> incompleto</strong>: mancavano tutte le variabili di
+      <span class="file">config/services.php</span> (Microsoft OAuth, MediaFacile, Business Central, bridge BPM)
+      — chi partiva da <span class="file">.env.example</span> per un setup nuovo si trovava con queste
+      integrazioni silenziosamente non funzionanti. Aggiunte con placeholder vuoti (nessun segreto reale).</li>
+    <li><strong>Comando dispatchabile via API, senza endpoint di stato</strong> (§12): i log applicativi e la
+      tabella <code>failed_jobs</code> restano l'unico riscontro per un'esecuzione accodata; non c'è un endpoint
+      dedicato per interrogarne stato/risultato. Non affrontato in questa revisione (limitato deliberatamente
+      alla sola affidabilità dell'esecuzione — retry/lock, sopra); da valutare se necessario, ad es. per un
+      pannello di monitoraggio lato scheduler esterno.</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>Enasarco::$fillable</code> disallineato dallo schema reale</strong>: elencava una colonna
+      <code>aliquota</code> mai esistita e ometteva <code>minimale</code>, <code>massimale</code>,
+      <code>aliquota_soc</code>, <code>aliquota_agente</code> — le colonne effettivamente usate dal calcolo
+      ENASARCO (§8). Un <code>Enasarco::create()</code>/<code>update()</code> le avrebbe scartate in silenzio.
+      Scoperto e corretto scrivendo <code>EnasarcoSeeder</code> (§3).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong><code>ProvvigioniStato</code> senza <code>$timestamps = false</code></strong>: la tabella
+      <code>provvigioni_statos</code> non ha colonne <code>created_at</code>/<code>updated_at</code>, ma il model
+      non disattivava i timestamp automatici di Eloquent — qualunque <code>create()</code> falliva con
+      <code>SQLSTATE[42S22]: Column not found</code>. Scoperto eseguendo <code>ProvvigioniStatoSeeder</code> per
+      la prima volta su un database vuoto (§3).</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Nessun seeder per i dati di riferimento</strong> (tipi prodotto, stati pratica/provvigione, ruoli
+      fornitore, aliquote ENASARCO/FIRR, azienda di default): un ambiente ricostruito da zero con le sole
+      migration baseline aveva lo schema ma non questi dati, dai quali dipendono le select dell'interfaccia e il
+      calcolo ENASARCO. Aggiunti 7 seeder (§3), verificati end-to-end su un database MySQL vuoto e confrontati
+      per conteggio riga con un dump dello schema live.</li>
+    <li><span class="badge" style="color:var(--ok);border-color:var(--ok)">Risolto</span>
+      <strong>Disallineamento fra file di migration rinominati e la tabella <code>migrations</code></strong>: le
+      due migration <code>prima_nota_configs</code>/<code>prima_nota_entries</code> erano state rinominate da
+      <code>2026_09_11_*</code> a <code>2026_09_15_*</code> senza aggiornare le righe corrispondenti nella
+      tabella <code>migrations</code> del database live, che quindi le vedeva come "Pending" — un
+      <code>php artisan migrate</code> reale avrebbe tentato di ricrearle, fallendo perché le tabelle esistono
+      già. Corretto aggiornando i due nomi in tabella. <strong>Attenzione per il futuro</strong>: rinominare un
+      file di migration richiede sempre di aggiornare anche la riga <code>migrations.migration</code>
+      corrispondente sugli ambienti dove è già stata eseguita — altrimenti <code>migrate:status</code> la mostra
+      erroneamente come da eseguire.</li>
+  </ul>
+</section>
+
+<section id="appendice">
+  <h2>17. Appendice — valori di configurazione seed</h2>
+
+  <h3>17.1 Aliquote ENASARCO (tabella <code>enasarcos</code>, esempio anno 2026)</h3>
+  <table>
+    <tr><th>Tipologia</th><th>Massimo</th><th>Minimale</th><th>Aliquota agente</th><th>Aliquota società</th></tr>
+    <tr><td>Monomandatario</td><td>45.717,00 €</td><td>1.011,00 €</td><td>8,50%</td><td>8,50%</td></tr>
+    <tr><td>Plurimandatario</td><td>30.478,00 €</td><td>507,00 €</td><td>8,50%</td><td>8,50%</td></tr>
+    <tr><td>Società</td><td>13.000.000,00 €</td><td>1.011,00 €</td><td>0%</td><td>0%</td></tr>
+  </table>
+  <p>I valori sono editabili per anno di competenza da <strong>Settings → Enasarco</strong> nel pannello; qualunque
+  variazione normativa richiede una nuova riga per l'anno interessato, non la modifica di quella esistente
+  (per preservare lo storico dei ricalcoli).</p>
+
+  <h3>17.2 Scaglioni FIRR (tabella <code>firrs</code>)</h3>
+  <table>
+    <tr><th>Scaglione</th><th>Plurimandatario</th><th>Monomandatario</th><th>Aliquota</th></tr>
+    <tr><td>1°</td><td>0 – 6.200 €</td><td>0 – 12.400 €</td><td>4%</td></tr>
+    <tr><td>2°</td><td>scaglione successivo</td><td>scaglione successivo</td><td>2%</td></tr>
+    <tr><td>3°</td><td>oltre, fino a 99.999.999 €</td><td>oltre, fino a 99.999.999 €</td><td>1%</td></tr>
+  </table>
+
+  <h3>17.3 Variabili d'ambiente rilevanti</h3>
+  <table>
+    <tr><th>Variabile</th><th>Uso</th></tr>
+    <tr><td><code>MEDIAFACILE_BASE_URL</code>, <code>MEDIAFACILE_HEADER_KEY</code></td><td>Import pratiche/provvigioni (§10), via <code>config('services.mediafacile')</code></td></tr>
+    <tr><td><code>BC_TENANT_ID</code>, <code>BC_CLIENT_ID</code>, <code>BC_CLIENT_SECRET</code>, <code>BC_SCOPE</code>, <code>BC_ENVIRONMENT</code>, <code>BC_COMPANY_ID</code>, <code>BC_PRIMANOTA_DARE_SIGN</code></td><td>Integrazione Business Central (§7.2), via <code>config('services.business_central')</code></td></tr>
+    <tr><td><code>BPM_API_URL</code></td><td>Verifica token del bridge "landing" UnicoBPM (§11)</td></tr>
+    <tr><td><code>BPM_BRIDGE_API_KEY</code></td><td>Chiave condivisa (header <code>X-Api-Key</code>) per tutte le rotte sotto <span class="file">routes/api.php</span> (§11, §12), via <code>config('services.bpm.api_key')</code></td></tr>
+  </table>
+</section>
+
+<footer>
+  Manuale tecnico generato per uso interno del team di sviluppo — basato sull'analisi del codice sorgente al
+  momento della stesura. In caso di discrepanza fra questo documento e il comportamento reale dell'applicazione,
+  fa fede il codice: aggiornare questo file quando la logica descritta cambia.
+</footer>
+
+</main>
+</div>
+</body>
+</html>

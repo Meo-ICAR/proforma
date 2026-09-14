@@ -38,6 +38,13 @@ class ProvvigioniStato extends Model
     public $incrementing = false;
 
     /**
+     * La tabella 'provvigioni_statos' non ha colonne created_at/updated_at.
+     *
+     * @var bool
+     */
+    public $timestamps = false;
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>

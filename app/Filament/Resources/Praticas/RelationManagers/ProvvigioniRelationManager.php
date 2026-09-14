@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\Praticas\RelationManagers;
 
-use Filament\Actions\EditAction;
-// use Filament\Actions\Action;
 use App\Models\Provvigione;
+// use Filament\Actions\Action;
 use Filament\Actions\Action;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -55,7 +55,7 @@ class ProvvigioniRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('entrata_uscita')
                     ->badge()
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'Entrata' => 'success',
                         'Uscita' => 'danger',
                         default => 'gray',
@@ -93,22 +93,23 @@ class ProvvigioniRelationManager extends RelationManager
                     ->label('Annulla storno')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
-                    ->visible(fn(Provvigione $record): bool =>
-                        $record->entrata_uscita === 'Uscita' &&
+                    ->visible(fn (Provvigione $record): bool => $record->entrata_uscita === 'Uscita' &&
                         isset($record->quota) &&
                         $record->quota > 0 &&
-                        !isset($record->proforma_id))
+                        ! isset($record->proforma_id))
                     ->action(function (Provvigione $record): void {
+                        // La riga di storno passivo è stata creata da 'storna' con id = "{$record->id}-".
+                        Provvigione::where('id', $record->id.'-')->delete();
+
                         $record->update([
                             'quota' => 0,
                         ]);
-                    }),  // da aggiungere cancellazione record di storno
+                    }),
                 Action::make('storna')
                     ->label('Storna')
                     ->icon('heroicon-o-arrow-uturn-left')
                     ->color('danger')
-                    ->visible(fn(Provvigione $record): bool =>
-                        ($record->entrata_uscita === 'Entrata') &&
+                    ->visible(fn (Provvigione $record): bool => ($record->entrata_uscita === 'Entrata') &&
                         ($record->tipo === 'Istituto') &&
                         ($record->quota == 0))
                     ->form([
@@ -116,9 +117,9 @@ class ProvvigioniRelationManager extends RelationManager
                             ->label('Importo Storno')
                             ->numeric()
                             ->required()
-                            ->maxValue(fn($record) => $record->importo)
+                            ->maxValue(fn ($record) => $record->importo)
                             ->step(0.01)
-                            ->prefix('€')
+                            ->prefix('€'),
                     ])
                     ->action(function (array $data, Provvigione $record): void {
                         $quota = $data['quota'];
@@ -126,7 +127,7 @@ class ProvvigioniRelationManager extends RelationManager
                             ->get();
                         $relatedEntrata = $relatedEntrata0->replicate();
 
-                        $relatedEntrata->id = $record->id . '-';
+                        $relatedEntrata->id = $record->id.'-';
                         $relatedEntrata->data_inserimento_compenso = now();
                         $relatedEntrata->data_status = now();
                         $relatedEntrata->data_pagamento = null;
@@ -162,7 +163,7 @@ class ProvvigioniRelationManager extends RelationManager
                         // Update each related 'Uscita' record
                         foreach ($relatedUscite as $uscita) {
                             $newRecord = $uscita->replicate();
-                            $newRecord->id = $relatedUscite->id . '-';
+                            $newRecord->id = $uscita->id.'-';
                             // 2. Modifica eventuali campi (es. aggiungi "Copia" al titolo)
                             $newRecord->status_compenso = 'Pratica stornata';
                             $newRecord->importo = $uscita->importo * $quotaPercent;
@@ -186,7 +187,7 @@ class ProvvigioniRelationManager extends RelationManager
 
                         Notification::make()
                             ->title('Provvigione stornata')
-                            ->body('Stornate ' . $relatedUscite->count() . ' provvigioni passive')
+                            ->body('Stornate '.$relatedUscite->count().' provvigioni passive')
                             ->success()
                             ->send();
                     }),

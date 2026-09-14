@@ -126,7 +126,7 @@ class Fornitore extends Model
 
     public function provvigioni()
     {
-        return $this->hasMany(Provvigione::class, 'piva', 'vat_number');
+        return $this->hasMany(Provvigione::class, 'piva', 'piva');
     }
 
     /**

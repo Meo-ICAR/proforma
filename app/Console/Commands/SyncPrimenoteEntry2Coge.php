@@ -97,7 +97,7 @@ class SyncPrimenoteEntry2Coge extends Command
             $businessCentralService = new BusinessCentralService;
             $dataResponse = $businessCentralService->inviaPrimaNota($innerDocs);
 
-            if ($dataResponse && $dataResponse->successful()) {
+            if ($dataResponse->successful()) {
                 $entries->each->update(['synced_at' => Carbon::now(), 'sync_error' => null]);
 
                 $this->info("Sincronizzazione completata: {$entries->count()} voci inviate.");
@@ -106,9 +106,7 @@ class SyncPrimenoteEntry2Coge extends Command
                 return Command::SUCCESS;
             }
 
-            $errorMessage = $dataResponse
-                ? 'Errore API: '.$dataResponse->body()
-                : 'Impossibile ottenere il token di autenticazione da Business Central.';
+            $errorMessage = 'Errore API: '.$dataResponse->body();
 
             $entries->each->update(['sync_error' => $errorMessage]);
 

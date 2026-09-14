@@ -33,7 +33,7 @@ class ImportPraticheFromApi extends Command
         $this->info("Importing pratiche from {$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}");
 
         try {
-            $apiUrl = env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php');
+            $apiUrl = config('services.mediafacile.base_url');
             $queryParams = [
                 'table' => 'pratiche',
                 'data_inizio' => $startDate->format('Y-m-d'),
@@ -43,7 +43,7 @@ class ImportPraticheFromApi extends Command
             $response = Http::withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
-                'X-Api-Key' => env('MEDIAFACILE_HEADER_KEY'),
+                'X-Api-Key' => config('services.mediafacile.header_key'),
             ])
                 ->timeout(60)  // 60 seconds timeout
                 ->connectTimeout(10)  // 10 seconds to establish connection

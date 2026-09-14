@@ -12,6 +12,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -48,6 +49,24 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Contabilita'),
                 NavigationGroup::make()->label('Anagrafica')->collapsed(),
                 NavigationGroup::make()->label('Settings')->collapsed(),
+            ])
+            ->navigationItems([
+
+                NavigationItem::make('Manuale Utente')
+                    ->url(fn (): string => route('manuale-oam'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
+                    ->sort(99), // Opzionale: posizionalo in fondo al menu
+                NavigationItem::make('Manuale Contabile')
+                    ->url(fn (): string => route('manuale-contabile'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-document-arrow-line')
+                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
+                    ->sort(99), // Opzionale: posizionalo in fondo al menu
+                NavigationItem::make('Manuale tecnico')
+                    ->url(fn (): string => route('manuale-tecnico'), shouldOpenInNewTab: true)
+                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
+                    ->icon('heroicon-o-book-open')
+                    ->sort(100),
             ])
             ->favicon(asset('favicon.ico'))
             // ->search()

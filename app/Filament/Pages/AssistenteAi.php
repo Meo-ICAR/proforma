@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use NeuronAI\Chat\Messages\Usage;
 use NeuronAI\Chat\Messages\UserMessage;
 use Throwable;
+use UnitEnum;
 
 /**
  * Assistente AI che risponde a domande sull'uso dell'applicazione al posto
@@ -31,6 +32,8 @@ class AssistenteAi extends Page
     public string $view = 'filament.pages.assistente-ai';
 
     protected static ?string $navigationLabel = 'Assistente AI';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Documentazione';
 
     protected static ?string $title = 'Assistente AI';
 

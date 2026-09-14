@@ -2,22 +2,27 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class BusinessCentralService
 {
     protected string $tenantId;
+
     protected string $clientId;
+
     protected string $clientSecret;
+
     protected string $scope;
 
     public function __construct()
     {
-        $this->tenantId = env('BC_TENANT_ID');
-        $this->clientId = env('BC_CLIENT_ID');
-        $this->clientSecret = env('BC_CLIENT_SECRET');
-        $this->scope = env('BC_SCOPE');
+        $this->tenantId = config('services.business_central.tenant_id');
+        $this->clientId = config('services.business_central.client_id');
+        $this->clientSecret = config('services.business_central.client_secret');
+        $this->scope = config('services.business_central.scope');
     }
 
     /**
@@ -35,7 +40,8 @@ class BusinessCentralService
         ]);
 
         if ($response->failed()) {
-            Log::error('Errore recupero Token BC: ' . $response->body());
+            Log::error('Errore recupero Token BC: '.$response->body());
+
             return null;
         }
 
@@ -44,24 +50,32 @@ class BusinessCentralService
 
     /**
      * Invia i dati a Business Central (Equivale alla tua POST)
+     *
+     * Restituisce sempre una Response (mai false/null): il chiamante può
+     * controllare uniformemente ->successful()/->status()/->body() senza
+     * doversi ricordare di guardia extra sul valore di ritorno — prima, un
+     * fallimento nel recupero del token restituiva `false`, che mandava in
+     * errore fatale i chiamanti che invocavano ->status() direttamente
+     * (es. coge:sync-monthly) senza controllarlo prima.
      */
-    public function inviaPrimaNota(array $documenti)
+    public function inviaPrimaNota(array $documenti): Response
     {
         $token = $this->getToken();
 
-        if (!$token)
-            return false;
+        if (! $token) {
+            throw new RuntimeException('Impossibile recuperare il token OAuth2 di Business Central: verificare le credenziali in services.business_central.');
+        }
 
-        $env = env('BC_ENVIRONMENT');
-        $companyId = env('BC_COMPANY_ID');
+        $env = config('services.business_central.environment');
+        $companyId = config('services.business_central.company_id');
         $url = null;
         // $url = env('COGE_URL_POST');
         // https://api.businesscentral.dynamics.com/v2.0/85a25e3b-9459-45eb-b9c9-1dc26caf2edf/Production /ODataV4/ANCWS_SendExtCoge?Company=be36b58a-e198-ed11-bff5-000d3ab8edc9
-        if (!$url) {
+        if (! $url) {
             $url = "https://api.businesscentral.dynamics.com/v2.0/{$this->tenantId}/{$env}/ODataV4/ANCWS_SendExtCoge";
 
             $payload = [
-                'docs' => json_encode(['docs' => $documenti])
+                'docs' => json_encode(['docs' => $documenti]),
             ];
             Log::debug('URL costruito:', ['url' => $url]);
             Log::debug('Payload inviato (URL costruito):', $payload);
@@ -73,7 +87,7 @@ class BusinessCentralService
 
         // Costruiamo il body esattamente come nel tuo file JSON
         $payload = [
-            'docs' => json_encode(['docs' => $documenti])
+            'docs' => json_encode(['docs' => $documenti]),
         ];
 
         Log::debug('Payload inviato (URL diretto):', $payload);
