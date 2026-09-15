@@ -17,7 +17,8 @@ class SyncPrimenoteEntry2Coge extends Command
      */
     protected $signature = 'coge:sync-primenote
         {--limit=200 : Numero massimo di voci di prima nota da sincronizzare in questa esecuzione}
-        {--id= : Sincronizza solo la voce con questo ID, ignorando --limit}';
+        {--id= : Sincronizza solo la voce con questo ID, ignorando --limit}
+        {--ids= : Sincronizza solo le voci con questi ID (separati da virgola), ignorando --limit e --id}';
 
     /**
      * The console command description.
@@ -46,7 +47,10 @@ class SyncPrimenoteEntry2Coge extends Command
             ->with('config')
             ->orderBy('data');
 
-        if ($id = $this->option('id')) {
+        if ($ids = $this->option('ids')) {
+            $idList = array_values(array_filter(array_map('trim', explode(',', $ids)), fn (string $value) => $value !== ''));
+            $entries = $query->whereIn('id', $idList)->get();
+        } elseif ($id = $this->option('id')) {
             $entries = $query->where('id', $id)->get();
         } else {
             $entries = $query->limit((int) $this->option('limit'))->get();
@@ -65,7 +69,7 @@ class SyncPrimenoteEntry2Coge extends Command
 
         foreach ($entries as $entry) {
             $documentNo = 'PRIMANOTA-'.$entry->id;
-            $description = $entry->config?->event_label ?? 'Prima Nota';
+            $description = $entry->config?->name ?? 'Prima Nota';
             $amount = (float) $entry->importo;
 
             $innerDocs[] = [

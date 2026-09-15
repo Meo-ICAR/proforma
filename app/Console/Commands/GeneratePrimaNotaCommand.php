@@ -22,9 +22,14 @@ class GeneratePrimaNotaCommand extends Command
             $dateField = $config->date_field;
 
             $query = $modelClass::query()
-                // 1. Campo valore presente e > 0
+                // 1. Campo valore presente e con il segno richiesto dalla regola:
+                // is_positive = true -> solo > 0, false -> solo < 0, null -> qualsiasi segno (comunque escluso lo zero).
                 ->whereNotNull($valueField)
-                ->where($valueField, '>', 0)
+                ->when(
+                    $config->is_positive === null,
+                    fn ($q) => $q->where($valueField, '!=', 0),
+                    fn ($q) => $q->where($valueField, $config->is_positive ? '>' : '<', 0)
+                )
 
                 // 2. Ignora il regresso: considera solo record creati/modificati da effective_from in poi
                 ->when($config->effective_from, function ($q) use ($config) {

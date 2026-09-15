@@ -2,34 +2,17 @@
 
 namespace App\Filament\Resources\Clients\Tables;
 
+use App\Filament\Resources\PrimaNotaEntries\PrimaNotaEntryResource;
 use App\Models\Client;
 use App\Models\ClientType;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ImportAction;
-use Filament\Actions\ViewAction;
-use Filament\Notifications\Notification;
-use Filament\QueryBuilder\Constraints\RelationshipConstraint\Operators\IsRelatedToOperator;
-use Filament\QueryBuilder\Constraints\BooleanConstraint;
-use Filament\QueryBuilder\Constraints\DateConstraint;
-use Filament\QueryBuilder\Constraints\NumberConstraint;
-use Filament\QueryBuilder\Constraints\RelationshipConstraint;
-use Filament\QueryBuilder\Constraints\SelectConstraint;
-use Filament\QueryBuilder\Constraints\TextConstraint;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Enums\RecordActionsPosition;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\QueryBuilder;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Str;
-use Maatwebsite\Excel\Excel;
 
 class ConsulentiTable
 {
@@ -77,9 +60,9 @@ class ConsulentiTable
                     ->boolean()
                     ->trueIcon('heroicon-s-shield-check')
                     ->falseIcon('heroicon-o-shield-check')
-                    ->color(fn($state) => $state ? 'success' : 'warning')
-                    ->tooltip(fn($record) => $record->privacy_policy_read_at
-                        ? 'Privacy sottoscritta: ' . $record->privacy_policy_read_at->format('d/m/Y')
+                    ->color(fn ($state) => $state ? 'success' : 'warning')
+                    ->tooltip(fn ($record) => $record->privacy_policy_read_at
+                        ? 'Privacy sottoscritta: '.$record->privacy_policy_read_at->format('d/m/Y')
                         : 'Privacy da firmare'),
             ])
             ->filters([
@@ -96,6 +79,14 @@ class ConsulentiTable
                 // Filtro per Privacy
                 TernaryFilter::make('privacy_consent')
                     ->label('Nomina Privacy'),
+            ])
+            ->recordActions([
+                Action::make('primanota')
+                    ->label('Contabile')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->url(fn ($record) => PrimaNotaEntryResource::getUrl('index').'?filters[client_id][value]='.$record->id)
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 //  BulkActionGroup::make([

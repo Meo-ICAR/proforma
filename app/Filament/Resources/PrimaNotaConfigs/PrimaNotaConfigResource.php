@@ -29,7 +29,7 @@ class PrimaNotaConfigResource extends Resource
 
     protected static UnitEnum|string|null $navigationGroup = 'Settings';
 
-    protected static ?string $recordTitleAttribute = 'event_label';
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {

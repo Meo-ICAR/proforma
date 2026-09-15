@@ -418,10 +418,12 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
   <p>
     <span class="file">app/Console/Commands/GeneratePrimaNotaCommand.php</span> (<code>primanota:generate</code>,
     schedulato ogni sera alle 20:00) è completamente guidato dalla configurazione, senza logica hardcoded per
-    modello: per ogni riga attiva di <code>PrimaNotaConfig</code> (<code>event_label</code>,
-    <code>model_type</code> come FQCN, <code>value_field</code>, <code>date_field</code>, <code>conto_dare</code>,
-    <code>conto_avere</code>, <code>effective_from</code>) interroga dinamicamente
-    <code>$config->model_type::query()</code> per i record con <code>value_field &gt; 0</code>, filtrando
+    modello: per ogni riga attiva di <code>PrimaNotaConfig</code> (<code>name</code>,
+    <code>model_type</code> come FQCN, <code>value_field</code>, <code>is_positive</code>, <code>date_field</code>,
+    <code>conto_dare</code>, <code>conto_avere</code>, <code>effective_from</code>) interroga dinamicamente
+    <code>$config->model_type::query()</code> per i record con <code>value_field</code> valorizzato e con il segno
+    richiesto da <code>is_positive</code> (<code>true</code> → solo <code>&gt; 0</code>, <code>false</code> → solo
+    <code>&lt; 0</code>, <code>null</code> → qualsiasi segno, escluso comunque lo zero), filtrando
     opzionalmente su <code>date_field &lt;= oggi</code> e <code>updated_at &gt;= effective_from</code>. Crea una
     <code>PrimaNotaEntry</code> solo se non ne esiste già una per quel record+config
     (<code>whereDoesntHave('primaNotaEntries', ...)</code>), copiando <code>conto_dare</code>/<code>conto_avere</code>

@@ -25,7 +25,7 @@ class PrimaNotaEntryForm
             ->components([
                 Select::make('prima_nota_config_id')
                     ->label('Regola')
-                    ->relationship('config', 'event_label')
+                    ->relationship('config', 'name')
                     ->searchable()
                     ->preload()
                     ->live()

@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Clientis\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\PrimaNotaEntries\PrimaNotaEntryResource;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -10,13 +12,11 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Support\Htmlable;  // CORRETTO
+// CORRETTO
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\HtmlString;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 
 class ClientisTable
@@ -64,9 +64,9 @@ class ClientisTable
                     ->trueLabel('Con Partita IVA')
                     ->falseLabel('Senza Partita IVA')
                     ->queries(
-                        true: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('is_active', true))->whereNotNull('piva')->where('piva', '!=', ''),
-                        false: fn(Builder $query) => $query->where(fn(Builder $query) => $query->where('is_active', true))->whereNull('piva')->orWhere('piva', ''),
-                        blank: fn(Builder $query) => $query,
+                        true: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('is_active', true))->whereNotNull('piva')->where('piva', '!=', ''),
+                        false: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('is_active', true))->whereNull('piva')->orWhere('piva', ''),
+                        blank: fn (Builder $query) => $query,
                     ),
                 TernaryFilter::make('is_dummy')
                     ->label('Fittizia')
@@ -82,6 +82,12 @@ class ClientisTable
             ])
             ->recordActions([
                 EditAction::make(),
+                Action::make('primanota')
+                    ->label('Contabile')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->url(fn ($record) => PrimaNotaEntryResource::getUrl('index').'?filters[clienti_id][value]='.$record->id)
+                    ->openUrlInNewTab(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

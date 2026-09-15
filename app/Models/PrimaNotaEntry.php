@@ -46,4 +46,23 @@ class PrimaNotaEntry extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Quando il record collegato è un Proforma, risolve la controparte
+     * effettivamente valorizzata su di esso: fornitore (agente, via
+     * fornitori_id), cliente (istituto/mandante, tabella Clienti, via lo
+     * stesso fornitori_id) o client (cliente/consulente, tabella clients,
+     * via client_id). Le tre relazioni sono mutuamente esclusive nella
+     * pratica: solo una delle tre risulta valorizzata per un dato proforma.
+     * Restituisce null se il record collegato non è un Proforma o se
+     * nessuna delle tre controparti risulta impostata.
+     */
+    public function proformaControparte(): Fornitore|Clienti|Client|null
+    {
+        if (! $this->record instanceof Proforma) {
+            return null;
+        }
+
+        return $this->record->fornitore ?? $this->record->cliente ?? $this->record->client;
+    }
 }

@@ -20,33 +20,31 @@ class PrimaNotaConfigsTable
     {
         return $table
             ->columns([
-                TextColumn::make('event_label')
-                    ->label('Etichetta evento')
+                TextColumn::make('name')
+                    ->label('Nome')
                     ->searchable()
                     ->sortable(),
-
-                TextColumn::make('model_type')
-                    ->label('Modello')
-                    ->formatStateUsing(fn (string $state) => PrimaNotaConfigForm::MODEL_OPTIONS[$state] ?? class_basename($state))
-                    ->badge()
-                    ->sortable(),
-
-                TextColumn::make('value_field')
-                    ->label('Campo valore'),
-
-                TextColumn::make('date_field')
-                    ->label('Campo data')
-                    ->placeholder('—'),
 
                 TextColumn::make('conto_dare')
                     ->label('Conto Dare'),
 
+                TextColumn::make('conto_dare_description')
+                    ->label('Descrizione Conto Dare')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('conto_avere')
                     ->label('Conto Avere'),
 
-                TextColumn::make('effective_from')
-                    ->label('Attiva da')
-                    ->date()
+                TextColumn::make('conto_avere_description')
+                    ->label('Descrizione Conto Avere')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                TextColumn::make('entries_count')
+                    ->label('N. Primenote')
+                    ->badge()
+                    ->counts('entries')
                     ->sortable(),
 
                 IconColumn::make('is_active')
@@ -54,10 +52,38 @@ class PrimaNotaConfigsTable
                     ->boolean()
                     ->sortable(),
 
-                TextColumn::make('entries_count')
-                    ->label('Voci generate')
-                    ->counts('entries')
+                TextColumn::make('effective_from')
+                    ->label('Attiva da')
+                    ->date()
                     ->sortable(),
+
+                TextColumn::make('model_type')
+                    ->label('Tabella')
+                    ->formatStateUsing(fn (string $state) => PrimaNotaConfigForm::MODEL_OPTIONS[$state] ?? class_basename($state))
+                    ->badge()
+                    ->sortable(),
+
+                TextColumn::make('value_field')
+                    ->label('Campo valore'),
+
+                TextColumn::make('is_positive')
+                    ->label('Segno')
+                    ->formatStateUsing(fn (?bool $state) => match ($state) {
+                        true => 'Solo positivi',
+                        false => 'Solo negativi',
+                        null => 'Qualsiasi',
+                    })
+                    ->badge()
+                    ->color(fn (?bool $state) => match ($state) {
+                        true => 'success',
+                        false => 'danger',
+                        null => 'gray',
+                    }),
+
+                TextColumn::make('date_field')
+                    ->label('Campo data')
+                    ->placeholder('—'),
+
             ])
             ->filters([
                 SelectFilter::make('model_type')

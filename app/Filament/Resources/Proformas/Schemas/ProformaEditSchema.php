@@ -21,11 +21,26 @@ class ProformaEditSchema
                     ->label('Causale')
                     ->options([
                         'Anticipo Provvigionale' => 'Anticipo Provvigionale',
-                        'Welcome Bonus' => 'Welcome Bonus',
-                        'Recupero Costi' => 'Recupero Costi',
+
                     ])
                     ->default('Anticipo Provvigionale')
                     ->required(),
+
+                TextInput::make('welcome')
+                    ->label('Welcome bonus')
+                    ->numeric()
+                    ->prefix('€'),
+                TextInput::make('welcome_description')
+                    ->label('Causale welcome bonus')
+                    ->maxLength(255),
+
+                TextInput::make('spese')
+                    ->label('Spese')
+                    ->numeric()
+                    ->prefix('€'),
+                TextInput::make('spese_description')
+                    ->label('Causale spese')
+                    ->maxLength(255),
 
                 Textarea::make('annotation')
                     ->label('Commenti')

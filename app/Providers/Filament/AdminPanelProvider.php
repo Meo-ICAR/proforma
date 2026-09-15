@@ -59,7 +59,7 @@ class AdminPanelProvider extends PanelProvider
                     ->sort(99), // Opzionale: posizionalo in fondo al menu
                 NavigationItem::make('Manuale Contabile')
                     ->url(fn (): string => route('manuale-contabile'), shouldOpenInNewTab: true)
-                    ->icon('heroicon-o-document-arrow-line')
+                    ->icon('heroicon-o-document-arrow-down')
                     ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
                     ->sort(99), // Opzionale: posizionalo in fondo al menu
                 NavigationItem::make('Manuale tecnico')

@@ -28,12 +28,17 @@ class Proforma extends Model
     protected $fillable = [
         'stato',
         'fornitori_id',
+        'client_id',
         'anticipo',
         'anticipo_descrizione',
         'compenso',
         'compenso_descrizione',
         'contributo',
         'contributo_descrizione',
+        'welcome',
+        'welcome_description',
+        'spese',
+        'spese_description',
         'annotation',
         'emailsubject',
         'emailto',
@@ -61,6 +66,8 @@ class Proforma extends Model
         'anticipo_residuo' => 'decimal:2',
         'compenso' => 'decimal:2',
         'contributo' => 'decimal:2',
+        'welcome' => 'decimal:2',
+        'spese' => 'decimal:2',
         'delta' => 'decimal:2',
         'sended_at' => 'datetime',
         'paid_at' => 'datetime',
@@ -86,6 +93,14 @@ class Proforma extends Model
     public function cliente()
     {
         return $this->belongsTo(Clienti::class, 'fornitori_id');
+    }
+
+    /**
+     * Get the client/consulente (clients table) that owns the proforma, when applicable.
+     */
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
     }
 
     /**
@@ -128,6 +143,21 @@ class Proforma extends Model
                 'stato' => 'Inserito',
                 'proforma_id' => null,
             ]);
+        });
+
+        // Garantisce che vat_number sia sempre valorizzato dalla P.IVA della
+        // controparte effettiva, qualunque sia il punto di creazione: non ci
+        // si affida al fatto che ogni singolo call site (createFromFornitore,
+        // createFromIstitutoFinanziario, azioni Filament, ecc.) lo imposti
+        // esplicitamente. Non sovrascrive un vat_number passato esplicitamente.
+        static::creating(function (Proforma $proforma) {
+            if (filled($proforma->vat_number)) {
+                return;
+            }
+
+            $proforma->vat_number = $proforma->fornitore?->piva
+                ?? $proforma->cliente?->piva
+                ?? $proforma->client?->vat_number;
         });
     }
 

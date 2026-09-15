@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Fornitores\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\PrimaNotaEntries\PrimaNotaEntryResource;
+use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -107,6 +109,12 @@ class FornitoresTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                Action::make('primanota')
+                    ->label('Contabile')
+                    ->icon('heroicon-o-document-text')
+                    ->color('gray')
+                    ->url(fn ($record) => PrimaNotaEntryResource::getUrl('index').'?filters[fornitore_id][value]='.$record->id)
+                    ->openUrlInNewTab(),
             ])
             ->headerActions([
                 ExportAction::make()

@@ -8,12 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PrimaNotaConfig extends Model
 {
     protected $fillable = [
-        'event_label',
+        'name',
         'model_type',
         'value_field',
+        'is_positive',
         'date_field',
         'conto_dare',
+        'conto_dare_description',
         'conto_avere',
+        'conto_avere_description',
         'effective_from',
         'is_active',
     ];
@@ -23,6 +26,7 @@ class PrimaNotaConfig extends Model
         return [
             'effective_from' => 'date',
             'is_active' => 'boolean',
+            'is_positive' => 'boolean',
         ];
     }
 

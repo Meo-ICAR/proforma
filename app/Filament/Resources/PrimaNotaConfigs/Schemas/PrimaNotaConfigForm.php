@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\PrimaNotaConfigs\Schemas;
 
+use App\Models\Clienti;
 use App\Models\Fornitore;
 use App\Models\Pratica;
+use App\Models\Proforma;
 use App\Models\Provvigione;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -19,9 +21,12 @@ class PrimaNotaConfigForm
      * @var array<string, string>
      */
     public const MODEL_OPTIONS = [
-        Pratica::class => 'Pratica',
-        Provvigione::class => 'Provvigione',
         Fornitore::class => 'Fornitore',
+        Clienti::class => 'Istituto',
+        Pratica::class => 'Pratica',
+        Proforma::class => 'Proforma',
+        Provvigione::class => 'Provvigione',
+
     ];
 
     /**
@@ -36,34 +41,22 @@ class PrimaNotaConfigForm
 
     public static function configure(Schema $schema): Schema
     {
+
         return $schema
+            ->columns(3)
             ->components([
-                TextInput::make('event_label')
-                    ->label('Etichetta evento')
+                TextInput::make('name')
+                    ->label('Nome')
                     ->required()
                     ->maxLength(255),
-
-                Select::make('model_type')
-                    ->label('Modello di origine')
-                    ->options(self::MODEL_OPTIONS)
-                    ->required()
-                    ->live(),
-
-                Select::make('value_field')
-                    ->label('Campo valore')
-                    ->options(fn (Get $get) => self::columnOptions($get('model_type'), self::AMOUNT_TYPES))
-                    ->required()
-                    ->disabled(fn (Get $get) => ! $get('model_type')),
-
-                Select::make('date_field')
-                    ->label('Campo data evento')
-                    ->helperText('Opzionale: se impostato, la prima nota viene generata solo dopo questa data.')
-                    ->options(fn (Get $get) => self::columnOptions($get('model_type'), self::DATE_TYPES))
-                    ->disabled(fn (Get $get) => ! $get('model_type')),
 
                 TextInput::make('conto_dare')
                     ->label('Conto Dare')
                     ->required()
+                    ->maxLength(255),
+
+                TextInput::make('conto_dare_description')
+                    ->label('Descrizione Conto Dare')
                     ->maxLength(255),
 
                 TextInput::make('conto_avere')
@@ -71,6 +64,39 @@ class PrimaNotaConfigForm
                     ->required()
                     ->maxLength(255),
 
+                TextInput::make('conto_avere_description')
+                    ->label('Descrizione Conto Avere')
+                    ->maxLength(255),
+
+                Select::make('model_type')
+                    ->label('Tabella origine')
+                    ->helperText('Quale tabella usare per generare la prima nota')
+                    ->options(self::MODEL_OPTIONS)
+                    ->required()
+                    ->live(),
+
+                Select::make('value_field')
+                    ->label('Campo importo')
+                    ->helperText('Quale valore prendere per la prima nota')
+
+                    ->options(fn (Get $get) => self::columnOptions($get('model_type'), self::AMOUNT_TYPES))
+                    ->required()
+                    ->disabled(fn (Get $get) => ! $get('model_type')),
+
+                Select::make('is_positive')
+                    ->label('Segno importo')
+                    ->helperText('Filtra le righe da considerare in base al segno dello stesso campo valore. Lasciare vuoto per non filtrare per segno (comunque esclusi gli importi a zero).')
+                    ->options([
+                        1 => 'Solo importi positivi (> 0)',
+                        0 => 'Solo importi negativi (< 0)',
+                    ])
+                    ->placeholder('Qualsiasi segno'),
+
+                Select::make('date_field')
+                    ->label('Campo data evento')
+                    ->helperText('Opzionale: la prima nota viene generata solo se valorizzata questa data.')
+                    ->options(fn (Get $get) => self::columnOptions($get('model_type'), self::DATE_TYPES))
+                    ->disabled(fn (Get $get) => ! $get('model_type')),
                 DatePicker::make('effective_from')
                     ->label('Attiva da')
                     ->helperText('Ignora i record aggiornati prima di questa data.'),
@@ -78,6 +104,7 @@ class PrimaNotaConfigForm
                 Toggle::make('is_active')
                     ->label('Attiva')
                     ->default(true),
+
             ]);
     }
 

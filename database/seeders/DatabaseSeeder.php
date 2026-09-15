@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             FornitoriRoleSeeder::class,
             EnasarcoSeeder::class,
             FirrSeeder::class,
+            PrimaNotaConfigSeeder::class,
         ]);
 
         // User::factory(10)->create();
