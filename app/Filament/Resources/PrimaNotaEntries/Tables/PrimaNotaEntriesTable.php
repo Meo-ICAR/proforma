@@ -3,12 +3,20 @@
 namespace App\Filament\Resources\PrimaNotaEntries\Tables;
 
 use App\Filament\Exports\DynamicGroupExport;
+use App\Filament\Resources\Clientis\ClientiResource;
+use App\Filament\Resources\Clients\ClientResource;
+use App\Filament\Resources\Fornitores\FornitoreResource;
+use App\Filament\Resources\Praticas\PraticaResource;
 use App\Filament\Resources\PrimaNotaConfigs\Schemas\PrimaNotaConfigForm;
+use App\Filament\Resources\Proformas\ProformaResource;
+use App\Filament\Resources\Provvigiones\ProvvigioneResource;
 use App\Models\Client;
 use App\Models\Clienti;
 use App\Models\Fornitore;
+use App\Models\Pratica;
 use App\Models\PrimaNotaEntry;
 use App\Models\Proforma;
+use App\Models\Provvigione;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -16,6 +24,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
@@ -25,6 +34,8 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Log;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
@@ -35,35 +46,63 @@ class PrimaNotaEntriesTable
     {
         return $table
             ->defaultSort('data', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with([
+                'config',
+                'record' => fn (MorphTo $morphTo) => $morphTo->morphWith([
+                    Proforma::class => ['fornitore', 'cliente', 'client'],
+                ]),
+            ]))
             ->columns([
                 TextColumn::make('data')
                     ->label('Data')
                     ->date()
-                    ->sortable(),
-
-                TextColumn::make('conto_dare')
-                    ->label('Conto Dare'),
-
-                TextColumn::make('conto_avere')
-                    ->label('Conto Avere'),
-
-                TextColumn::make('config.name')
-                    ->label('Regola')
-                    ->searchable()
+                    ->weight(FontWeight::SemiBold)
                     ->sortable(),
 
                 TextColumn::make('importo')
                     ->label('Importo')
                     ->money('EUR')
+                    ->weight(FontWeight::SemiBold)
+                    ->color(fn (PrimaNotaEntry $record) => $record->importo < 0 ? 'danger' : 'success')
+                    ->alignEnd()
                     ->sortable(),
+
+                TextColumn::make('conto_dare')
+                    ->label('Conto Dare')
+                    ->badge()
+                    ->color('danger'),
+
+                TextColumn::make('conto_avere')
+                    ->label('Conto Avere')
+                    ->badge()
+                    ->color('success'),
 
                 TextColumn::make('record_type')
                     ->label('Origine')
                     ->formatStateUsing(fn (?string $state) => $state ? (PrimaNotaConfigForm::MODEL_OPTIONS[$state] ?? class_basename($state)) : '—')
+                    ->description(fn (PrimaNotaEntry $record) => $record->record_id ? "ID: {$record->record_id}" : null)
                     ->badge(),
 
-                TextColumn::make('record_id')
-                    ->label('ID origine'),
+                TextColumn::make('record_name')
+                    ->label('Nome')
+                    ->getStateUsing(fn (PrimaNotaEntry $record) => self::resolveRecordName($record->record))
+                    ->url(fn (PrimaNotaEntry $record) => self::resolveRecordUrl($record->record))
+                    ->openUrlInNewTab()
+                    ->weight(FontWeight::Medium)
+                    ->searchable()
+                    ->placeholder('—'),
+
+                TextColumn::make('controparte')
+                    ->label('Controparte (Proforma)')
+                    ->getStateUsing(fn (PrimaNotaEntry $record) => $record->proformaControparte()?->name)
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                TextColumn::make('config.name')
+                    ->label('Regola')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
 
                 ToggleColumn::make('is_active')
                     ->label('Attiva')
@@ -75,6 +114,10 @@ class PrimaNotaEntriesTable
                     ->tooltip(fn (PrimaNotaEntry $record) => $record->synced_at
                         ? 'Inviata il '.$record->synced_at->format('d/m/Y H:i')
                         : ($record->sync_error ?: 'Non ancora inviata')),
+
+                TextColumn::make('record_id')
+                    ->label('ID origine')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
                     ->label('Generata il')
@@ -306,5 +349,38 @@ class PrimaNotaEntriesTable
                         }),
                 ]),
             ]);
+    }
+
+    /**
+     * Risolve un'etichetta leggibile per il record polimorfico collegato,
+     * qualunque sia il modello (uno dei PrimaNotaConfigForm::MODEL_OPTIONS).
+     */
+    protected static function resolveRecordName(?Model $record): ?string
+    {
+        return match (true) {
+            $record === null => null,
+            $record instanceof Fornitore, $record instanceof Clienti, $record instanceof Client => $record->name,
+            $record instanceof Proforma => $record->emailsubject,
+            $record instanceof Pratica => $record->codice_pratica,
+            $record instanceof Provvigione => $record->descrizione,
+            default => null,
+        };
+    }
+
+    /**
+     * Risolve l'URL della pagina Filament (view se disponibile, altrimenti edit)
+     * del record polimorfico collegato, per rendere cliccabile la colonna "Nome".
+     */
+    protected static function resolveRecordUrl(?Model $record): ?string
+    {
+        return match (true) {
+            $record instanceof Fornitore => FornitoreResource::getUrl('view', ['record' => $record]),
+            $record instanceof Clienti => ClientiResource::getUrl('edit', ['record' => $record]),
+            $record instanceof Client => ClientResource::getUrl('edit', ['record' => $record]),
+            $record instanceof Proforma => ProformaResource::getUrl('edit', ['record' => $record]),
+            $record instanceof Pratica => PraticaResource::getUrl('view', ['record' => $record]),
+            $record instanceof Provvigione => ProvvigioneResource::getUrl('view', ['record' => $record]),
+            default => null,
+        };
     }
 }

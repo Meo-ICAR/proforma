@@ -79,7 +79,7 @@ class Proforma extends Model
     public function getTotaleAttribute()
     {
         return $this->compenso + $this->anticipo + $this->contributo
-            + $this->delta;
+            + $this->welcome + $this->spese + $this->delta;
     }
 
     /**
@@ -407,6 +407,16 @@ class Proforma extends Model
             if ($this->contributo != 0) {
                 $message .= $cr.$this->contributo_descrizione.': €'.number_format($this->contributo, 2);
                 $somma += $this->contributo;
+            }
+
+            if ($this->welcome != 0) {
+                $message .= $cr.$this->welcome_description.': €'.number_format($this->welcome, 2);
+                $somma += $this->welcome;
+            }
+
+            if ($this->spese != 0) {
+                $message .= $cr.$this->spese_description.': €'.number_format($this->spese, 2);
+                $somma += $this->spese;
             }
 
             $message .= $cr.'TOTALE LORDO € '.number_format($somma, 2);

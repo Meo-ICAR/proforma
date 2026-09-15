@@ -42,6 +42,14 @@ class ProformasTable
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->alignEnd()
                     ->sortable(),
+                TextColumn::make('welcome')
+                    ->summarize(Sum::make()->money('EUR')->label(''))
+                    ->alignEnd()
+                    ->sortable(),
+                TextColumn::make('spese')
+                    ->summarize(Sum::make()->money('EUR')->label(''))
+                    ->alignEnd()
+                    ->sortable(),
                 TextColumn::make('anticipo')
                     ->summarize(Sum::make()->money('EUR')->label(''))
                     ->alignEnd()
@@ -133,7 +141,7 @@ class ProformasTable
                     ->exports([
                         DynamicGroupExport::make()
                             ->groupBy('emailsubject')  // Campo per il raggruppamento
-                            ->sumColumns(['compenso', 'contributo', 'anticipo', 'delta']),  // Campi da sommare
+                            ->sumColumns(['compenso', 'contributo', 'welcome', 'spese', 'anticipo', 'delta']),  // Campi da sommare
                     ])
                     ->label('Excel')
                     ->color('success'),

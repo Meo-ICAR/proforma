@@ -29,7 +29,7 @@ class ProformaForm
                                         // Se il valore è positivo o negativo
                                         return $state > 0
                                             ? 'Recupero mensile Anticipo ( 0 = tutto il residuo)'
-                                            : 'Anticipo erogato ( il negativo indica erogazione)';
+                                            : 'Anticipo erogato ( il negativo indica trattenuta)';
                                     })
                                     ->numeric()
                                     ->prefix('€'),
@@ -42,38 +42,38 @@ class ProformaForm
                                     ->dehydrated(false)
                                     ->prefix('€'),
                                 TextInput::make('compenso')
-                                    ->label('Totale provvigioni')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                    ->label('Totale compenso provvigionale')
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->disabled()
                                     ->prefix('€'),
                                 Textarea::make('compenso_descrizione')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->columnSpanFull(),
                                 TextInput::make('contributo')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->prefix('€'),
                                 TextInput::make('contributo_descrizione')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->maxLength(255),
                                 TextInput::make('welcome')
                                     ->label('Welcome bonus')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->prefix('€'),
                                 TextInput::make('welcome_description')
                                     ->label('Causale welcome bonus')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->maxLength(255),
                                 TextInput::make('spese')
                                     ->label('Spese')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                 //   ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->numeric()
                                     ->prefix('€'),
                                 TextInput::make('spese_description')
                                     ->label('Causale spese')
-                                    ->hidden(fn (callable $get) => $get('anticipo') < 0)
+                                //    ->hidden(fn (callable $get) => $get('anticipo') < 0)
                                     ->maxLength(255),
                                 Textarea::make('annotation')
                                     ->label('Eventuali ns. note aggiuntve nella email')

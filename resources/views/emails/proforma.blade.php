@@ -71,6 +71,18 @@
                         <td>€ {{ number_format($proforma->contributo, 2, ',', '.') }}</td>
                     </tr>
                     @endif
+                    @if($proforma->welcome <> 0)
+                    <tr>
+                        <td colspan="3" style="text-align: right;">{{ $proforma->welcome_description }}:</td>
+                        <td>€ {{ number_format($proforma->welcome, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    @if($proforma->spese <> 0)
+                    <tr>
+                        <td colspan="3" style="text-align: right;">{{ $proforma->spese_description }}:</td>
+                        <td>€ {{ number_format($proforma->spese, 2, ',', '.') }}</td>
+                    </tr>
+                    @endif
                     <tr class="total">
                         <td colspan="3" style="text-align: right;">TOTALE LORDO:</td>
                         <td>€ {{ number_format($somma, 2, ',', '.') }}</td>
