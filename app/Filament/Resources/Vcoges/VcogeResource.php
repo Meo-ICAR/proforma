@@ -6,6 +6,7 @@ use App\Filament\Resources\Vcoges\Pages\ListVcoges;
 use App\Filament\Resources\Vcoges\Schemas\VcogeForm;
 use App\Filament\Resources\Vcoges\Schemas\VcogeInfolist;
 use App\Filament\Resources\Vcoges\Tables\VcogesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Vcoge;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class VcogeResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Vcoge::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartBar;

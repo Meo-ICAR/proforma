@@ -7,6 +7,7 @@ use App\Filament\Resources\Fatturas\Pages\EditFattura;
 use App\Filament\Resources\Fatturas\Pages\ListFatturas;
 use App\Filament\Resources\Fatturas\Schemas\FatturaForm;
 use App\Filament\Resources\Fatturas\Tables\FatturasTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Fattura;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class FatturaResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Fattura::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;

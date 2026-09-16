@@ -7,6 +7,7 @@ use App\Filament\Resources\ClientTypes\Pages\EditClientType;
 use App\Filament\Resources\ClientTypes\Pages\ListClientTypes;
 use App\Filament\Resources\ClientTypes\Schemas\ClientTypeForm;
 use App\Filament\Resources\ClientTypes\Tables\ClientTypesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\ClientType;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class ClientTypeResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = ClientType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;

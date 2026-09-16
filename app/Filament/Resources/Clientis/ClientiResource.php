@@ -7,6 +7,7 @@ use App\Filament\Resources\Clientis\Pages\EditClienti;
 use App\Filament\Resources\Clientis\Pages\ListClientis;
 use App\Filament\Resources\Clientis\Schemas\ClientiForm;
 use App\Filament\Resources\Clientis\Tables\ClientisTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Clienti;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -21,6 +22,8 @@ use UnitEnum;
 
 class ClientiResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Clienti::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;

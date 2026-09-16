@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\PurchaseInvoices\RelationManagers;
 
+use App\Filament\Traits\HasRelationPlanAccess;
 use App\Models\Proforma;
+use App\Models\PurchaseInvoice;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DissociateBulkAction;
@@ -23,6 +25,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ProformasAfterRegistrationRelationManager extends RelationManager
 {
+    use HasRelationPlanAccess;
+
     protected static string $relationship = 'proformasAfterRegistration';
 
     public function form(Schema $schema): Schema
@@ -205,8 +209,8 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
 
                 // Se la fattura è già riconciliata mostra solo le proforma ad essa abbinate
                 if ($purchaseInvoice->closed) {
-                    $query->where('invoiceable_type', \App\Models\PurchaseInvoice::class)
-                          ->where('invoiceable_id', $purchaseInvoice->id);
+                    $query->where('invoiceable_type', PurchaseInvoice::class)
+                        ->where('invoiceable_id', $purchaseInvoice->id);
                 }
             });
     }

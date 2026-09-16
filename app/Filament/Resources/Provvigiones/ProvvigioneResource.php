@@ -8,6 +8,7 @@ use App\Filament\Resources\Provvigiones\Pages\ListProvvigioniAttive;
 use App\Filament\Resources\Provvigiones\Pages\ViewProvvigione;
 use App\Filament\Resources\Provvigiones\Schemas\ProvvigioneForm;
 use App\Filament\Resources\Provvigiones\Tables\ProvvigionesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Provvigione;
 use BackedEnum;  // Add this import at the top
 use Filament\Navigation\NavigationItem;
@@ -23,6 +24,8 @@ use UnitEnum;
 
 class ProvvigioneResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Provvigione::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBanknotes;

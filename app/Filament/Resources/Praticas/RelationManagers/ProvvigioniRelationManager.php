@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Praticas\RelationManagers;
 
+use App\Filament\Traits\HasRelationPlanAccess;
 use App\Models\Provvigione;
 // use Filament\Actions\Action;
 use Filament\Actions\Action;
@@ -18,6 +19,8 @@ use Filament\Tables\Table;
 
 class ProvvigioniRelationManager extends RelationManager
 {
+    use HasRelationPlanAccess;
+
     protected static string $relationship = 'provvigioni';
 
     public function form(Schema $schema): Schema

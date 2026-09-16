@@ -9,6 +9,7 @@ use App\Filament\Resources\Companies\Pages\ViewCompany;
 use App\Filament\Resources\Companies\Schemas\CompanyForm;
 use App\Filament\Resources\Companies\Schemas\CompanyInfolist;
 use App\Filament\Resources\Companies\Tables\CompaniesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Company;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -21,6 +22,8 @@ use UnitEnum;
 
 class CompanyResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Company::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;

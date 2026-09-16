@@ -7,6 +7,7 @@ use App\Filament\Resources\Firrs\Pages\EditFirr;
 use App\Filament\Resources\Firrs\Pages\ListFirrs;
 use App\Filament\Resources\Firrs\Schemas\FirrForm;
 use App\Filament\Resources\Firrs\Tables\FirrsTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Firr;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class FirrResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Firr::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPercentBadge;

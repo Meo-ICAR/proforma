@@ -6,6 +6,7 @@ use App\Filament\Resources\InvoiceIns\Pages\EditInvoiceIn;
 use App\Filament\Resources\InvoiceIns\Pages\ListInvoiceIns;
 use App\Filament\Resources\InvoiceIns\Schemas\InvoiceInForm;
 use App\Filament\Resources\InvoiceIns\Tables\InvoiceInsTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\InvoiceIn;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -16,6 +17,8 @@ use UnitEnum;
 
 class InvoiceInResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = InvoiceIn::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowDownOnSquareStack;

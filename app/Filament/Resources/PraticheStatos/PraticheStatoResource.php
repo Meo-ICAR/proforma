@@ -9,6 +9,7 @@ use App\Filament\Resources\PraticheStatos\Pages\ViewPraticheStato;
 use App\Filament\Resources\PraticheStatos\Schemas\PraticheStatoForm;
 use App\Filament\Resources\PraticheStatos\Schemas\PraticheStatoInfolist;
 use App\Filament\Resources\PraticheStatos\Tables\PraticheStatosTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\PraticheStato;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class PraticheStatoResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = PraticheStato::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;

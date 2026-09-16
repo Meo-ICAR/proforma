@@ -8,6 +8,7 @@ use App\Filament\Resources\Proformas\Pages\ListProformas;
 use App\Filament\Resources\Proformas\RelationManagers\ProvvigioniRelationManager;
 use App\Filament\Resources\Proformas\Schemas\ProformaForm;
 use App\Filament\Resources\Proformas\Tables\ProformasTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Proforma;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -67,6 +68,8 @@ use UnitEnum;
 
 class ProformaResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Proforma::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPaperAirplane;

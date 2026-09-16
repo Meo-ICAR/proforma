@@ -3,16 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Filament\Notifications\Notification;
+use Database\Factories\UserFactory;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     public function sendPasswordResetNotification($token): void
@@ -25,10 +26,10 @@ class User extends Authenticatable
         ]);
 
         // 2. Usiamo la classe di notifica di Laravel, ma passando l'URL creato da noi
-        $notification = new \Illuminate\Auth\Notifications\ResetPassword($token);
+        $notification = new ResetPassword($token);
 
         // Questo trucco sovrascrive la generazione automatica dell'URL interna alla notifica
-        $notification->createUrlUsing(fn($user, $token) => $url);
+        $notification->createUrlUsing(fn ($user, $token) => $url);
 
         $this->notify($notification);
     }
@@ -36,6 +37,15 @@ class User extends Authenticatable
     public function socialiteAccounts(): HasMany
     {
         return $this->hasMany(SocialiteUser::class);
+    }
+
+    /**
+     * Profilo polimorfico dell'utente, usato dal motore RBAC condiviso
+     * (vedi App\Models\EmployeeType e app/helpers.php).
+     */
+    public function profile(): MorphTo
+    {
+        return $this->morphTo();
     }
 
     public function canResetPassword(): bool
@@ -52,6 +62,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'microsoft_id',
         'azure_id',
         'email_verified_at',

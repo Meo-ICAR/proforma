@@ -9,6 +9,7 @@ use App\Filament\Resources\Venasarcotots\Pages\ViewVenasarcotot;
 use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototForm;
 use App\Filament\Resources\Venasarcotots\Schemas\VenasarcototInfolist;
 use App\Filament\Resources\Venasarcotots\Tables\VenasarcototsTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Venasarcotot;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class VenasarcototResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Venasarcotot::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalculator;

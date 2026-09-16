@@ -7,6 +7,7 @@ use App\Filament\Resources\PrimaNotaEntries\Pages\EditPrimaNotaEntry;
 use App\Filament\Resources\PrimaNotaEntries\Pages\ListPrimaNotaEntries;
 use App\Filament\Resources\PrimaNotaEntries\Schemas\PrimaNotaEntryForm;
 use App\Filament\Resources\PrimaNotaEntries\Tables\PrimaNotaEntriesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\PrimaNotaEntry;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class PrimaNotaEntryResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = PrimaNotaEntry::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;

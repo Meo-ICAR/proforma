@@ -8,6 +8,7 @@ use App\Filament\Resources\SalesInvoices\Pages\ListSalesInvoices;
 use App\Filament\Resources\SalesInvoices\RelationManagers\ProformasAfterRegistrationRelationManager;
 use App\Filament\Resources\SalesInvoices\Schemas\SalesInvoiceForm;
 use App\Filament\Resources\SalesInvoices\Tables\SalesInvoicesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\SalesInvoice;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class SalesInvoiceResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = SalesInvoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCurrencyEuro;

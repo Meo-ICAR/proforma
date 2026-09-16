@@ -9,6 +9,7 @@ use App\Filament\Resources\Fornitores\Pages\ViewFornitore;
 use App\Filament\Resources\Fornitores\Schemas\FornitoreForm;
 use App\Filament\Resources\Fornitores\Schemas\FornitoreInfoList;
 use App\Filament\Resources\Fornitores\Tables\FornitoresTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Fornitore;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -23,6 +24,8 @@ use UnitEnum;
 
 class FornitoreResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Fornitore::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;

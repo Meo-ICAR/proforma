@@ -8,6 +8,7 @@ use App\Filament\Resources\Clients\Pages\ListClients;
 use App\Filament\Resources\Clients\Pages\ListConsulenti;
 use App\Filament\Resources\Clients\Schemas\ClientForm;
 use App\Filament\Resources\Clients\Tables\ClientsTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\Client;
 use BackedEnum;
 use Filament\Navigation\NavigationItem;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class ClientResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = Client::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\VenasarcoTrimestres;
 use App\Filament\Resources\VenasarcoTrimestres\Pages\ListVenasarcoTrimestres;
 use App\Filament\Resources\VenasarcoTrimestres\Schemas\VenasarcoTrimestreInfolist;
 use App\Filament\Resources\VenasarcoTrimestres\Tables\VenasarcoTrimestresTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\VenasarcoTrimestre;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -15,6 +16,8 @@ use UnitEnum;
 
 class VenasarcoTrimestreResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = VenasarcoTrimestre::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentChartBar;

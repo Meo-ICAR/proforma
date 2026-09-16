@@ -7,6 +7,7 @@ use App\Filament\Resources\PrimaNotaConfigs\Pages\EditPrimaNotaConfig;
 use App\Filament\Resources\PrimaNotaConfigs\Pages\ListPrimaNotaConfigs;
 use App\Filament\Resources\PrimaNotaConfigs\Schemas\PrimaNotaConfigForm;
 use App\Filament\Resources\PrimaNotaConfigs\Tables\PrimaNotaConfigsTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\PrimaNotaConfig;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -17,6 +18,8 @@ use UnitEnum;
 
 class PrimaNotaConfigResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = PrimaNotaConfig::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAdjustmentsHorizontal;

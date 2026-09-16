@@ -9,6 +9,7 @@ use App\Filament\Resources\ProvvigioniStatos\Pages\ViewProvvigioniStato;
 use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoForm;
 use App\Filament\Resources\ProvvigioniStatos\Schemas\ProvvigioniStatoInfolist;
 use App\Filament\Resources\ProvvigioniStatos\Tables\ProvvigioniStatosTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\ProvvigioniStato;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -19,6 +20,8 @@ use UnitEnum;
 
 class ProvvigioniStatoResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = ProvvigioniStato::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFlag;

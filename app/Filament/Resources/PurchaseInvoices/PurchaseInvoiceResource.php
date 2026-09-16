@@ -8,6 +8,7 @@ use App\Filament\Resources\PurchaseInvoices\Pages\ListPurchaseInvoices;
 use App\Filament\Resources\PurchaseInvoices\RelationManagers\ProformasAfterRegistrationRelationManager;
 use App\Filament\Resources\PurchaseInvoices\Schemas\PurchaseInvoiceForm;
 use App\Filament\Resources\PurchaseInvoices\Tables\PurchaseInvoicesTable;
+use App\Filament\Traits\HasPlanAccess;
 use App\Models\PurchaseInvoice;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class PurchaseInvoiceResource extends Resource
 {
+    use HasPlanAccess;
+
     protected static ?string $model = PurchaseInvoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentMinus;

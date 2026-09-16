@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Proformas\RelationManagers;
 
 use App\Filament\Resources\Praticas\PraticaResource;
+use App\Filament\Traits\HasRelationPlanAccess;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 class ProvvigioniRelationManager extends RelationManager
 {
+    use HasRelationPlanAccess;
+
     protected static string $relationship = 'provvigioni';
 
     protected static ?string $recordTitleAttribute = 'id';
