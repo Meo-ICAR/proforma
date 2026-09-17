@@ -90,8 +90,7 @@ class ProvvigioneForm
                                         'Escluso' => 'Escluso',
                                         'Fatturato' => 'Fatturato',
                                         'Stornato' => 'Stornato',
-                                    ])
-                                    ->required(),
+                                    ]),
                                 TextInput::make('status_compenso')->disabled(),
                                 TextInput::make('status_pratica')->disabled(),
                                 TextInput::make('status_pagamento')->disabled(),

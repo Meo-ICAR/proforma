@@ -64,7 +64,7 @@ class PraticasTable
                     ->label('Stato Pratica'),
 
                 SelectFilter::make('tipo_prodotto')
-                    ->options(TipoProdotto::pluck('tipo_prodotto', 'tipo_prodotto'))
+                    ->options(TipoProdotto::whereNotNull('tipo_prodotto')->pluck('tipo_prodotto', 'tipo_prodotto'))
                     ->multiple()
                     ->label('Tipo Prodotto'),
                 Filter::make('data_fattura')
