@@ -69,6 +69,8 @@ class AdminPanelProvider extends PanelProvider
                     ->sort(100),
             ])
             ->favicon(asset('favicon.ico'))
+            ->brandLogo(asset('images/unicocoge.png'))
+            ->brandLogoHeight('2.5rem')
             // ->search()
             ->default()
             ->id('admin')
