@@ -65,6 +65,10 @@ return [
         'description' => 'Ricalcola i totali ENASARCO e FIRR (azione "Ricalcola contributi" di admin/venasarcotots).',
         'options' => [],
     ],
+    'clienti:check-missing-piva' => [
+        'description' => 'Invia un reminder se ci sono istituti attivi (non fittizi) senza partita IVA.',
+        'options' => ['to'],
+    ],
     'manual:sync' => [
         'description' => 'Reindicizza il manuale operativo per l\'assistente AI.',
         'options' => [],

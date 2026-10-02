@@ -62,10 +62,7 @@ class ClientiResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         $n =
-            Clienti::where('is_active', true)
-                ->where('is_dummy', false)
-                ->where(fn ($query) => $query->whereNull('piva')->orWhere('piva', ''))
-                ->count();
+            Clienti::activeWithoutPiva()->count();
         if ($n > 0) {
             return $n;
         }

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -22,9 +24,9 @@ use Illuminate\Support\Str;
  * @property string|null $citta
  * @property string $company_id
  * @property int|null $customertype_id
- * @property \Illuminate\Support\Carbon|null $deleted_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Clienti extends Model
 {
@@ -45,6 +47,7 @@ class Clienti extends Model
     protected $primaryKey = 'id';
 
     protected $orderBy = 'name';
+
     protected $orderDirection = 'asc';
 
     /**
@@ -102,9 +105,19 @@ class Clienti extends Model
 
         static::creating(function ($clienti) {
             if (empty($clienti->id)) {
-                $clienti->id = (string) \Illuminate\Support\Str::uuid();
+                $clienti->id = (string) Str::uuid();
             }
         });
+    }
+
+    /**
+     * Istituti attivi e non fittizi privi di partita IVA (nulla o vuota).
+     */
+    public function scopeActiveWithoutPiva(Builder $query): Builder
+    {
+        return $query->where('is_active', true)
+            ->where('is_dummy', false)
+            ->where(fn (Builder $query) => $query->whereNull('piva')->orWhere('piva', ''));
     }
 
     /**
