@@ -15,6 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
 use UnitEnum;
 
 class PurchaseInvoiceResource extends Resource
@@ -36,6 +37,43 @@ class PurchaseInvoiceResource extends Resource
     protected static ?int $navigationSort = 4;
 
     //    protected static ?int $navigationSort = 1;
+
+    /**
+     * Data dell'ultimo caricamento (max created_at) delle fatture di acquisto.
+     */
+    private static function lastLoadedAt(): ?Carbon
+    {
+        $createdAt = PurchaseInvoice::query()->toBase()->max('created_at');
+
+        return $createdAt ? Carbon::parse($createdAt) : null;
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::lastLoadedAt()?->format('d/m/Y');
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Data ultimo caricamento';
+    }
+
+    /**
+     * Verde fino a 30 giorni dall'ultimo caricamento, blu oltre 30,
+     * giallo oltre 40, rosso oltre 45.
+     */
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        $daysSinceLastLoad = static::lastLoadedAt()?->diffInDays(now());
+
+        return match (true) {
+            $daysSinceLastLoad === null => 'gray',
+            $daysSinceLastLoad > 45 => 'danger',
+            $daysSinceLastLoad > 40 => 'warning',
+            $daysSinceLastLoad > 30 => 'info',
+            default => 'success',
+        };
+    }
 
     public static function form(Schema $schema): Schema
     {
