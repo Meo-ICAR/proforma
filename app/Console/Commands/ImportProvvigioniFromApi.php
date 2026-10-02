@@ -377,28 +377,15 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Updated {$updatedCount} records piva.");
 
-            /*
-             * $updatedCount = \DB::update(
-             *     'UPDATE provvigioni p
-             *         SET  p.erogated_at = p.data_status, p.importo_erogato= p.importo
-             *         WHERE  p.erogated_at is null and p.data_status is not null
-             *         and p.status_compenso = "Pratica perfezionata"'
-             * );
-             * $this->info("Updated {$updatedCount} records to stato perfezionato from pratiche.");
-             */
+           
+              $updatedCount = \DB::update(
+                  'update provvigioni f inner join proformas p on p.id = f.proforma_id INNER JOIN sales_invoices s  ON p.invoiceable_id = s.id
+set f.data_pagamento = s.registration_date, f.n_fattura = s.number, f.data_fattura = s.registration_date, f.status_pagamento = "Fatturato"'
+            );
+             $this->info("Updated {$updatedCount} records to stato fatturato from proforma.");
+             
 
-            /*
-             * --- ricorda di rimettere ad inserito le pratiche in Sospeso dopo un mese
-             * --- guardando updated_at
-             * ---
-             * $updatedCount = \DB::update(
-             *     "UPDATE provvigioni p
-             *     INNER JOIN vwprovvcoordinamento  v on v.id_pratica = p.id_pratica and p.importo = v.minimo
-             *     set p.stato = 'Coordinamento'
-             *     where p.stato = 'Inserito'"
-             * );
-             * $this->info("Updated {$updatedCount} records with provv. stato = coordinamento");
-             */
+        
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
 
