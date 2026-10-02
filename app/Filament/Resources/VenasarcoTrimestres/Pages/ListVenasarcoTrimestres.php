@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\VenasarcoTrimestres\Pages;
 
 use App\Filament\Resources\VenasarcoTrimestres\VenasarcoTrimestreResource;
-use App\Models\Venasarcotrimestre;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\HtmlString;
 
 class ListVenasarcoTrimestres extends ListRecords
@@ -33,21 +32,13 @@ class ListVenasarcoTrimestres extends ListRecords
                 //   ->requiresConfirmation()
                 ->action(function () {
                     try {
-                        // Delete existing records
-                        Venasarcotrimestre::truncate();
-
-                        // Insert new records from view
-                        DB::table('venasarcotrimestre')->insertUsing(
-                            ['produttore', 'montante', 'competenza', 'Trimestre', 'enasarco', 'contributo'], DB::table('vwenasarcotrimestre')->select('produttore', 'montante', 'competenza', 'Trimestre', 'enasarco', 'contributo')
-                        );
+                        Artisan::call('venasarco-trimestre:calculate');
 
                         Notification::make()
                             ->title('Calcolo trimestrale ENASARCO completato con successo')
                             ->success()
                             ->send();
                     } catch (\Exception $e) {
-                        DB::rollBack();
-
                         Notification::make()
                             ->title('Errore durante il calcolo ENASARCO')
                             ->body($e->getMessage())

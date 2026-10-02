@@ -5,6 +5,10 @@ namespace App\Services;
 use App\Models\Clienti;
 use App\Models\Fornitore;
 use App\Models\Pratica;
+use App\Models\Proforma;
+use App\Models\Provvigione;
+use App\Models\PurchaseInvoice;
+use App\Models\SalesInvoice;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +33,10 @@ class ModelFieldIntrospector
         'fornitore' => Fornitore::class,
         'cliente' => Clienti::class,
         'pratica' => Pratica::class,
+        'proforma' => Proforma::class,
+        'provvigione' => Provvigione::class,
+        'sales_invoice' => SalesInvoice::class,
+        'purchase_invoice' => PurchaseInvoice::class,
     ];
 
     public function resolveModelClass(string $modelType): string

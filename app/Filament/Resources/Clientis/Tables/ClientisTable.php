@@ -65,7 +65,7 @@ class ClientisTable
                     ->falseLabel('Senza Partita IVA')
                     ->queries(
                         true: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('is_active', true))->whereNotNull('piva')->where('piva', '!=', ''),
-                        false: fn (Builder $query) => $query->where(fn (Builder $query) => $query->where('is_active', true))->whereNull('piva')->orWhere('piva', ''),
+                        false: fn (Builder $query) => $query->where('is_active', true)->where('is_dummy', false)->where(fn (Builder $query) => $query->whereNull('piva')->orWhere('piva', '')),
                         blank: fn (Builder $query) => $query,
                     ),
                 TernaryFilter::make('is_dummy')

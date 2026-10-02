@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CommandDispatchApiController;
+use App\Http\Controllers\Api\LatestModelRecordApiController;
 use App\Http\Controllers\Api\ModelFieldsApiController;
 use App\Http\Controllers\Api\ModelFieldValueApiController;
 use App\Http\Controllers\Api\UserLookupApiController;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 // vedi services.bpm.api_key / App\Http\Middleware\VerifyBpmApiKey).
 Route::middleware('bpm.auth')->group(function () {
     Route::get('/models/{model}/fields', [ModelFieldsApiController::class, 'show'])->name('api.models.fields');
+    Route::get('/models/{model}/latest', [LatestModelRecordApiController::class, 'show'])->name('api.models.latest');
     Route::get('/models/{model}/{id}', [ModelFieldValueApiController::class, 'show'])->name('api.models.show-record');
     Route::patch('/models/{model}/{id}', [ModelFieldValueApiController::class, 'update'])->name('api.models.update-field');
 

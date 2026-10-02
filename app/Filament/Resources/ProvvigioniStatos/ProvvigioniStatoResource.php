@@ -32,7 +32,7 @@ class ProvvigioniStatoResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Provvigioni Stato';
 
-    // protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
 
     //  protected static ?int $navigationSort = 4;
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation

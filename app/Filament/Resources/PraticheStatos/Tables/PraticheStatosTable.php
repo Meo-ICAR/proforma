@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\PraticheStatos\Tables;
 
+use App\Filament\Resources\PraticheStatos\PraticheStatoResource;
+use App\Models\PraticheStato;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -30,9 +32,15 @@ class PraticheStatosTable
             ->filters([
                 //
             ])
+            // Esiste uno stato con chiave vuota (pratiche senza stato): non ha un URL di dettaglio valido.
+            ->recordUrl(fn (PraticheStato $record): ?string => filled($record->getKey())
+                ? PraticheStatoResource::getUrl('view', ['record' => $record])
+                : null)
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ViewAction::make()
+                    ->visible(fn (PraticheStato $record): bool => filled($record->getKey())),
+                EditAction::make()
+                    ->visible(fn (PraticheStato $record): bool => filled($record->getKey())),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

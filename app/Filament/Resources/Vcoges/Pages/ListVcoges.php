@@ -3,13 +3,12 @@
 namespace App\Filament\Resources\Vcoges\Pages;
 
 use App\Filament\Resources\Vcoges\VcogeResource;
-use App\Models\Vcoge;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\HtmlString;
 
 class ListVcoges extends ListRecords
@@ -26,28 +25,13 @@ class ListVcoges extends ListRecords
                 //   ->requiresConfirmation()
                 ->action(function () {
                     try {
-                        // Delete existing records
-                        Vcoge::truncate();
+                        Artisan::call('vcoge:calculate');
 
-                        // Insert new records from view
-                        DB::table('vcoge')->insertUsing(
-                            ['mese', 'entrata', 'uscita'],
-                            DB::table('vwcoge')->select('mese', 'entrata', 'uscita')
-                        );
-
-                        DB::table('vcoge')
-                            ->leftJoin('vwcogestorno', 'vcoge.mese', '=', 'vwcogestorno.mese')
-                            ->update([
-                                'vcoge.storno_entrata' => DB::raw('COALESCE(vwcogestorno.storno_entrata, 0)'),
-                                'vcoge.storno_uscita' => DB::raw('COALESCE(vwcogestorno.storno_uscita, 0)')
-                            ]);
                         Notification::make()
                             ->title('Calcolo provvigioni completato con successo')
                             ->success()
                             ->send();
                     } catch (\Exception $e) {
-                        DB::rollBack();
-
                         Notification::make()
                             ->title('Errore durante il calcolo provvigioni')
                             ->body($e->getMessage())

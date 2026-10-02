@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Pratica extends Model
@@ -95,6 +96,14 @@ class Pratica extends Model
     public function agente()
     {
         return $this->belongsTo(Fornitore::class, 'partita_iva_agente', 'piva');
+    }
+
+    /**
+     * Get the istituto (cliente) associated with the pratica, matched by name.
+     */
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Clienti::class, 'denominazione_banca', 'name');
     }
 
     /**

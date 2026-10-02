@@ -63,7 +63,8 @@ class ClientiResource extends Resource
     {
         $n =
             Clienti::where('is_active', true)
-                ->whereNull('piva')
+                ->where('is_dummy', false)
+                ->where(fn ($query) => $query->whereNull('piva')->orWhere('piva', ''))
                 ->count();
         if ($n > 0) {
             return $n;

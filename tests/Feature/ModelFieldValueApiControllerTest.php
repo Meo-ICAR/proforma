@@ -55,4 +55,16 @@ class ModelFieldValueApiControllerTest extends TestCase
 
         $response->assertUnauthorized();
     }
+
+    public function test_latest_returns_404_for_an_unknown_model(): void
+    {
+        $response = $this->getJson('/api/models/unknown-model/latest', $this->apiKeyHeader());
+
+        $response->assertNotFound();
+    }
+
+    public function test_latest_requires_the_api_key(): void
+    {
+        $this->getJson('/api/models/sales_invoice/latest')->assertUnauthorized();
+    }
 }

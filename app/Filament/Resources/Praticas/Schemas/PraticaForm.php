@@ -2,11 +2,16 @@
 
 namespace App\Filament\Resources\Praticas\Schemas;
 
+use App\Filament\Resources\Clientis\ClientiResource;
+use App\Filament\Resources\Fornitores\FornitoreResource;
+use App\Models\Pratica;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class PraticaForm
 {
@@ -31,10 +36,30 @@ class PraticaForm
                             ->maxLength(191),
                         TextInput::make('denominazione_agente')
                             ->label('Agente / Rappresentante')
-                            ->maxLength(191),
+                            ->maxLength(191)
+                            ->suffixAction(
+                                Action::make('apriFornitore')
+                                    ->label('Apri scheda fornitore')
+                                    ->icon(Heroicon::ArrowTopRightOnSquare)
+                                    ->url(fn (?Pratica $record): ?string => $record?->agente
+                                        ? FornitoreResource::getUrl('edit', ['record' => $record->agente])
+                                        : null)
+                                    ->openUrlInNewTab()
+                                    ->visible(fn (?Pratica $record): bool => (bool) $record?->agente)
+                            ),
                         TextInput::make('denominazione_banca')
                             ->label('Istituto')
-                            ->maxLength(191),
+                            ->maxLength(191)
+                            ->suffixAction(
+                                Action::make('apriCliente')
+                                    ->label('Apri scheda istituto')
+                                    ->icon(Heroicon::ArrowTopRightOnSquare)
+                                    ->url(fn (?Pratica $record): ?string => $record?->cliente
+                                        ? ClientiResource::getUrl('edit', ['record' => $record->cliente])
+                                        : null)
+                                    ->openUrlInNewTab()
+                                    ->visible(fn (?Pratica $record): bool => (bool) $record?->cliente)
+                            ),
 
                     ])->columns(2),
 

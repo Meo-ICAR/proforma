@@ -53,6 +53,18 @@ return [
         'description' => 'Normalizza le descrizioni prodotto delle pratiche importate.',
         'options' => [],
     ],
+    'vcoge:calculate' => [
+        'description' => 'Ricalcola le provvigioni finanziarie (azione "Ricalcola" di admin/vcoges). Con l\'opzione invia manda anche in contabilità la primanota del mese precedente (o di month).',
+        'options' => ['invia', 'month'],
+    ],
+    'venasarco-trimestre:calculate' => [
+        'description' => 'Ricalcola i contributi trimestrali ENASARCO (azione "Ricalcola contributi" di admin/venasarco-trimestres), seguito dal ricalcolo di venasarcotot.',
+        'options' => [],
+    ],
+    'venasarcotot:calculate' => [
+        'description' => 'Ricalcola i totali ENASARCO e FIRR (azione "Ricalcola contributi" di admin/venasarcotots).',
+        'options' => [],
+    ],
     'manual:sync' => [
         'description' => 'Reindicizza il manuale operativo per l\'assistente AI.',
         'options' => [],
