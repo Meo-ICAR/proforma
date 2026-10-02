@@ -377,15 +377,17 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Updated {$updatedCount} records piva.");
 
-           
-              $updatedCount = \DB::update(
-                  'update provvigioni f inner join proformas p on p.id = f.proforma_id INNER JOIN sales_invoices s  ON p.invoiceable_id = s.id
+            $updatedCount = \DB::update(
+                'update provvigioni f inner join proformas p on p.id = f.proforma_id INNER JOIN sales_invoices s ON p.invoiceable_id = s.id and p.invoiceable_type = "App\\\\Models\\\\SalesInvoice"
 set f.data_pagamento = s.registration_date, f.n_fattura = s.number, f.data_fattura = s.registration_date, f.status_pagamento = "Fatturato"'
             );
-             $this->info("Updated {$updatedCount} records to stato fatturato from proforma.");
-             
+            $this->info("Updated {$updatedCount} records to stato fatturato from proforma.");
 
-        
+            $updatedCount = \DB::update(
+                'update provvigioni f inner join proformas p on p.id = f.proforma_id INNER JOIN purchase_invoices s ON p.invoiceable_id = s.id and p.invoiceable_type = "App\\\\Models\\\\PurchaseInvoice"
+set f.data_pagamento = s.registration_date, f.n_fattura = coalesce(s.supplier_invoice_number, s.number), f.data_fattura = s.registration_date, f.status_pagamento = "Fatturato"'
+            );
+            $this->info("Updated {$updatedCount} records to stato fatturato from proforma (fatture passive).");
 
             $this->info("Import completed. Imported: {$imported}, Updated: {$updated}, Errors: {$errors}");
 
