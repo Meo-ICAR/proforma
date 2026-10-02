@@ -80,7 +80,7 @@ class PrimaNotaEntriesTable
                 TextColumn::make('record_type')
                     ->label('Origine')
                     ->formatStateUsing(fn (?string $state) => $state ? (PrimaNotaConfigForm::MODEL_OPTIONS[$state] ?? class_basename($state)) : '—')
-                    ->description(fn (PrimaNotaEntry $record) => $record->record_id ? "ID: {$record->record_id}" : null)
+               //     ->description(fn (PrimaNotaEntry $record) => $record->record_id ? "ID: {$record->record_id}" : null)
                     ->badge(),
 
                 TextColumn::make('record_name')
