@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources\Fornitores\Schemas;
 
+use App\Filament\Resources\PrimaNotaEntries\PrimaNotaEntryResource;
+use App\Models\Fornitore;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Schema;
 
 class FornitoreInfoList
@@ -14,6 +18,17 @@ class FornitoreInfoList
     {
         return $schema
             ->components([
+                Actions::make([
+                    Action::make('schedaContabile')
+                        ->label('Scheda Contabile')
+                        ->icon('heroicon-o-book-open')
+                        ->color('gray')
+                        ->url(fn (Fornitore $record): string => PrimaNotaEntryResource::getUrl('index', [
+                            'filters' => ['fornitore_id' => ['value' => $record->getKey()]],
+                        ]))
+                        ->openUrlInNewTab(),
+                ])
+                    ->columnSpanFull(),
                 Tabs::make('Fornitore')
                     ->tabs([
                         Tab::make('Info base')
@@ -27,7 +42,7 @@ class FornitoreInfoList
                                     ->numeric(),
                                 TextEntry::make('anticipo_residuo'),
                                 TextEntry::make('contributo_description'),
-                                TextEntry::make('contributo')
+                                TextEntry::make('contributo'),
                             ])
                             ->columns(3),
                         Tab::make('Dati Fiscali')

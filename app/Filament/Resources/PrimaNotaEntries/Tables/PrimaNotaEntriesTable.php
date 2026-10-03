@@ -26,6 +26,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\Filter;
@@ -65,7 +66,8 @@ class PrimaNotaEntriesTable
                     ->weight(FontWeight::SemiBold)
                     ->color(fn (PrimaNotaEntry $record) => $record->importo < 0 ? 'danger' : 'success')
                     ->alignEnd()
-                    ->sortable(),
+                    ->sortable()
+                    ->summarize(Sum::make()->label('Totale')->money('EUR')),
 
                 TextColumn::make('conto_dare')
                     ->label('Conto Dare')
