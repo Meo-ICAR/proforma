@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\CheckStatusApiController;
 use App\Http\Controllers\Api\CommandDispatchApiController;
 use App\Http\Controllers\Api\LatestModelRecordApiController;
 use App\Http\Controllers\Api\ModelFieldsApiController;
@@ -25,4 +26,9 @@ Route::middleware('bpm.auth')->group(function () {
     // accodata (RunArtisanCommandJob) e la risposta torna subito con 202 Accepted.
     Route::get('/commands', [CommandDispatchApiController::class, 'index'])->name('api.commands.index');
     Route::post('/commands/{command}', [CommandDispatchApiController::class, 'store'])->name('api.commands.store');
+
+    // Consumato da UnicoBPM per conoscere lo stato (valore + severity) dei controlli; è
+    // UnicoBPM, in base alla RACI, a decidere chi avvisare e con quale email.
+    Route::get('/checks', [CheckStatusApiController::class, 'index'])->name('api.checks.index');
+    Route::get('/checks/{command}', [CheckStatusApiController::class, 'show'])->name('api.checks.show');
 });

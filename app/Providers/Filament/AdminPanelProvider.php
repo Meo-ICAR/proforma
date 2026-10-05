@@ -120,7 +120,7 @@ class AdminPanelProvider extends PanelProvider
                             ->color('gray')  // or 'gray' for a lighter gray
                             ->label('Microsoft'),
                     ])
-                    ->registration(true)  // Abilita la registrazione automatica per nuovi utenti
+                    // ->registration(true)  // Abilita la registrazione automatica per nuovi utenti
                     // Questo forza il plugin a mostrare i bottoni in entrambe le pagine
                     //  ->showNotAssociatedMessage(true)
                     ->createUserUsing(function (string $provider, $oauthUser, $plugin) {

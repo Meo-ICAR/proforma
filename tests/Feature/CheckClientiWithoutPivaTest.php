@@ -2,24 +2,23 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\RunArtisanCommandJob;
-use Illuminate\Support\Facades\Queue;
+use App\Console\Commands\CheckClientiWithoutPiva;
+use App\Console\Commands\StatusCheckCommand;
 use Tests\TestCase;
 
 class CheckClientiWithoutPivaTest extends TestCase
 {
     /**
-     * The check itself needs the MySQL schema (the legacy migrations don't run
-     * on the sqlite test database), so only the API dispatch is covered.
+     * Il check ora riporta solo valore e severity a UnicoBPM (GET /api/checks/{comando}):
+     * non è più un comando di invio email lanciabile da /api/commands. Il calcolo richiede
+     * lo schema MySQL (le migration legacy non girano sul database sqlite di test), quindi qui
+     * si verifica solo la registrazione; il contratto dell'API è in CheckStatusApiControllerTest.
      */
-    public function test_check_missing_piva_can_be_dispatched_via_the_commands_api(): void
+    public function test_missing_piva_check_is_a_status_check_without_email_options(): void
     {
-        config(['services.bpm.api_key' => 'test-bpm-api-key']);
-        Queue::fake();
+        $command = $this->app->make(CheckClientiWithoutPiva::class);
 
-        $this->postJson('/api/commands/clienti:check-missing-piva', ['options' => ['to' => 'segreteria@races.it']], ['X-Api-Key' => 'test-bpm-api-key'])
-            ->assertAccepted();
-
-        Queue::assertPushed(RunArtisanCommandJob::class);
+        $this->assertInstanceOf(StatusCheckCommand::class, $command);
+        $this->assertFalse($command->getDefinition()->hasOption('to'));
     }
 }
