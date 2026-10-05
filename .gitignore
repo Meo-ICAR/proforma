@@ -27,3 +27,7 @@ composer.lock
 /public/js
 .env.save
 *.deb
+.env.bak*
+.env.save*
+graphify-out/cache/ast/
+graphify-out/20*/
