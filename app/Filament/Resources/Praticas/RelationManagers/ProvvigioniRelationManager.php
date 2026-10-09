@@ -8,6 +8,7 @@ use App\Models\Provvigione;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -134,6 +135,12 @@ class ProvvigioniRelationManager extends RelationManager
                             ->maxValue(fn ($record) => $record->importo)
                             ->step(0.01)
                             ->prefix('€'),
+                        DatePicker::make('data_storno')
+                            ->label('Data Storno')
+                            ->required()
+                            ->default(today()->toDateString())
+                            ->minDate(fn (Provvigione $record) => $record->data_status)
+                            ->maxDate(today()),
                     ])
                     ->action(function (array $data, Provvigione $record): void {
                         $quota = $data['quota'];
@@ -141,7 +148,7 @@ class ProvvigioniRelationManager extends RelationManager
 
                         $relatedEntrata->id = $record->id.'-';
                         $relatedEntrata->data_inserimento_compenso = now();
-                        $relatedEntrata->data_status = now();
+                        $relatedEntrata->data_status = $data['data_storno'];
                         $relatedEntrata->data_pagamento = null;
                         $relatedEntrata->erogated_at = now();
 
@@ -194,7 +201,7 @@ class ProvvigioniRelationManager extends RelationManager
                             $newRecord->importo = $stornoUscita;
                             $newRecord->descrizione = 'Storno provvigione ';
                             $newRecord->data_inserimento_compenso = now();
-                            $newRecord->data_status = now();
+                            $newRecord->data_status = $data['data_storno'];
                             $newRecord->erogated_at = now();
                             $newRecord->data_pagamento = null;
                             $newRecord->stato = 'Inserito';
