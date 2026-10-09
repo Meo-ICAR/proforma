@@ -13,8 +13,10 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ProvvigioniRelationManager extends RelationManager
@@ -67,12 +69,14 @@ class ProvvigioniRelationManager extends RelationManager
                     ->label('Produttore'),
                 TextColumn::make('importo')
                     ->money('EUR')
-                    ->alignEnd(),
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('EUR')->label('Totale')),
                 TextColumn::make('descrizione'),
                 TextColumn::make('quota')
                     ->label('Storno')
                     ->money('EUR')
-                    ->alignEnd(),
+                    ->alignEnd()
+                    ->summarize(Sum::make()->money('EUR')->label('Totale')),
                 //  ->searchable(),
                 TextColumn::make('descrizione'),
                 TextColumn::make('status_compenso'),
@@ -84,7 +88,13 @@ class ProvvigioniRelationManager extends RelationManager
                 TextColumn::make('id'),
             ])
             ->filters([
-                //
+                SelectFilter::make('tipo')
+                    ->label('Tipo')
+                    ->placeholder('Tutte')
+                    ->options([
+                        'Istituto' => 'Istituto',
+                        'Agente' => 'Agente',
+                    ]),
             ])
             ->headerActions([
                 //  CreateAction::make(),
@@ -114,6 +124,7 @@ class ProvvigioniRelationManager extends RelationManager
                     ->color('danger')
                     ->visible(fn (Provvigione $record): bool => ($record->entrata_uscita === 'Entrata') &&
                         ($record->tipo === 'Istituto') &&
+                        ($record->importo > 0) &&
                         ($record->quota == 0))
                     ->form([
                         TextInput::make('quota')
