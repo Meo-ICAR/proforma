@@ -268,6 +268,8 @@ class ImportProvvigioniFromApi extends Command
                     if (! $existingPratica) {
                         continue;
                     }
+                    // Il legame vero con la pratica è la chiave esterna; id_pratica resta il codice che arriva dall'API.
+                    $provvigioneData['pratica_id'] = $existingPratica->getKey();
 
                     // Ensure we have the ID Compenso in our data
                     // debug 3
@@ -365,7 +367,7 @@ class ImportProvvigioniFromApi extends Command
             );
             $this->info("Updated {$updatedCount} records to stato Pagato from pratiche.");
             $updatedCount = \DB::update(
-                'UPDATE provvigioni p inner join pratiches pr on pr.id = p.id_pratica
+                'UPDATE provvigioni p inner join pratiches pr on pr.id = p.pratica_id
 
                     SET  p.erogated_at = pr.erogated_at, p.importo_erogato= p.importo
                     WHERE  p.erogated_at <>pr.erogated_at and pr.erogated_at is not null'

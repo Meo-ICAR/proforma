@@ -61,11 +61,11 @@ class CoreIntegrationTest extends TestCase
         $this->assertNull($second->fresh()->stato_pratica);
     }
 
-    public function test_provvigioni_are_linked_to_the_pratica_through_its_code(): void
+    public function test_provvigioni_are_linked_to_the_pratica_through_pratica_id(): void
     {
         $this->seed(ProvvigioniStatoSeeder::class);
         $pratica = $this->pratica(['codice_pratica' => 'QT00010']);
-        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT00010', 'stato' => 'Proforma', 'importo' => 100]);
+        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT00010', 'pratica_id' => $pratica->id, 'stato' => 'Proforma', 'importo' => 100]);
         $id = 1;
 
         $this->assertSame($pratica->id, Provvigione::find($id)->pratica->id);
@@ -90,13 +90,13 @@ class CoreIntegrationTest extends TestCase
         $this->assertGreaterThanOrEqual(20, count($existing));
     }
 
-    public function test_the_pratica_views_join_on_the_code(): void
+    public function test_the_pratica_views_join_on_the_foreign_key(): void
     {
         $this->seed(ProvvigioniStatoSeeder::class);
-        $this->pratica(['codice_pratica' => 'QT00020', 'nome_cliente' => 'Rossi', 'cognome_cliente' => 'Mario', 'tipo_prodotto' => 'Cessione']);
+        $pratica = $this->pratica(['codice_pratica' => 'QT00020', 'nome_cliente' => 'Rossi', 'cognome_cliente' => 'Mario', 'tipo_prodotto' => 'Cessione']);
         foreach ([1, 2] as $n) {
             DB::table('provvigioni')->insert([
-                'id' => $n, 'id_pratica' => 'QT00020', 'stato' => 'Proforma', 'importo' => 50, 'tipo' => 'T',
+                'id' => $n, 'id_pratica' => 'QT00020', 'pratica_id' => $pratica->id, 'stato' => 'Proforma', 'importo' => 50, 'tipo' => 'T',
                 'denominazione_riferimento' => 'X', 'descrizione' => 'D', 'data_fattura' => '2026-01-01',
             ]);
         }
@@ -106,5 +106,27 @@ class CoreIntegrationTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('QT00020', $rows[0]->id_pratica);
         $this->assertSame('Cessione', $rows[0]->tipo_prodotto);
+    }
+
+    public function test_a_provvigione_cannot_point_to_a_missing_pratica(): void
+    {
+        $this->seed(ProvvigioniStatoSeeder::class);
+
+        $this->expectException(\Illuminate\Database\QueryException::class);
+
+        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => 999999, 'stato' => 'Proforma', 'importo' => 1]);
+    }
+
+    public function test_the_import_update_joins_provvigioni_to_pratiche_through_pratica_id(): void
+    {
+        $this->seed(ProvvigioniStatoSeeder::class);
+        $pratica = $this->pratica(['codice_pratica' => 'QT00030', 'erogated_at' => '2026-03-01 00:00:00']);
+        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT00030', 'pratica_id' => $pratica->id, 'stato' => 'Proforma', 'importo' => 80, 'erogated_at' => '2026-02-01 00:00:00']);
+
+        // stessa istruzione di ImportProvvigioniFromApi
+        $updated = DB::update('UPDATE provvigioni p inner join pratiches pr on pr.id = p.pratica_id SET p.erogated_at = pr.erogated_at, p.importo_erogato= p.importo WHERE p.erogated_at <>pr.erogated_at and pr.erogated_at is not null');
+
+        $this->assertSame(1, $updated);
+        $this->assertSame('2026-03-01 00:00:00', (string) DB::table('provvigioni')->value('erogated_at'));
     }
 }

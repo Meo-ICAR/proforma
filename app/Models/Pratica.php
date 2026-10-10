@@ -107,7 +107,7 @@ class Pratica extends CorePratica
      */
     public function provvigioni()
     {
-        return $this->hasMany(Provvigione::class, 'id_pratica', 'codice_pratica');
+        return $this->hasMany(Provvigione::class, 'pratica_id');
     }
 
     public function primaNotaEntries(): MorphMany

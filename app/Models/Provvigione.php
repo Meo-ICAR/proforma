@@ -61,6 +61,7 @@ class Provvigione extends Model
         'denominazione_riferimento',
         'entrata_uscita',
         'id_pratica',
+        'pratica_id',
         'segnalatore',
         'istituto_finanziario',
         'piva',
@@ -103,7 +104,7 @@ class Provvigione extends Model
      */
     public function pratica()
     {
-        return $this->belongsTo(Pratica::class, 'id_pratica', 'codice_pratica');
+        return $this->belongsTo(Pratica::class, 'pratica_id');
     }
 
     protected $casts = [

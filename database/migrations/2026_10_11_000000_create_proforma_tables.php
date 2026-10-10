@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Schema;
  * Tabelle proprie di Proforma (provvigioni, proforma, fatture, ENASARCO, COGE...). Le CREATE TABLE vengono dal dump dello
  * schema live, con tre differenze dovute al pacchetto meo-icar/unico-core: le colonne che richiamano `clientis`, `fornitoris` e
  * `companies` sono interi (`bigint unsigned`) invece di UUID, e `provvigioni.id_pratica` resta il codice della pratica
- * (`pratiches.codice_pratica`, ad es. QT06585) senza chiave esterna, perché `pratiches.id` è ora un intero.
+ * che arriva dall'API (`pratiches.codice_pratica`, ad es. QT06585). Il legame vero è `provvigioni.pratica_id` → `pratiches.id`,
+ * che valorizza l'import.
  * Le tabelle del pacchetto (utenti, aziende, clienti, fornitori, pratiche...) si creano con le sue migration, che vengono prima.
  */
 return new class extends Migration
@@ -132,13 +133,16 @@ return new class extends Migration
   `paided_at` timestamp NULL DEFAULT NULL COMMENT \'Data e ora di pagamento della provvigione\',
   `fattura_id` bigint unsigned DEFAULT NULL COMMENT \'ID della fattura contabile definitiva collegata\',
   `upload_at` timestamp NOT NULL DEFAULT \'2026-04-03 03:54:45\' COMMENT \'Data e ora di caricamento a sistema del record\',
+    `pratica_id` bigint unsigned DEFAULT NULL COMMENT \'Pratica collegata (pratiches.id): la valorizza l\'\'import, che parte dal codice in id_pratica\',
   PRIMARY KEY (`id`),
+  KEY `pratica_id` (`pratica_id`),
   KEY `proforma_id` (`proforma_id`),
   KEY `id_pratica` (`id_pratica`),
   KEY `fattura_id` (`fattura_id`),
   KEY `idx_performance_calcolo` (`stato`,`entrata_uscita`,`data_status`,`importo`),
   CONSTRAINT `fk_provvigioni_stato` FOREIGN KEY (`stato`) REFERENCES `provvigioni_statos` (`stato`) ON DELETE RESTRICT ON UPDATE CASCADE,
   CONSTRAINT `provvigioni_ibfk_1` FOREIGN KEY (`proforma_id`) REFERENCES `proformas` (`id`) ON DELETE SET NULL ON UPDATE SET NULL,
+  CONSTRAINT `provvigioni_pratica_id_foreign` FOREIGN KEY (`pratica_id`) REFERENCES `pratiches` (`id`),
   CONSTRAINT `provvigioni_ibfk_3` FOREIGN KEY (`fattura_id`) REFERENCES `fatturas` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT=\'Singole righe provvigionali attive (Banca -> Mediatore) e passive (Mediatore -> Agente)\';');
 
