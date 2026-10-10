@@ -4,10 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Unico\Core\Models\Employee as CoreEmployee;
 
 /**
  * Puntatore cross-DB all'anagrafica dipendenti/ruoli, la cui fonte unica è
@@ -15,55 +15,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * Usato dal motore RBAC condiviso (vedi App\Models\EmployeeType,
  * App\Models\EmployeeTypePermission e app/helpers.php).
  */
-class Employee extends Model
+class Employee extends CoreEmployee
 {
     use HasFactory, SoftDeletes;
-
-    protected $connection = 'mysql_unicooam';
 
     protected $orderBy = 'name';
 
     protected $orderDirection = 'asc';
-
-    protected $fillable = [
-        'company_id',
-        'user_id',
-        'name',
-        'role_title',
-        'cf',
-        'email',
-        'pec',
-        'phone',
-        'department',
-        'oam',
-        'oam_at',
-        'oam_name',
-        'numero_iscrizione_rui',
-        'oam_dismissed_at',
-        'ivass',
-        'hiring_date',
-        'termination_date',
-        'branch_id',
-        'coordinated_by_id',
-        'employee_type',
-
-        'supervisor_type',
-        'privacy_role',
-        'purpose',
-        'data_subjects',
-        'data_categories',
-        'retention_period',
-        'extra_eu_transfer',
-        'security_measures',
-        'privacy_data',
-        'is_structure',
-        'is_ghost',
-        'employee_roles',
-        'is_external',
-        'created_by',
-        'updated_by',
-        'deleted_by',
-    ];
 
     protected $casts = [
         'is_structure' => 'boolean',

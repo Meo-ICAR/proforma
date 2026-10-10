@@ -54,7 +54,7 @@ class ProvvigioneInfoList
                                     ->label('Nome Cliente'),
                                 TextEntry::make('pratica.cognome_cliente')
                                     ->label('Cognome Cliente'),
-                                TextEntry::make('pratica.tipo_prodotto')
+                                TextEntry::make('pratica.tipoprodotto.tipo_prodotto')
                                     ->label('Tipo Prodotto'),
                                 TextEntry::make('pratica.denominazione_prodotto')
                                     ->label('Prodotto'),

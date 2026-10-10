@@ -13,6 +13,17 @@ Before relying on a package's API, confirm its installed version:
 - PHP packages: run `composer show --direct` to list direct dependencies with versions, or `composer show <vendor/package>` for a single package.
 - JS packages: check `package.json` for the installed versions.
 
+## Pacchetto unico-core
+Le tabelle condivise (utenti, aziende, clienti `clientis`, fornitori `fornitoris`, `clients`, pratiche, stati, tipi prodotto, indirizzi...) sono del pacchetto `meo-icar/unico-core` (vedi il suo README e CLAUDE.md). Proforma è su Laravel 13 e Filament 5.
+- I modelli corrispondenti in `app/Models` sono **sottoclassi** di `Unico\Core\Models\*` (`Clienti` estende `Cliente`, `PraticheStato` estende `PraticaStato`). Non ridefinire `$table`, `$connection`, `$fillable`. Restano modelli propri di Proforma: `Provvigione`, `Proforma`, `Fattura`, `Invoice*`, `PurchaseInvoice`, `SalesInvoice`, `Enasarco`, `Firr`, `Coges`, `Vcoge`, `Venasarco*`, `Compenso`, `PrimaNota*`.
+- **Database:** `proforma_core` (sviluppo) e `proforma_test` (test); i test girano su MySQL, non più su SQLite. `php artisan migrate` crea sia le tabelle del pacchetto sia quelle di Proforma. Con `UNICO_CORE_MIGRATE=false` le migration del pacchetto non vengono caricate (database condiviso in cui le crea un'altra app, es. unicoloan). Il database `proforma` precedente non va toccato da qui.
+- **La pratica si identifica con `pratiches.codice_pratica`** (es. QT06585), non con `id`, che ora è un intero assegnato dal database. `provvigioni.id_pratica` contiene il codice (nessuna chiave esterna): la relazione è `belongsTo(Pratica::class, 'id_pratica', 'codice_pratica')`, l'import cerca e crea per `codice_pratica`, le viste agganciano `pratiches.codice_pratica`. `pratiches.upload_at` non ha valore predefinito: lo imposta l'import.
+- `Pratica::stato_pratica` e `Pratica::tipo_prodotto` restano utilizzabili come testo (import, form, comandi): il modello li traduce in `pratica_stato_id` (tabella `pratica_stati`, colonna `codice`) e `tipoprodotto_id`; uno stato o un tipo nuovo viene creato. Nelle tabelle Filament si ordina e si cerca su `stato.codice` e `tipoprodotto.tipo_prodotto`.
+- Le colonne che richiamano clienti, fornitori e aziende (`proformas.fornitori_id`, `fatturas.clienti_id`, `invoices.clienti_id`, `sales_invoices.company_id`...) sono interi; `proformas.client_id` ricalca `clients.id`.
+- **Viste di reporting** (`database/views/*.sql`, create da `2026_10_11_000100_create_reporting_views`): 24 delle 34 originali. Le altre dipendevano da tabelle o colonne che non esistono più (`calls`, `leads`, `tmpprovvigioni`, `provvigioni_coge`, `invoices.fornitori_id`, `provvigioni.fornitori_id`) e si saltano. Quelle usate dal codice (`vwcoge`, `vwcogestorno`, `vwenasarco`, `vwenasarcotot`, `vwenasarcotrimestre`, `vwproformaagente`, `vwproformaistituto`) sono verificate dai test.
+- `eightynine/filament-excel-import` (solo Filament 4) è stato tolto: l'importazione delle fatture passate è un'azione Filament nativa con `maatwebsite/excel` (`ListInvoiceIns`).
+- `SalesInvoiceMatchingServiceTest` è saltato: usa factory che non sono mai esistite (da riscrivere).
+
 ## Skills Activation
 
 This project has domain-specific skills available in `**/skills/**`. You MUST activate the relevant skill whenever you work in that domain—don't wait until you're stuck.

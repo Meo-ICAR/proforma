@@ -171,6 +171,9 @@ return [
     |
     */
 
+    // Esegue le migration del pacchetto unico-core (false se un'altra app crea già le tabelle nel database condiviso).
+    'unico_core_migrate' => env('UNICO_CORE_MIGRATE', true),
+
     'migrations' => [
         'table' => 'migrations',
         'update_date_on_publish' => true,

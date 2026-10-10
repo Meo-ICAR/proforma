@@ -2,72 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Unico\Core\Models\Pratica as CorePratica;
 
-class Pratica extends Model
+class Pratica extends CorePratica
 {
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'pratiches';
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
-
-    /**
-     * The data type of the auto-incrementing ID.
-     *
-     * @var string
-     */
-    protected $keyType = 'string';
-
-    /**
-     * Indicates if the model's ID is auto-incrementing.
-     *
-     * @var bool
-     */
-    public $incrementing = false;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'id',
-        'codice_pratica',
-        'nome_cliente',
-        'cognome_cliente',
-        'codice_fiscale',
-        'denominazione_agente',
-        'partita_iva_agente',
-        'denominazione_banca',
-        'tipo_prodotto',
-        'denominazione_prodotto',
-        'data_inserimento_pratica',
-        'stato_pratica',
-        'rata',
-        'erogato',
-        'nrate',
-        'sended_at',
-        'approved_at',
-        'erogated_at',
-        'rejected_at',
-        'amount',
-        'net',
-        'is_notowned',
-        'upload_at',
-        'abi', 'abi_name',
-    ];
-
     /**
      * The attributes that should be cast.
      *
@@ -107,16 +47,59 @@ class Pratica extends Model
     }
 
     /**
-     * Get the status of the pratica.
+     * Stato della pratica (tabella `pratica_stati` del pacchetto, tramite `pratica_stato_id`).
      */
-    public function stato()
+    public function stato(): BelongsTo
     {
-        return $this->belongsTo(PraticheStato::class, 'stato_pratica', 'stato_pratica');
+        return $this->belongsTo(PraticheStato::class, 'pratica_stato_id');
+    }
+
+    /**
+     * Compatibilità con i vecchi campi di testo `pratiches.stato_pratica` e `pratiches.tipo_prodotto`: import e form
+     * continuano a leggerli e scriverli come testo, il modello li traduce in `pratica_stato_id` e `tipoprodotto_id`
+     * (uno stato o un tipo nuovo viene creato). Si gestiscono qui e non con gli accessor, perché `tipo_prodotto` darebbe un
+     * metodo omonimo (in PHP senza distinzione di maiuscole) della relazione `tipoprodotto()` del pacchetto.
+     */
+    /**
+     * Le chiavi che non sono colonne reali vengono scartate dall'assegnazione di massa: i due attributi di testo devono
+     * restare assegnabili (import, form).
+     */
+    protected function isGuardableColumn($key): bool
+    {
+        return in_array($key, ['stato_pratica', 'tipo_prodotto'], true) ? true : parent::isGuardableColumn($key);
+    }
+
+    public function getAttribute($key)
+    {
+        return match ($key) {
+            'stato_pratica' => $this->stato?->codice,
+            'tipo_prodotto' => $this->tipoprodotto?->tipo_prodotto,
+            default => parent::getAttribute($key),
+        };
+    }
+
+    public function setAttribute($key, $value)
+    {
+        if ($key === 'stato_pratica') {
+            $this->attributes['pratica_stato_id'] = blank($value) ? null : PraticheStato::firstOrCreate(['codice' => $value], ['name' => $value])->getKey();
+            $this->unsetRelation('stato');
+
+            return $this;
+        }
+
+        if ($key === 'tipo_prodotto') {
+            $this->attributes['tipoprodotto_id'] = blank($value) ? null : TipoProdotto::firstOrCreate(['tipo_prodotto' => $value], ['name' => $value])->getKey();
+            $this->unsetRelation('tipoprodotto');
+
+            return $this;
+        }
+
+        return parent::setAttribute($key, $value);
     }
 
     public function annullato()
     {
-        return $this->stato()->is_rejected;
+        return (bool) $this->stato?->is_rejected;
     }
 
     /**
@@ -124,7 +107,7 @@ class Pratica extends Model
      */
     public function provvigioni()
     {
-        return $this->HasMany(Provvigione::class, 'id_pratica', 'id');
+        return $this->hasMany(Provvigione::class, 'id_pratica', 'codice_pratica');
     }
 
     public function primaNotaEntries(): MorphMany

@@ -25,6 +25,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Proforma possiede il proprio database: le tabelle del pacchetto si creano con il normale `php artisan migrate`
+        // (e quindi anche con `migrate:fresh`, nei test). Se il database è condiviso e le crea un'altra app, UNICO_CORE_MIGRATE=false.
+        if (config('database.unico_core_migrate')) {
+            $this->loadMigrationsFrom(\Unico\Core\UnicoCoreServiceProvider::migrationsPath());
+        }
+
         // Il sottotitolo delle pagine elenco occupa tutta la larghezza (di default è limitato a max-w-2xl).
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,

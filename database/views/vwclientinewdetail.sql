@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwclientinewdetail` AS select distinct `p`.`denominazione_riferimento` AS `denominazione_riferimento` from `provvigioni` `p` where ((`p`.`entrata_uscita` = 'Entrata') and (`p`.`tipo` = 'Istituto'))

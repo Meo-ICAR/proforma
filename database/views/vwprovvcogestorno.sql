@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwprovvcogestorno` AS select `p`.`provvigioni_id` AS `provvigioni_id`,`p`.`entrata_uscita` AS `entrata_uscita`,-(`p`.`importo`) AS `-p.importo` from (`provvigioni_coge` `p` left join `vwprovv2cogedetailx` `x` on((`p`.`provvigioni_id` = `x`.`provvigioni_id`))) where (`x`.`provvigioni_id` is null)

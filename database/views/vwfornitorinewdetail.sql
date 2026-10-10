@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwfornitorinewdetail` AS select distinct `p`.`denominazione_riferimento` AS `denominazione_riferimento`,`p`.`piva` AS `piva`,`p`.`cf` AS `cf` from `provvigioni` `p` where ((`p`.`entrata_uscita` = 'Uscita') and (`p`.`tipo` = 'Agente'))

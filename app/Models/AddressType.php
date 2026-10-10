@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Unico\Core\Models\AddressType as CoreAddressType;
 
-class AddressType extends Model
+class AddressType extends CoreAddressType
 {
-    protected $fillable = [
-        'name',
-    ];
-
     public $timestamps = false;
 
     //

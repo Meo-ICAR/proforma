@@ -11,12 +11,12 @@ class PraticheStatoInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('stato_pratica'),
-                TextEntry::make('isrejected')
+                TextEntry::make('codice'),
+                TextEntry::make('is_rejected')
                     ->numeric(),
-                TextEntry::make('isworking')
+                TextEntry::make('is_working')
                     ->numeric(),
-                TextEntry::make('isestingued')
+                TextEntry::make('is_estingued')
                     ->numeric(),
             ]);
     }

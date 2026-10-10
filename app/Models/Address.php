@@ -4,25 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\Eloquent\Model;
+use Unico\Core\Models\Address as CoreAddress;
 // use Illuminate\Database\Eloquent\SoftDeletes;
 // use Wildside\Userstamps\HasUserstamps;
 
-class Address extends Model
+class Address extends CoreAddress
 {
-    // use SoftDeletes;  // , HasUserstamps;
-
-    protected $fillable = [
-        'addressable_type',
-        'addressable_id',
-        'name',
-        'numero',
-        'street',
-        'city',
-        'zip_code',
-        'address_type_id',
-    ];
-
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

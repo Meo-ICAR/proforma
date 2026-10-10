@@ -4,28 +4,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Unico\Core\Models\TipoProdotto as CoreTipoProdotto;
 
-class TipoProdotto extends Model
+class TipoProdotto extends CoreTipoProdotto
 {
-    protected $table = 'tipoprodotto';
-
-    protected $primaryKey = 'tipo_prodotto';
-
-    public $incrementing = false;
-
-    protected $keyType = 'string';
-
     public $timestamps = false;
-
-    protected $fillable = [
-        'name',
-        'tipo_prodotto',
-        'code',
-        'is_external',
-        'is_active',
-        'is_oneclient',
-        'oam',
-        'tipo_provvigioni',
-    ];
 }

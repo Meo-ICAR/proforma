@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwfornitorinew` AS select `v`.`denominazione_riferimento` AS `denominazione_riferimento`,`c`.`name` AS `name`,`v`.`piva` AS `piva`,`v`.`cf` AS `cf` from (`vwfornitorinewdetail` `v` left join `fornitoris` `c` on((`c`.`name` = `v`.`denominazione_riferimento`))) where (`c`.`name` is null)

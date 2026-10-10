@@ -11,15 +11,15 @@ class PraticheStatoForm
     {
         return $schema
             ->components([
-                TextInput::make('isrejected')
+                TextInput::make('is_rejected')
                     ->required()
                     ->numeric()
                     ->default(0),
-                TextInput::make('isworking')
+                TextInput::make('is_working')
                     ->required()
                     ->numeric()
                     ->default(0),
-                TextInput::make('isestingued')
+                TextInput::make('is_estingued')
                     ->required()
                     ->numeric()
                     ->default(0),

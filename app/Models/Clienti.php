@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Unico\Core\Models\Cliente as CoreCliente;
 
 /**
  * @property string $id
@@ -28,61 +28,13 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-class Clienti extends Model
+class Clienti extends CoreCliente
 {
     use HasFactory, SoftDeletes;
-
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
-    protected $table = 'clientis';
-
-    /**
-     * The primary key for the model.
-     *
-     * @var string
-     */
-    protected $primaryKey = 'id';
 
     protected $orderBy = 'name';
 
     protected $orderDirection = 'asc';
-
-    /**
-     * The "type" of the primary key ID.
-     *
-     * @var string
-     */
-    protected $keyType = 'string';
-
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
-    public $incrementing = false;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
-    protected $fillable = [
-        'cf',
-        'coge',
-        'codice',
-        'name',
-        'nome',
-        'piva',
-        'email',
-        'regione',
-        'citta',
-        'company_id',
-        'is_active',
-        'is_dummy',
-    ];
 
     /**
      * The attributes that should be cast.
@@ -99,6 +51,7 @@ class Clienti extends Model
 
     protected static function booted()
     {
+        parent::booted();
         static::addGlobalScope('order_by_name', function ($builder) {
             $builder->orderBy('name');
         });

@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwcoordinamentobase` AS select `p`.`id_pratica` AS `id_pratica`,max(`p`.`importo`) AS `massimo`,min(`p`.`importo`) AS `minimo` from `provvigioni` `p` where ((`p`.`stato` = 'Inseritx') and (month(`p`.`data_status`) >= 9) and (year(`p`.`data_status`) >= 2025) and (`p`.`tipo` = 'Agente')) group by `p`.`id_pratica` having (count(0) > 1)

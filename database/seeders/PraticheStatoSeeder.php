@@ -10,7 +10,7 @@ class PraticheStatoSeeder extends Seeder
     /**
      * Run the database seeds.
      *
-     * Stati possibili di 'pratiches.stato_pratica' (FK verso questa tabella,
+     * Stati possibili delle pratiche, nella tabella pratica_stati del pacchetto (prima 'pratiches_statos', FK da 'pratiches.stato_pratica',
      * vedi manuale tecnico §4.3) e i relativi flag isrejected/isworking/
      * isestingued usati per raggruppare le pratiche negli import MediaFacile.
      * Nessun model Eloquent copre 'pratiches_statos': si seeda via query
@@ -19,42 +19,42 @@ class PraticheStatoSeeder extends Seeder
     public function run(): void
     {
         $stati = [
-            ['stato_pratica' => '', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'ACCETTATO PREVENTIVO', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Approvata', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'ATTO FISSATO', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Caricata Banca', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Chiusa', 'isrejected' => 0, 'isworking' => 0, 'isestingued' => 0],
-            ['stato_pratica' => 'DECLINATA', 'isrejected' => 1, 'isworking' => 0, 'isestingued' => 0],
-            ['stato_pratica' => 'DELIBERATA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'ESTINTO', 'isrejected' => 0, 'isworking' => 0, 'isestingued' => 1],
-            ['stato_pratica' => 'FASCICOLO COMPLETO', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Fatturato', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'IN AMMORTAMENTO', 'isrejected' => 0, 'isworking' => 0, 'isestingued' => 1],
-            ['stato_pratica' => 'IN ATTESA BENESTARE', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'In attesa documenti originali', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Inserita', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Inserito', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'INVIO IN ISTRUTTORIA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'LIQUIDATA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'NOTIFICA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'ORIGINALI IN SEDE', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'PERFEZIONATA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'PERIZIA KO', 'isrejected' => 1, 'isworking' => 0, 'isestingued' => 0],
-            ['stato_pratica' => 'PRATICA RESPINTA', 'isrejected' => 1, 'isworking' => 0, 'isestingued' => 0],
-            ['stato_pratica' => 'RICHIESTA EMISSIONE', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Richiesta Istruttoria', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Richiesta Polizza', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'RIENTRO BENESTARE', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'RIENTRO POLIZZA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'RINNOVABILE', 'isrejected' => 0, 'isworking' => 0, 'isestingued' => 1],
-            ['stato_pratica' => 'RINUNCIA CLIENTE', 'isrejected' => 1, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'SOSPESA', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
-            ['stato_pratica' => 'Sospesa Istruttoria Interna', 'isrejected' => 0, 'isworking' => 1, 'isestingued' => 0],
+            ['codice' => '', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'ACCETTATO PREVENTIVO', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Approvata', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'ATTO FISSATO', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Caricata Banca', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Chiusa', 'is_rejected' => 0, 'is_working' => 0, 'is_estingued' => 0],
+            ['codice' => 'DECLINATA', 'is_rejected' => 1, 'is_working' => 0, 'is_estingued' => 0],
+            ['codice' => 'DELIBERATA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'ESTINTO', 'is_rejected' => 0, 'is_working' => 0, 'is_estingued' => 1],
+            ['codice' => 'FASCICOLO COMPLETO', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Fatturato', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'IN AMMORTAMENTO', 'is_rejected' => 0, 'is_working' => 0, 'is_estingued' => 1],
+            ['codice' => 'IN ATTESA BENESTARE', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'In attesa documenti originali', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Inserita', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Inserito', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'INVIO IN ISTRUTTORIA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'LIQUIDATA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'NOTIFICA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'ORIGINALI IN SEDE', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'PERFEZIONATA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'PERIZIA KO', 'is_rejected' => 1, 'is_working' => 0, 'is_estingued' => 0],
+            ['codice' => 'PRATICA RESPINTA', 'is_rejected' => 1, 'is_working' => 0, 'is_estingued' => 0],
+            ['codice' => 'RICHIESTA EMISSIONE', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Richiesta Istruttoria', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Richiesta Polizza', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'RIENTRO BENESTARE', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'RIENTRO POLIZZA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'RINNOVABILE', 'is_rejected' => 0, 'is_working' => 0, 'is_estingued' => 1],
+            ['codice' => 'RINUNCIA CLIENTE', 'is_rejected' => 1, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'SOSPESA', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
+            ['codice' => 'Sospesa Istruttoria Interna', 'is_rejected' => 0, 'is_working' => 1, 'is_estingued' => 0],
         ];
 
         foreach ($stati as $stato) {
-            DB::table('pratiches_statos')->updateOrInsert(['stato_pratica' => $stato['stato_pratica']], $stato);
+            DB::table('pratica_stati')->updateOrInsert(['codice' => $stato['codice']], $stato + ['name' => $stato['codice'] !== '' ? $stato['codice'] : 'N/D']);
         }
     }
 }

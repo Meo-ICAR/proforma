@@ -37,7 +37,7 @@ class PraticheStatoResource extends Resource
     //   protected static ?int $navigationSort = 3;
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation
 
-    protected static ?string $recordTitleAttribute = 'stato_pratica';
+    protected static ?string $recordTitleAttribute = 'codice';
 
     public static function form(Schema $schema): Schema
     {

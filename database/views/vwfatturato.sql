@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwfatturato` AS select `invoices`.`competenza` AS `competenza`,`invoices`.`fornitore` AS `fornitore`,sum(`invoices`.`total_amount`) AS `fatturato`,`invoices`.`fornitori_id` AS `fornitori_id` from `invoices` where (0 = `invoices`.`is_notenasarco`) group by `invoices`.`competenza`,`invoices`.`fornitore` order by `invoices`.`competenza`,`invoices`.`fornitore`

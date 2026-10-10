@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwclientinew` AS select `v`.`denominazione_riferimento` AS `denominazione_riferimento`,`c`.`name` AS `name` from (`vwclientinewdetail` `v` left join `clientis` `c` on((`c`.`name` = `v`.`denominazione_riferimento`))) where (`c`.`name` is null)

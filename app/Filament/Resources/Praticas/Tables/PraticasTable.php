@@ -37,10 +37,12 @@ class PraticasTable
                 TextColumn::make('denominazione_banca')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('tipo_prodotto')
+                TextColumn::make('tipoprodotto.tipo_prodotto')
+                    ->label('Tipo prodotto')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('stato_pratica')
+                TextColumn::make('stato.codice')
+                    ->label('Stato pratica')
                     ->badge()
                     ->sortable()
                     ->searchable(),
@@ -58,13 +60,19 @@ class PraticasTable
             ])
             ->filters([
                 SelectFilter::make('stato_pratica')
-                    ->options(PraticheStato::pluck('stato_pratica', 'stato_pratica'))
+                    ->options(PraticheStato::pluck('codice', 'codice'))
+                    ->query(fn ($query, array $data) => filled($data['values'] ?? null)
+                        ? $query->whereHas('stato', fn ($q) => $q->whereIn('codice', $data['values']))
+                        : $query)
                     ->multiple()
                //     ->default(['PERFEZIONATA', 'IN AMMORTAMENTO'])
                     ->label('Stato Pratica'),
 
                 SelectFilter::make('tipo_prodotto')
                     ->options(TipoProdotto::whereNotNull('tipo_prodotto')->pluck('tipo_prodotto', 'tipo_prodotto'))
+                    ->query(fn ($query, array $data) => filled($data['values'] ?? null)
+                        ? $query->whereHas('tipoprodotto', fn ($q) => $q->whereIn('tipo_prodotto', $data['values']))
+                        : $query)
                     ->multiple()
                     ->label('Tipo Prodotto'),
                 Filter::make('data_fattura')

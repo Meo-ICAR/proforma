@@ -116,14 +116,14 @@ class ImportPraticheFromApi extends Command
                         ['name' => $praticaData['denominazione_banca']],
                         //  ['piva' => $praticaData['partita_iva_agente']]
                     );
-                    if (empty($praticaData['id'])) {
+                    if (empty($praticaData['codice_pratica'])) {
                         $this->warn('Skipping item without id: '.json_encode($item));
                         $errors++;
 
                         continue;
                     }
 
-                    if ($praticaData['id'] === 'QT06585xx') {
+                    if ($praticaData['codice_pratica'] === 'QT06585xx') {
                         \Log::info($item);
                     }
 
@@ -160,7 +160,7 @@ class ImportPraticheFromApi extends Command
                      *     //  $this->info("Pratica {$praticaData['id']} marked as rejected at " . $praticaData['rejected_at']);
                      * }
                      */
-                    $existing = Pratica::where('id', $praticaData['id'])->first();
+                    $existing = Pratica::where('codice_pratica', $praticaData['codice_pratica'])->first();
                     if ($existing) {
                         $existing->update($praticaData);
                         $updated++;
@@ -258,7 +258,7 @@ class ImportPraticheFromApi extends Command
         $net = $this->parseDecimal($apiData['Importo_Erogazione'] ?? null);
 
         return [
-            'id' => $apiData['ID Pratica'] ?? (string) Str::uuid(),
+            // La pratica si identifica con il suo codice (pratiches.codice_pratica); l'id intero lo assegna il database.
             'codice_pratica' => $apiData['ID Pratica'] ?? null,
             'nome_cliente' => $apiData['Cognome Cliente'] ?? null,
             'cognome_cliente' => $apiData['Nome Cliente'] ?? null,

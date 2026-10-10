@@ -152,7 +152,7 @@ class AttiveTable
                 TextColumn::make('pratica.nome_cliente')
                     ->label('Nome')
                     ->searchable(),
-                TextColumn::make('pratica.tipo_prodotto')
+                TextColumn::make('pratica.tipoprodotto.tipo_prodotto')
                     ->label('Tipo prodotto')
                     ->searchable(),
                 TextColumn::make('id_pratica')

@@ -3,25 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Unico\Core\Models\EmployeeType as CoreEmployeeType;
 
-class EmployeeType extends Model
+class EmployeeType extends CoreEmployeeType
 {
-    protected $connection = 'mysql_unicobpm';
-
-    /**
-     * I campi che possono essere assegnati in massa (mass assignable).
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'icon',
-        'companytype',
-        'is_external',
-    ];
-
     /**
      * Casting dei tipi di attributi (Sintassi moderna Laravel).
      *
@@ -29,9 +15,9 @@ class EmployeeType extends Model
      */
     protected function casts(): array
     {
-        return [
+        return array_merge(parent::casts(), [
             'is_external' => 'boolean',
-        ];
+        ]);
     }
 
     /* =========================================================================

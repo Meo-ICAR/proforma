@@ -264,7 +264,7 @@ class ImportProvvigioniFromApi extends Command
 
                         continue;
                     }
-                    $existingPratica = Pratica::where('id', $provvigioneData['id_pratica'])->first();
+                    $existingPratica = Pratica::where('codice_pratica', $provvigioneData['id_pratica'])->first();
                     if (! $existingPratica) {
                         continue;
                     }

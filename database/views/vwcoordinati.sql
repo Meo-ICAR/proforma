@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwcoordinati` AS select distinct `provvigioni`.`segnalatore` AS `coordinatore`,`provvigioni`.`denominazione_riferimento` AS `agente` from `provvigioni` where ((`provvigioni`.`tipo` = 'Agente') and (`provvigioni`.`segnalatore` is not null) and (`provvigioni`.`denominazione_riferimento` <> `provvigioni`.`segnalatore`)) order by `provvigioni`.`segnalatore`

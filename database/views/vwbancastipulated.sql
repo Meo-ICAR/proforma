@@ -1,0 +1,1 @@
+CREATE OR REPLACE VIEW `vwbancastipulated` AS select `pratiches`.`denominazione_banca` AS `banca`,min(`pratiches`.`sended_at`) AS `stipulated_at` from `pratiches` group by `pratiches`.`denominazione_banca`

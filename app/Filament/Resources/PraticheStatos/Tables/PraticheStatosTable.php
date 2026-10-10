@@ -17,15 +17,15 @@ class PraticheStatosTable
     {
         return $table
             ->columns([
-                TextColumn::make('stato_pratica')
+                TextColumn::make('codice')
                     ->searchable(),
-                TextColumn::make('isrejected')
+                TextColumn::make('is_rejected')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('isworking')
+                TextColumn::make('is_working')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('isestingued')
+                TextColumn::make('is_estingued')
                     ->numeric()
                     ->sortable(),
             ])

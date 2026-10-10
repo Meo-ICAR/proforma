@@ -103,7 +103,7 @@ class Provvigione extends Model
      */
     public function pratica()
     {
-        return $this->belongsTo(Pratica::class, 'id_pratica', 'id');
+        return $this->belongsTo(Pratica::class, 'id_pratica', 'codice_pratica');
     }
 
     protected $casts = [

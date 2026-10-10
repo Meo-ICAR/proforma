@@ -10,17 +10,15 @@ class CompanySeeder extends Seeder
     /**
      * Run the database seeds.
      *
-     * L'azienda di riferimento del mediatore: il suo id è il default di
-     * 'company_id' su clientis/clients/fornitoris (vedi manuale tecnico §4.4),
-     * quindi deve esistere prima di seedare quelle tabelle in un ambiente nuovo.
+     * L'azienda di riferimento del mediatore. Nel pacchetto unico-core 'company_id' non ha più un valore predefinito
+     * (era il tenant fisso 5c044917-… su clientis/clients/fornitoris) e l'id è intero: l'azienda si riconosce dalla partita IVA.
      */
     public function run(): void
     {
         Company::updateOrCreate(
-            ['id' => '5c044917-15b3-4471-90c9-38061fcca754'],
+            ['vat_number' => '10282211001'],
             [
                 'name' => 'RACES FINANCE',
-                'piva' => '10282211001',
                 'email' => 'amministrazione@races.it',
                 'email_cc' => 'amministrazione@races.it',
                 'email_bcc' => 'amministrazione@races.it',
