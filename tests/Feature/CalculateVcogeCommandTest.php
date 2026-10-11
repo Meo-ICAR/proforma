@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Jobs\RunArtisanCommandJob;
+use Unico\Core\Bridge\Jobs\RunBridgeCommand;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
@@ -19,8 +19,20 @@ class CalculateVcogeCommandTest extends TestCase
 
         $response = $this->postJson('/api/commands/vcoge:calculate', [], ['X-Api-Key' => 'test-bpm-api-key']);
 
-        $response->assertAccepted();
-        Queue::assertPushed(RunArtisanCommandJob::class);
+        $response->assertAccepted()->assertJsonStructure(['run_id', 'status_url']);
+        Queue::assertPushed(RunBridgeCommand::class);
+
+        $this->getJson($response->json('status_url'), ['X-Api-Key' => 'test-bpm-api-key'])->assertOk()->assertJsonPath('status', 'queued')->assertJsonPath('command', 'vcoge:calculate');
+    }
+
+    public function test_commands_outside_the_whitelist_and_calls_without_the_key_are_refused(): void
+    {
+        config(['services.bpm.api_key' => 'test-bpm-api-key']);
+        Queue::fake();
+
+        $this->postJson('/api/commands/db:wipe', [], ['X-Api-Key' => 'test-bpm-api-key'])->assertNotFound();
+        $this->postJson('/api/commands/vcoge:calculate')->assertUnauthorized();
+        Queue::assertNothingPushed();
     }
 
     public function test_venasarco_trimestre_calculate_can_be_dispatched_via_the_commands_api(): void
@@ -31,6 +43,6 @@ class CalculateVcogeCommandTest extends TestCase
         $response = $this->postJson('/api/commands/venasarco-trimestre:calculate', [], ['X-Api-Key' => 'test-bpm-api-key']);
 
         $response->assertAccepted();
-        Queue::assertPushed(RunArtisanCommandJob::class);
+        Queue::assertPushed(RunBridgeCommand::class);
     }
 }
