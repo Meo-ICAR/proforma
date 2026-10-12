@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5ef6ef6a72340b548df75c839053eed9",
+    "content-hash": "b86705e0e0fb3d6dfef401826c8c154c",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4435,16 +4435,10 @@
         {
             "name": "meo-icar/unico-core",
             "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Meo-ICAR/unico-core.git",
-                "reference": "ead8094e4528a211cd3e38a570bbc400e2382e1e"
-            },
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Meo-ICAR/unico-core/zipball/ead8094e4528a211cd3e38a570bbc400e2382e1e",
-                "reference": "ead8094e4528a211cd3e38a570bbc400e2382e1e",
-                "shasum": ""
+                "type": "path",
+                "url": "../unico-core",
+                "reference": "d20ed8dfd234ee3111c14669e0b831aaac8074cd"
             },
             "require": {
                 "filament/support": "^5.0",
@@ -4466,7 +4460,6 @@
             "require-dev": {
                 "phpunit/phpunit": "^12.0"
             },
-            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -4500,11 +4493,10 @@
                 "proprietary"
             ],
             "description": "Tabelle, modelli e risorse condivise della suite Unico per mediatori creditizi",
-            "support": {
-                "source": "https://github.com/Meo-ICAR/unico-core/tree/main",
-                "issues": "https://github.com/Meo-ICAR/unico-core/issues"
-            },
-            "time": "2026-10-11T05:53:27+00:00"
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
         },
         {
             "name": "mikehaertl/php-pdftk",

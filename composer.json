@@ -108,9 +108,16 @@
     "prefer-stable": true,
     "repositories": [
         {
+            "type": "path",
+            "url": "../unico-core",
+            "options": {
+                "symlink": true
+            }
+        },
+        {
             "name": "unico-core",
             "type": "vcs",
             "url": "https://github.com/Meo-ICAR/unico-core"
         }
-        ]
+    ]
 }
