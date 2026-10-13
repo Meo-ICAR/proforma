@@ -4,12 +4,15 @@ namespace App\Filament\Pages;
 
 use BackedEnum;
 use Filament\Pages\Page;
+use UnitEnum;
 
 class Manuale extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
 
     public string $view = 'filament.pages.manuale';
+
+    protected static UnitEnum|string|null $navigationGroup = 'Manuali';
 
     protected static ?string $navigationLabel = 'Manuale Utente';
 

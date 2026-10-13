@@ -32,7 +32,7 @@ class PraticheStatoResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Pratiche Stato';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Settings';
+    protected static UnitEnum|string|null $navigationGroup = 'Configurazioni';
 
     //   protected static ?int $navigationSort = 3;
     protected static bool $shouldRegisterNavigation = false;  // This will hide it from navigation

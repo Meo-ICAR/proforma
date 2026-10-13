@@ -49,22 +49,25 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Contabilita'),
                 NavigationGroup::make()->label('Anagrafica')->collapsed(),
                 NavigationGroup::make()->label('Settings')->collapsed(),
+                NavigationGroup::make()->label('Configurazioni')->collapsed(),
+                NavigationGroup::make()->label('Documentazione')->collapsed(),
+                NavigationGroup::make()->label('Manuali')->collapsed(),
             ])
             ->navigationItems([
 
                 NavigationItem::make('Manuale Utente')
                     ->url(fn (): string => route('manuale-oam'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-document-arrow-down')
-                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
-                    ->sort(99), // Opzionale: posizionalo in fondo al menu
+                    ->group('Manuali')
+                    ->sort(99),
                 NavigationItem::make('Manuale Contabile')
                     ->url(fn (): string => route('manuale-contabile'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-document-arrow-down')
-                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
-                    ->sort(99), // Opzionale: posizionalo in fondo al menu
+                    ->group('Manuali')
+                    ->sort(99),
                 NavigationItem::make('Manuale tecnico')
                     ->url(fn (): string => route('manuale-tecnico'), shouldOpenInNewTab: true)
-                    ->group('Documentazione') // Opzionale: raggruppa l'elemento in una sezione
+                    ->group('Manuali')
                     ->icon('heroicon-o-book-open')
                     ->sort(100),
             ])
