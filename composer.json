@@ -16,11 +16,11 @@
         "laravel/socialite": "^5.24",
         "laravel/tinker": "^3.0",
         "neuron-core/neuron-ai": "^3.16",
-        "pxlrbt/filament-excel": "^3.6",
+        "pxlrbt/filament-excel": "^4.1",
         "smalot/pdfparser": "^2.12",
         "socialiteproviders/microsoft": "^4.7",
         "socialiteproviders/microsoft-azure": "^5.2",
-        "maatwebsite/excel": "^3.1",
+        "maatwebsite/excel": "^3.1|^4.0",
         "meo-icar/unico-core": "dev-main"
     },
     "require-dev": {
