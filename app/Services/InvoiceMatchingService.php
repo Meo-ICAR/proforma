@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Proforma;
+use App\Models\Provvigione;
+
 /**
  * Punto unico dell'abbinamento delle provvigioni alle fatture. Un proforma è composto da più provvigioni di dettaglio; a seconda del tipo
  * di provvigione la fattura è diversa e si arriva ad essa per strade diverse:
@@ -23,7 +26,7 @@ class InvoiceMatchingService
 
     /**
      * @param  array<int, string>  $tipi  agente, istituto, cliente (default: tutti)
-     * @return array{agente?: array, istituto?: array, cliente?: array}
+     * @return array{agente?: array, istituto?: array, cliente?: array, stati_riallineati: int}
      */
     public function match(array $tipi = ['agente', 'istituto', 'cliente']): array
     {
@@ -41,7 +44,33 @@ class InvoiceMatchingService
             $results['cliente'] = $this->clienti->matchClienteProvvigioniToSalesInvoices();
         }
 
+        $results['stati_riallineati'] = $this->riallineaStati();
+
         return $results;
+    }
+
+    /**
+     * Fattura emessa = `Pagato` anche per gli abbinamenti già fatti: l'import orario dei vecchi archivi riporta lo `stato` che hanno là
+     * (es. «Proforma»), quindi a ogni giro si riallinea quello delle provvigioni che hanno una fattura, direttamente o tramite il proforma.
+     * Non si toccano le provvigioni annullate, stornate o escluse.
+     *
+     * @return int Provvigioni aggiornate
+     */
+    public function riallineaStati(): int
+    {
+        $esclusi = ['Pagato', 'Annullato', 'Stornato', 'Escluso'];
+
+        $conProforma = Provvigione::query()
+            ->whereIn('proforma_id', Proforma::query()->whereNotNull('invoiceable_id')->select('id'))
+            ->where(fn ($query) => $query->whereNull('stato')->orWhereNotIn('stato', $esclusi))
+            ->update(['stato' => 'Pagato']);
+
+        $dirette = Provvigione::query()
+            ->whereNotNull('invoiceable_id')
+            ->where(fn ($query) => $query->whereNull('stato')->orWhereNotIn('stato', $esclusi))
+            ->update(['stato' => 'Pagato']);
+
+        return $conProforma + $dirette;
     }
 
     /** Fatture di vendita: gli istituti passano dal proforma, i clienti no. */

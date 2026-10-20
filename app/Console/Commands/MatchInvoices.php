@@ -25,6 +25,12 @@ class MatchInvoices extends Command
 
         if (! $this->option('stats-only')) {
             foreach ($matching->match($tipi) as $tipo => $stats) {
+                if ($tipo === 'stati_riallineati') {
+                    $this->info("Provvigioni portate a Pagato: {$stats}");
+
+                    continue;
+                }
+
                 $abbinati = $stats['matched_proformas'] ?? $stats['matched'];
                 $this->info(ucfirst($tipo).": abbinati {$abbinati}".(isset($stats['clients_created']) ? ", clienti creati {$stats['clients_created']}, aggiornati {$stats['clients_updated']}" : ''));
 
