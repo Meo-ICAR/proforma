@@ -47,11 +47,10 @@ class AdminPanelProvider extends PanelProvider
             ->navigationGroups([
                 NavigationGroup::make()->label('Pratiche'),
                 NavigationGroup::make()->label('Contabilita'),
-                NavigationGroup::make()->label('Anagrafica')->collapsed(),
-                NavigationGroup::make()->label('Settings')->collapsed(),
-                NavigationGroup::make()->label('Configurazioni')->collapsed(),
-                NavigationGroup::make()->label('Documentazione')->collapsed(),
+                NavigationGroup::make()->label('Anagrafiche')->collapsed(),
+                NavigationGroup::make()->label('Archivi'),
                 NavigationGroup::make()->label('Manuali')->collapsed(),
+                NavigationGroup::make()->label('Settings')->collapsed(),
             ])
             ->navigationItems([
 

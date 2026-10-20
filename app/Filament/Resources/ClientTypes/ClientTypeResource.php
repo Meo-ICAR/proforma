@@ -26,7 +26,7 @@ class ClientTypeResource extends Resource
 
     protected static ?string $navigationLabel = 'Tipo consulenti';
 
-    protected static UnitEnum|string|null $navigationGroup = 'Configurazioni';
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
 
     public static function form(Schema $schema): Schema
     {

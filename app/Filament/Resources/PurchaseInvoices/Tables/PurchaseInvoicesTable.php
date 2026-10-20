@@ -275,8 +275,7 @@ class PurchaseInvoicesTable
                             $matchService->matchFornitoresByVatNumber();
 
                             // Step 2: abbina proforma ↔ purchase invoice
-                            $proformaMatchService = new ProformaPurchaseInvoiceMatchingService;
-                            $stats = $proformaMatchService->matchProformasToInvoices();
+                            $stats = app(\App\Services\InvoiceMatchingService::class)->matchAcquisti()['agente'];
 
                             Notification::make()
                                 ->title('Riconciliazione completata')

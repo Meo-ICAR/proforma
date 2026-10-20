@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Fornitore;
 use App\Models\Proforma;
 use App\Models\PurchaseInvoice;
 use Illuminate\Support\Facades\DB;
@@ -11,10 +10,14 @@ use Illuminate\Support\Facades\Log;
 class ProformaPurchaseInvoiceMatchingService
 {
     /**
-     * Match proformas to purchase invoices.
+     * Abbina i proforma alle fatture di acquisto.
      *
-     * Legame:
-     *   PurchaseInvoice.vat_number  =  Fornitore.piva  =  Proforma.fornitori_id (FK → fornitoris.id)
+     * Regole di abbinabilità (Proforma::abbinabiliAFatturaAcquisto): il proforma è di un fornitore con la stessa partita IVA della fattura
+     * (PurchaseInvoice.vat_number = Fornitore.piva) e la fattura non è precedente al proforma (data di registrazione >= data di invio).
+     * Tra i proforma abbinabili si sceglie quello con lo stesso importo (tolleranza di 5 euro): l'importo non rende abbinabile un proforma, ma
+     * serve a collegare in automatico quello giusto; gli altri si riconciliano a mano dalla fattura.
+     *
+     * Una fattura è candidata se non ha ancora un proforma: lo stato `closed` (pagata in contabilità) non conta.
      *
      * @return array{processed_invoices: int, matched_proformas: int, errors: string[]}
      */
@@ -26,11 +29,11 @@ class ProformaPurchaseInvoiceMatchingService
             'errors'             => [],
         ];
 
-        // Solo fatture non chiuse, di tipo Fornitore, non is_nopractice, con vat_number e importo valorizzati.
-        $purchaseInvoices = PurchaseInvoice::where('closed', false)
-            ->where('invoiceable_type', Fornitore::class)
+        $purchaseInvoices = PurchaseInvoice::query()
+            ->libere()
             ->where('is_nopractice', false)
             ->whereNotNull('vat_number')
+            ->where('vat_number', '!=', '')
             ->whereNotNull('amount')
             ->whereNotNull('registration_date')
             ->orderBy('registration_date')
@@ -53,52 +56,21 @@ class ProformaPurchaseInvoiceMatchingService
         return $stats;
     }
 
-    /**
-     * Tenta di abbinare una PurchaseInvoice a una Proforma.
-     *
-     * Strategia A — tramite fornitori_id:
-     *   Trova il Fornitore (inclusi soft-deleted) per P.IVA, poi cerca le sue proforma.
-     *   Se nessuna combacia per importo → attiva la strategia B.
-     *
-     * Strategia B — fallback su vat_number denormalizzato:
-     *   Cerca le proforma direttamente per proforma.vat_number.
-     *   Copre i casi in cui la proforma ha un fornitori_id disallineato o il fornitore
-     *   non esiste più, ma il campo vat_number è corretto.
-     */
     private function processPurchaseInvoice(PurchaseInvoice $purchaseInvoice, array &$stats): void
     {
-        // Strategia A: tramite Fornitore (inclusi soft-deleted)
-        $fornitore = Fornitore::withTrashed()
-            ->where('piva', $purchaseInvoice->vat_number)
-            ->first();
-
-        if ($fornitore) {
-            $proformas = Proforma::where('fornitori_id', $fornitore->id)
-                ->whereNull('invoiceable_id')
-                ->whereNotNull('sended_at')
-                ->where('sended_at', '<=', $purchaseInvoice->registration_date)
-                ->get();
-
-            if ($this->tryMatchByAmount($proformas, $purchaseInvoice, $stats)) {
-                return;
-            }
-        }
-
-        // Strategia B: fallback su vat_number denormalizzato
-        Log::debug("[PurchaseMatching] Strategia B (vat_number) per fattura {$purchaseInvoice->id} (P.IVA: {$purchaseInvoice->vat_number})");
-
-        $proformasByVat = Proforma::where('vat_number', $purchaseInvoice->vat_number)
+        $proformas = Proforma::query()
             ->whereNull('invoiceable_id')
-            ->whereNotNull('sended_at')
-            ->where('sended_at', '<=', $purchaseInvoice->registration_date)
+            ->abbinabiliAFatturaAcquisto($purchaseInvoice)
+            ->orderBy('sended_at')
             ->get();
 
-        if ($proformasByVat->isEmpty()) {
-            Log::debug("[PurchaseMatching] Nessuna proforma per P.IVA '{$purchaseInvoice->vat_number}' (fattura {$purchaseInvoice->id})");
+        if ($proformas->isEmpty()) {
+            Log::debug("[PurchaseMatching] Nessun proforma abbinabile per la fattura {$purchaseInvoice->id} (P.IVA: {$purchaseInvoice->vat_number})");
+
             return;
         }
 
-        $this->tryMatchByAmount($proformasByVat, $purchaseInvoice, $stats);
+        $this->tryMatchByAmount($proformas, $purchaseInvoice, $stats);
     }
 
     /**
@@ -162,10 +134,11 @@ class ProformaPurchaseInvoiceMatchingService
     public function getUnmatchedStatistics(): array
     {
         $unmatchedProformas = Proforma::whereNull('invoiceable_id')
+            ->where('tipo', 'Agente')
             ->whereNotNull('sended_at')
             ->count();
 
-        $unmatchedInvoices = PurchaseInvoice::where('closed', false)
+        $unmatchedInvoices = PurchaseInvoice::libere()
             ->whereNotNull('vat_number')
             ->whereNotNull('amount')
             ->count();

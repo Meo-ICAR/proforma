@@ -138,7 +138,7 @@ class PrimaNotaEntriesTable
 
                 SelectFilter::make('fornitore_id')
                     ->label('Fornitore')
-                    ->options(fn () => Fornitore::query()->orderBy('name')->pluck('name', 'id'))
+                    ->options(fn () => Fornitore::query()->whereNotNull('name')->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
@@ -158,7 +158,7 @@ class PrimaNotaEntriesTable
 
                 SelectFilter::make('clienti_id')
                     ->label('Istituto/Mandante (Clienti)')
-                    ->options(fn () => Clienti::query()->orderBy('name')->pluck('name', 'id'))
+                    ->options(fn () => Clienti::query()->whereNotNull('name')->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
@@ -178,7 +178,7 @@ class PrimaNotaEntriesTable
 
                 SelectFilter::make('client_id')
                     ->label('Cliente/Consulente')
-                    ->options(fn () => Client::query()->orderBy('name')->pluck('name', 'id'))
+                    ->options(fn () => Client::query()->whereNotNull('name')->orderBy('name')->pluck('name', 'id'))
                     ->searchable()
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;

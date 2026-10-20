@@ -10,7 +10,12 @@ use Illuminate\Support\Facades\Log;
 class ProformaInvoiceMatchingService
 {
     /**
-     * Match proformas to sales invoices based on amount equality
+     * Abbina i proforma alle fatture di vendita.
+     *
+     * Regole di abbinabilità (Proforma::abbinabiliAFatturaVendita): il proforma è di un istituto (cliente) con la stessa partita IVA della
+     * fattura, purché non sia un cliente fittizio (`is_dummy`), e la fattura non è precedente al proforma (data di registrazione >= data di invio).
+     * Tra i proforma abbinabili si collega in automatico quello con lo stesso importo (compenso + anticipo + contributo, tolleranza di 10 euro).
+     * Una fattura è candidata se non ha ancora un proforma: lo stato `closed` non conta.
      *
      * @return array Statistics about the matching process
      */
@@ -19,17 +24,19 @@ class ProformaInvoiceMatchingService
         $stats = [
             'processed_invoices' => 0,
             'matched_proformas' => 0,
-            'errors' => []
+            'errors' => [],
         ];
 
-        // Get all sales invoices that are not closed
-        $salesInvoices = SalesInvoice::where('closed', 0)
+        $salesInvoices = SalesInvoice::query()
+            ->libere()
+            ->whereNotNull('vat_number')
+            ->where('vat_number', '!=', '')
             ->whereNotNull('amount')
             ->whereNotNull('registration_date')
             ->orderBy('registration_date')
             ->get();
 
-        Log::info("Processing {$salesInvoices->count()} unclosed sales invoices");
+        Log::info("Processing {$salesInvoices->count()} sales invoices without a proforma");
 
         foreach ($salesInvoices as $salesInvoice) {
             try {
@@ -48,20 +55,18 @@ class ProformaInvoiceMatchingService
 
     /**
      * Process a single sales invoice and try to match with proformas
-     *
-     * @param SalesInvoice $salesInvoice
-     * @param array $stats
      */
     private function processSalesInvoice(SalesInvoice $salesInvoice, array &$stats): void
     {
-        // Get proformas sent after or on the registration date
-        $proformas = $salesInvoice
-            ->proformasAfterRegistration()
-            ->whereNull('invoiceable_id')  // Only process unassociated proformas
+        $proformas = Proforma::query()
+            ->whereNull('invoiceable_id')
+            ->abbinabiliAFatturaVendita($salesInvoice)
+            ->orderBy('sended_at')
             ->get();
 
         if ($proformas->isEmpty()) {
             Log::debug("No proformas found for sales invoice {$salesInvoice->id}");
+
             return;
         }
 
@@ -69,13 +74,14 @@ class ProformaInvoiceMatchingService
             // Calculate total amount (compenso + anticipo + contributo)
             $proformaTotal = $proforma->compenso + $proforma->anticipo + $proforma->contributo;
 
-            // Compare with sales invoice amount (allowing small floating point differences)
             if ($this->amountsMatch($salesInvoice->amount, $proformaTotal)) {
-                // Associate the proforma with the sales invoice
                 $this->associateProformaWithInvoice($proforma, $salesInvoice);
                 $stats['matched_proformas']++;
 
                 Log::info("Matched proforma {$proforma->id} with sales invoice {$salesInvoice->id} - Amount: {$salesInvoice->amount}");
+
+                // La fattura ha ora il suo proforma: gli altri con lo stesso importo restano da riconciliare a mano.
+                return;
             }
         }
     }
@@ -107,6 +113,9 @@ class ProformaInvoiceMatchingService
                 'invoiceable_id' => $salesInvoice->id,
                 'stato' => 'Pagato',
             ]);
+
+            // Fattura emessa = pagato, anche per le provvigioni di dettaglio che compongono il proforma.
+            $proforma->provvigioni()->update(['stato' => 'Pagato']);
             $salesInvoice->update([
                 'closed' => 1,
             ]);
@@ -121,11 +130,11 @@ class ProformaInvoiceMatchingService
     public function getUnmatchedStatistics(): array
     {
         $unmatchedProformas = Proforma::whereNull('invoiceable_id')
+            ->where('tipo', 'Istituto')
             ->whereNotNull('sended_at')
             ->count();
 
-        $unmatchedInvoices = SalesInvoice::where('closed', 0)
-            ->whereNull('invoiceable_id')
+        $unmatchedInvoices = SalesInvoice::libere()
             ->whereNotNull('amount')
             ->count();
 

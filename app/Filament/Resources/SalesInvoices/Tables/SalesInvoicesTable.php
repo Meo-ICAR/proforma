@@ -197,13 +197,14 @@ class SalesInvoicesTable
                             // Esegui il matching per sales invoices con clienti
                             $matchService->matchClientisByVatNumber();
 
-                            // Esegui anche il matching per proforme
-                            $proformaMatchService = new ProformaInvoiceMatchingService;
-                            $proformaResults = $proformaMatchService->matchProformasToInvoices();
+                            // Istituti (via proforma) e clienti (direttamente, dal codice fiscale della pratica)
+                            $risultati = app(\App\Services\InvoiceMatchingService::class)->matchVendite();
+                            $proformaResults = ['matched_proformas' => $risultati['istituto']['matched_proformas']];
+                            $clienteResults = ['matched' => $risultati['cliente']['matched']];
 
                             Notification::make()
                                 ->title('Associazione completata')
-                                ->body('Le fatture di vendita sono state associate a mandanti, clienti e proforme. Proforme abbinate: '.$proformaResults['matched_proformas'])
+                                ->body('Le fatture di vendita sono state associate a mandanti, clienti e proforme. Proforme abbinate: '.$proformaResults['matched_proformas'].'. Provvigioni cliente abbinate: '.$clienteResults['matched'])
                                 ->success()
                                 ->send();
                         } catch (\Exception $e) {

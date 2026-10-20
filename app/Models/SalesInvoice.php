@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Model;
 
 class SalesInvoice extends Model
@@ -103,10 +104,30 @@ class SalesInvoice extends Model
         return $this->morphTo();
     }
 
-    public function proformasAfterRegistration()
+    /** Proforma che si possono abbinare a questa fattura (o già abbinate ad essa), secondo le regole di vendita in Proforma::abbinabiliAFatturaVendita. */
+    public function proformasAfterRegistration(): HasMany
     {
-        return $this->proformas()->when($this->registration_date, function ($query, $registrationDate) {
-            return $query->where('sended_at', '<=', $registrationDate);
-        });
+        // Senza il vincolo sulla colonna vat_number dei proforma: la partita IVA si legge dal fornitore o dal cliente.
+        $relation = Relation::noConstraints(fn () => $this->hasMany(Proforma::class, 'vat_number', 'vat_number'));
+
+        $relation->getQuery()->where(fn ($query) => $query
+            ->abbinabiliAFatturaVendita($this)
+            ->orWhere(fn ($linked) => $linked->where('proformas.invoiceable_type', static::class)->where('proformas.invoiceable_id', $this->getKey())));
+
+        return $relation;
+    }
+
+    /** Fatture a cui non è ancora abbinato nessun proforma né una provvigione (tipo Cliente). */
+    public function scopeLibere($query)
+    {
+        return $query
+            ->whereNotExists(fn ($proformas) => $proformas->from('proformas')
+                ->whereColumn('proformas.invoiceable_id', $this->getTable().'.id')
+                ->where('proformas.invoiceable_type', static::class)
+                ->whereNull('proformas.deleted_at'))
+            ->whereNotExists(fn ($provvigioni) => $provvigioni->from('provvigioni')
+                ->whereColumn('provvigioni.invoiceable_id', $this->getTable().'.id')
+                ->where('provvigioni.invoiceable_type', static::class)
+                ->whereNull('provvigioni.deleted_at'));
     }
 }

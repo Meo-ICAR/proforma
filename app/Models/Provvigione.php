@@ -73,6 +73,8 @@ class Provvigione extends Model
         'proforma_id',
         'legacy_id',
         'invoice_number',
+        'invoiceable_type',
+        'invoiceable_id',
         'cognome',
         'quota',
         'nome',
@@ -104,7 +106,7 @@ class Provvigione extends Model
      */
     public function pratica()
     {
-        return $this->belongsTo(Pratica::class, 'pratica_id');
+        return $this->belongsTo(Pratica::class, 'id_pratica');
     }
 
     protected $casts = [

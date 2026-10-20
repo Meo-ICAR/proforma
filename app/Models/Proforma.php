@@ -76,6 +76,38 @@ class Proforma extends Model
         'deleted_at' => 'datetime',
     ];
 
+    /**
+     * Proforma abbinabili a una fattura di acquisto: sono quelle del fornitore con la stessa partita IVA della fattura (anche se il fornitore è stato
+     * eliminato), non precedenti alla fattura, cioè inviate in una data non successiva a quella di registrazione.
+     */
+    public function scopeAbbinabiliAFatturaAcquisto(Builder $query, PurchaseInvoice $fattura): Builder
+    {
+        return $query
+            ->where('proformas.tipo', 'Agente')
+            ->whereIn('proformas.fornitori_id', Fornitore::withoutGlobalScopes()->where('piva', $this->partitaIvaOrNull($fattura->vat_number))->select('id'))
+            ->whereNotNull('proformas.sended_at')
+            ->whereDate('proformas.sended_at', '<=', $fattura->registration_date ?? '1900-01-01');
+    }
+
+    /**
+     * Proforma abbinabili a una fattura di vendita: sono quelle dell'istituto (cliente) con la stessa partita IVA della fattura, purché non sia un
+     * cliente fittizio (`is_dummy`), e inviate in una data non successiva a quella di registrazione.
+     */
+    public function scopeAbbinabiliAFatturaVendita(Builder $query, SalesInvoice $fattura): Builder
+    {
+        return $query
+            ->where('proformas.tipo', 'Istituto')
+            ->whereIn('proformas.fornitori_id', Clienti::withoutGlobalScopes()->where('piva', $this->partitaIvaOrNull($fattura->vat_number))->where('is_dummy', false)->select('id'))
+            ->whereNotNull('proformas.sended_at')
+            ->whereDate('proformas.sended_at', '<=', $fattura->registration_date ?? '1900-01-01');
+    }
+
+    /** Una partita IVA vuota non deve mai coincidere con i fornitori o i clienti che non ce l'hanno. */
+    private function partitaIvaOrNull(?string $partitaIva): string
+    {
+        return filled($partitaIva) ? trim($partitaIva) : "\0";
+    }
+
     public function getTotaleAttribute()
     {
         return $this->compenso + $this->anticipo + $this->contributo
