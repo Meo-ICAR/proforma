@@ -57,5 +57,7 @@ return [
     'mediafacile' => [
         'base_url' => env('MEDIAFACILE_BASE_URL', 'https://races.mediafacile.it/ws/hassisto.php'),
         'header_key' => env('MEDIAFACILE_HEADER_KEY'),
+        // Utenti (email) che ricevono l'esito dell'importazione schedulata.
+        'notify_emails' => array_filter(array_map('trim', explode(',', (string) env('MEDIAFACILE_NOTIFY_EMAILS', '')))),
     ],
 ];

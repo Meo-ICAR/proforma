@@ -7,7 +7,11 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+use App\Jobs\ImportaDaMediafacile;
 use Illuminate\Support\Facades\Schedule;
+
+// Import notturno da MediaFacile (ultimi 60 giorni), in coda; a fine lavoro gli utenti in MEDIAFACILE_NOTIFY_EMAILS ricevono la notifica.
+Schedule::job(new ImportaDaMediafacile)->dailyAt('03:00')->withoutOverlapping();
 
 Schedule::command('coge:sync-monthly')->monthlyOn(1, '01:00');
 
