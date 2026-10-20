@@ -194,7 +194,7 @@ class ProvvigionesTable
                         1 => 'Si',
                         0 => 'No',
                     ])
-                    ->default(in_array(now()->month, [1, 4, 7, 10]) ? 1 : 0)
+                    ->default(in_array(now()->month, [1, 4, 7, 10]) ? null : 0)
                     ->placeholder('Tutti'),
                 Filter::make('data_fattura')
                     ->form([
