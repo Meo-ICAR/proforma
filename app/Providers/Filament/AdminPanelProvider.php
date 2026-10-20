@@ -72,7 +72,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->favicon(asset('brand/icons/unico-coge-64.png'))
             ->brandLogo(asset('brand/logos/unico-coge.jpg'))
-            ->brandLogoHeight('2.5rem')
+            ->brandLogoHeight('5rem')
             // ->search()
             ->default()
             ->id('admin')
