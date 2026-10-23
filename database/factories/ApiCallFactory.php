@@ -16,20 +16,17 @@ class ApiCallFactory extends Factory
     public function definition(): array
     {
         return [
-            'service' => 'mediafacile',
+            'provider' => 'mediafacile',
             'operation' => 'pratiche',
-            'method' => 'GET',
-            'url' => fake()->url(),
-            'status' => 200,
-            'successful' => true,
+            'status' => ApiCall::STATUS_SUCCESS,
+            'http_status' => 200,
             'duration_ms' => fake()->numberBetween(20, 2000),
-            'response_bytes' => fake()->numberBetween(100, 100000),
-            'called_at' => now(),
+            'request' => ['method' => 'GET', 'url' => fake()->url()],
         ];
     }
 
     public function failed(): static
     {
-        return $this->state(fn (): array => ['status' => 500, 'successful' => false, 'error' => 'HTTP 500']);
+        return $this->state(fn (): array => ['status' => ApiCall::STATUS_FAILED, 'http_status' => 500, 'error' => 'HTTP 500']);
     }
 }

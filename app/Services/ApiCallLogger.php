@@ -24,25 +24,24 @@ class ApiCallLogger
     {
         return fn (callable $handler): callable => function (RequestInterface $request, array $options) use ($handler, $service, $operation) {
             $startedAt = microtime(true);
-            $calledAt = now();
 
             try {
                 $promise = $handler($request, $options);
             } catch (Throwable $e) {
-                $this->record($service, $operation, $request, $startedAt, $calledAt, null, false, null, $e->getMessage());
+                $this->record($service, $operation, $request, $startedAt, null, false, null, $e->getMessage());
 
                 throw $e;
             }
 
             return $promise->then(
-                function (ResponseInterface $response) use ($request, $service, $operation, $startedAt, $calledAt) {
+                function (ResponseInterface $response) use ($request, $service, $operation, $startedAt) {
                     $status = $response->getStatusCode();
-                    $this->record($service, $operation, $request, $startedAt, $calledAt, $status, $status < 400, $response->getBody()->getSize(), $status >= 400 ? $this->excerpt($response) : null);
+                    $this->record($service, $operation, $request, $startedAt, $status, $status < 400, $response->getBody()->getSize(), $status >= 400 ? $this->excerpt($response) : null);
 
                     return $response;
                 },
-                function (mixed $reason) use ($request, $service, $operation, $startedAt, $calledAt) {
-                    $this->record($service, $operation, $request, $startedAt, $calledAt, null, false, null, $reason instanceof Throwable ? $reason->getMessage() : (string) $reason);
+                function (mixed $reason) use ($request, $service, $operation, $startedAt) {
+                    $this->record($service, $operation, $request, $startedAt, null, false, null, $reason instanceof Throwable ? $reason->getMessage() : (string) $reason);
 
                     return Create::rejectionFor($reason);
                 },
@@ -50,20 +49,20 @@ class ApiCallLogger
         };
     }
 
-    private function record(string $service, ?string $operation, RequestInterface $request, float $startedAt, mixed $calledAt, ?int $status, bool $successful, ?int $bytes, ?string $error): void
+    private function record(string $service, ?string $operation, RequestInterface $request, float $startedAt, ?int $status, bool $successful, ?int $bytes, ?string $error): void
     {
         try {
             ApiCall::create([
-                'service' => $service,
-                'operation' => $operation,
-                'method' => $request->getMethod(),
-                'url' => mb_substr((string) $request->getUri()->withUserInfo(''), 0, 1000),
-                'status' => $status,
-                'successful' => $successful,
+                'provider' => $service,
+                'operation' => (string) $operation,
+                'user_id' => auth()->id(),
+                'status' => $successful ? ApiCall::STATUS_SUCCESS : ApiCall::STATUS_FAILED,
+                'http_status' => $status,
                 'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
-                'response_bytes' => $bytes,
+                'cost' => 0,
+                'request' => ['method' => $request->getMethod(), 'url' => (string) $request->getUri()->withUserInfo('')],
+                'summary' => $bytes === null ? null : "{$bytes} byte",
                 'error' => $error,
-                'called_at' => $calledAt,
             ]);
         } catch (Throwable $e) {
             report($e);
