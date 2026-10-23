@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW `vwpraticacoordinata` AS select distinct `provvigioni`.`denominazione_riferimento` AS `denominazione_riferimento`,`provvigioni`.`id_pratica` AS `id_pratica` from `provvigioni` where ((`provvigioni`.`descrizione` like '%10%') or (`provvigioni`.`descrizione` like '%5%'))

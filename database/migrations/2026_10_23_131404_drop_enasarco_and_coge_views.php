@@ -4,22 +4,34 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
 /**
- * ENASARCO, COGE e storico proforma non leggono più le viste: le query sono in App\Services\ReportingQueries.
+ * Unicocoge non usa viste: ENASARCO, COGE e storico proforma leggono le query di App\Services\ReportingQueries. Si tolgono tutte le viste di reporting rimaste.
  */
 return new class extends Migration
 {
     private const VIEWS = [
-        'vwenasarcotot',
-        'vwenasarcotrimestre',
-        'vwenasarcoprovv',
-        'vwenasarco',
-        'vwcogestorno',
-        'vwcoge',
-        'vwproformaagente',
-        'vwproformaistituto',
-        'vwbancastipulated',
-        'vwcogeprovvigioni',
-        'vwenasarcoanno',
+        'v_calcolo_enasarco_annuo',
+        'vwclientinew',
+        'vwclientinewdetail',
+        'vwcoordinamentobase',
+        'vwcoordinati',
+        'vwcoordinatori',
+        'vwfatturato',
+        'vwfatturepercompetenza',
+        'vwfornitorinew',
+        'vwfornitorinewdetail',
+        'vwleadcalls',
+        'vwleadcalltots',
+        'vwpraticacoordinata',
+        'vwprovv2cogedetail',
+        'vwprovv2cogedetailx',
+        'vwprovv2cogestorno',
+        'vwprovvanomale',
+        'vwprovvcogestorno',
+        'vwprovvcoordinamento',
+        'vwprovvdoppie',
+        'vwprovvigioni',
+        'vwprovvigioni_fatturato',
+        'vwstipulated_at',
     ];
 
     public function up(): void

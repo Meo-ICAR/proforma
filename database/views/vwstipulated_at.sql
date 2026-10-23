@@ -1,1 +1,0 @@
-CREATE OR REPLACE VIEW `vwstipulated_at` AS select `pratiches`.`partita_iva_agente` AS `partita_iva_agente`,min(`pratiches`.`sended_at`) AS `stipulated_at` from `pratiches` group by `pratiches`.`partita_iva_agente`

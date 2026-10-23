@@ -72,42 +72,6 @@ class CoreIntegrationTest extends TestCase
         $this->assertSame(1, $pratica->provvigioni()->count());
     }
 
-    public function test_the_reporting_views_used_by_the_code_exist_and_run(): void
-    {
-        $used = ['vwcoge', 'vwcogestorno', 'vwenasarco', 'vwenasarcotot', 'vwenasarcotrimestre', 'vwproformaagente', 'vwproformaistituto'];
-        $existing = collect(DB::select('select table_name as name from information_schema.views where table_schema = database()'))->pluck('name')->all();
-
-        foreach ($used as $view) {
-            $this->assertContains($view, $existing, "vista {$view} mancante");
-        }
-
-        // Quelle usate dal codice devono girare; delle altre (report nel solo database) basta l'esistenza: alcune non sono
-        // valide con ONLY_FULL_GROUP_BY, come già nel database precedente.
-        foreach ($used as $view) {
-            DB::select("select * from `{$view}` limit 1");
-        }
-
-        $this->assertGreaterThanOrEqual(20, count($existing));
-    }
-
-    public function test_the_pratica_views_join_on_the_foreign_key(): void
-    {
-        $this->seed(ProvvigioniStatoSeeder::class);
-        $pratica = $this->pratica(['codice_pratica' => 'QT00020', 'nome_cliente' => 'Rossi', 'cognome_cliente' => 'Mario', 'tipo_prodotto' => 'Cessione']);
-        foreach ([1, 2] as $n) {
-            DB::table('provvigioni')->insert([
-                'id' => $n, 'id_pratica' => 'QT00020', 'pratica_id' => $pratica->id, 'stato' => 'Proforma', 'importo' => 50, 'tipo' => 'T',
-                'denominazione_riferimento' => 'X', 'descrizione' => 'D', 'data_fattura' => '2026-01-01',
-            ]);
-        }
-
-        $rows = DB::select('select * from vwprovvdoppie');
-
-        $this->assertCount(1, $rows);
-        $this->assertSame('QT00020', $rows[0]->id_pratica);
-        $this->assertSame('Cessione', $rows[0]->tipo_prodotto);
-    }
-
     public function test_a_provvigione_can_exist_before_its_pratica_and_keeps_the_code(): void
     {
         $this->seed(ProvvigioniStatoSeeder::class);
