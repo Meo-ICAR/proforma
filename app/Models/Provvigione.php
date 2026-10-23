@@ -12,11 +12,6 @@ class Provvigione extends Model
     use SoftDeletes;
 
     /**
-     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
-     */
-    protected $connection = 'mysql';
-
-    /**
      * The table associated with the model.
      *
      * @var string
@@ -111,6 +106,7 @@ class Provvigione extends Model
      */
     public function pratica()
     {
+        // `id_pratica` è il codice della pratica (testo, da Mediafacile): il riferimento alle pratiche di questo database è `pratica_id`.
         return $this->belongsTo(Pratica::class, 'pratica_id');
     }
 

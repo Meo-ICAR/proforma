@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use Unico\Core\Bridge\Jobs\RunBridgeCommand;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
+use Unico\Core\Bridge\Jobs\RunBridgeCommand;
 
 class CalculateVcogeCommandTest extends TestCase
 {
@@ -13,7 +13,7 @@ class CalculateVcogeCommandTest extends TestCase
      */
     public function test_vcoge_calculate_can_be_dispatched_via_the_commands_api(): void
     {
-        config(['services.bpm.api_key' => 'test-bpm-api-key']);
+        config(['unico-core.bridge.api_key' => 'test-bpm-api-key']);
         Queue::fake();
 
         $response = $this->postJson('/api/commands/vcoge:calculate', [], ['X-Api-Key' => 'test-bpm-api-key']);
@@ -26,7 +26,7 @@ class CalculateVcogeCommandTest extends TestCase
 
     public function test_commands_outside_the_whitelist_and_calls_without_the_key_are_refused(): void
     {
-        config(['services.bpm.api_key' => 'test-bpm-api-key']);
+        config(['unico-core.bridge.api_key' => 'test-bpm-api-key']);
         Queue::fake();
 
         $this->postJson('/api/commands/db:wipe', [], ['X-Api-Key' => 'test-bpm-api-key'])->assertNotFound();
@@ -36,7 +36,7 @@ class CalculateVcogeCommandTest extends TestCase
 
     public function test_venasarco_trimestre_calculate_can_be_dispatched_via_the_commands_api(): void
     {
-        config(['services.bpm.api_key' => 'test-bpm-api-key']);
+        config(['unico-core.bridge.api_key' => 'test-bpm-api-key']);
         Queue::fake();
 
         $response = $this->postJson('/api/commands/venasarco-trimestre:calculate', [], ['X-Api-Key' => 'test-bpm-api-key']);

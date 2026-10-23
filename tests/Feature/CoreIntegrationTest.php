@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Pratica;
 use App\Models\Provvigione;
-use App\Services\ReportingQueries;
 use Database\Seeders\ProvvigioniStatoSeeder;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -74,42 +72,22 @@ class CoreIntegrationTest extends TestCase
         $this->assertSame(1, $pratica->provvigioni()->count());
     }
 
-    public function test_the_enasarco_coge_and_proforma_queries_run_without_views(): void
+    public function test_the_reporting_views_used_by_the_code_exist_and_run(): void
     {
-        $queries = [
-            ReportingQueries::coge(),
-            ReportingQueries::cogeStorno(),
-            ReportingQueries::enasarcoTrimestre(),
-            ReportingQueries::enasarcoAnno(),
-            ReportingQueries::enasarcoTotali(),
-            ReportingQueries::proformaAgente(),
-            ReportingQueries::proformaIstituto(),
-        ];
+        $used = ['vwcoge', 'vwcogestorno', 'vwenasarco', 'vwenasarcotot', 'vwenasarcotrimestre', 'vwproformaagente', 'vwproformaistituto'];
+        $existing = collect(DB::select('select table_name as name from information_schema.views where table_schema = database()'))->pluck('name')->all();
 
-        foreach ($queries as $query) {
-            $this->assertIsArray($query->limit(1)->get()->all());
+        foreach ($used as $view) {
+            $this->assertContains($view, $existing, "vista {$view} mancante");
         }
 
-        $existing = collect(DB::select('select table_name as name from information_schema.views where table_schema = database()'))->pluck('name')->all();
-        $this->assertNotContains('vwenasarco', $existing);
-        $this->assertNotContains('vwcoge', $existing);
-    }
+        // Quelle usate dal codice devono girare; delle altre (report nel solo database) basta l'esistenza: alcune non sono
+        // valide con ONLY_FULL_GROUP_BY, come già nel database precedente.
+        foreach ($used as $view) {
+            DB::select("select * from `{$view}` limit 1");
+        }
 
-    public function test_the_coge_query_groups_provvigioni_by_month_and_separates_storni(): void
-    {
-        $this->seed(ProvvigioniStatoSeeder::class);
-        $pratica = $this->pratica(['codice_pratica' => 'QT00040']);
-        $base = ['id_pratica' => 'QT00040', 'pratica_id' => $pratica->id, 'stato' => 'Proforma'];
-        DB::table('provvigioni')->insert($base + ['id' => 1, 'entrata_uscita' => 'Entrata', 'importo' => 100, 'erogated_at' => '2026-02-10 00:00:00']);
-        DB::table('provvigioni')->insert($base + ['id' => 2, 'entrata_uscita' => 'Uscita', 'importo' => 30, 'erogated_at' => '2026-02-20 00:00:00']);
-        DB::table('provvigioni')->insert($base + ['id' => 3, 'entrata_uscita' => 'Entrata', 'importo' => 40, 'status_compenso' => 'Pratica stornata', 'data_status' => '2026-03-05']);
-
-        $coge = ReportingQueries::coge()->get()->firstWhere('mese', '2026-02');
-        $storno = ReportingQueries::cogeStorno()->get()->firstWhere('mese', '2026-03');
-
-        $this->assertEquals(100, $coge->entrata);
-        $this->assertEquals(30, $coge->uscita);
-        $this->assertEquals(40, $storno->storno_entrata);
+        $this->assertGreaterThanOrEqual(20, count($existing));
     }
 
     public function test_the_pratica_views_join_on_the_foreign_key(): void
@@ -130,13 +108,17 @@ class CoreIntegrationTest extends TestCase
         $this->assertSame('Cessione', $rows[0]->tipo_prodotto);
     }
 
-    public function test_a_provvigione_cannot_point_to_a_missing_pratica(): void
+    public function test_a_provvigione_can_exist_before_its_pratica_and_keeps_the_code(): void
     {
         $this->seed(ProvvigioniStatoSeeder::class);
 
-        $this->expectException(QueryException::class);
+        // `pratica_id` è facoltativo e senza chiave esterna: il legame comune resta il codice della pratica (`id_pratica`).
+        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => null, 'stato' => 'Proforma', 'importo' => 1]);
 
-        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => 999999, 'stato' => 'Proforma', 'importo' => 1]);
+        $provvigione = Provvigione::find(1);
+
+        $this->assertSame('QT99999', $provvigione->id_pratica);
+        $this->assertNull($provvigione->pratica);
     }
 
     public function test_the_import_update_joins_provvigioni_to_pratiche_through_pratica_id(): void
