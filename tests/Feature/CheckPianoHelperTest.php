@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 use Unico\Core\Access\AccessChecker;
+use Unico\Core\Access\PlanType;
 
 class CheckPianoHelperTest extends TestCase
 {
@@ -37,7 +38,7 @@ class CheckPianoHelperTest extends TestCase
 
         // Cambiando il piano il risultato viene ricalcolato, non servito dalla cache della chiamata precedente.
         config()->set('unico-core.access.plan', 'base');
-        $this->assertSame(\Unico\Core\Access\PlanType::Base, $access->plan());
+        $this->assertSame(PlanType::Base, $access->plan());
         $this->assertTrue(checkPiano('employees'));
     }
 }

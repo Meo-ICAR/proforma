@@ -67,6 +67,10 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "vercel": [
+            "@php -r \"@unlink('bootstrap/cache/packages.php'); @unlink('bootstrap/cache/services.php'); foreach (['bootstrap/cache','storage/framework/views','storage/framework/cache/data','storage/framework/sessions','storage/logs'] as \\$directory) { if (!is_dir(\\$directory)) { mkdir(\\$directory, 0777, true); } }\"",
+            "@php artisan package:discover --ansi"
+        ],
         "pre-commit": [
             "composer update"
         ],

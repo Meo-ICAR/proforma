@@ -10,6 +10,7 @@
 /.nova
 /.phpunit.cache
 /.vscode
+/.vercel
 /.zed
 /auth.json
 /node_modules
@@ -31,3 +32,4 @@ composer.lock
 .env.save*
 graphify-out/cache/ast/
 graphify-out/20*/
+.env.local
