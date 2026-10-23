@@ -17,7 +17,7 @@ class CheckStatusApiControllerTest extends TestCase
     {
         parent::setUp();
 
-        config(['services.bpm.api_key' => 'test-bpm-api-key']);
+        config(['services.bpm.api_key' => 'test-bpm-api-key', 'unico-core.bridge.api_key' => 'test-bpm-api-key']);
 
         // I check reali richiedono lo schema MySQL (le migration legacy non girano su sqlite):
         // il contratto dell'API si verifica con un check fittizio.

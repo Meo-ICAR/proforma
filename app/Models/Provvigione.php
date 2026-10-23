@@ -106,7 +106,8 @@ class Provvigione extends Model
      */
     public function pratica()
     {
-        return $this->belongsTo(Pratica::class, 'id_pratica');
+        // `id_pratica` è il codice della pratica (testo, da Mediafacile): il riferimento alle pratiche di questo database è `pratica_id`.
+        return $this->belongsTo(Pratica::class, 'pratica_id');
     }
 
     protected $casts = [

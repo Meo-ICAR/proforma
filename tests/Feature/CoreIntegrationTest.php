@@ -108,13 +108,17 @@ class CoreIntegrationTest extends TestCase
         $this->assertSame('Cessione', $rows[0]->tipo_prodotto);
     }
 
-    public function test_a_provvigione_cannot_point_to_a_missing_pratica(): void
+    public function test_a_provvigione_can_exist_before_its_pratica_and_keeps_the_code(): void
     {
         $this->seed(ProvvigioniStatoSeeder::class);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        // `pratica_id` è facoltativo e senza chiave esterna: il legame comune resta il codice della pratica (`id_pratica`).
+        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => null, 'stato' => 'Proforma', 'importo' => 1]);
 
-        DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => 999999, 'stato' => 'Proforma', 'importo' => 1]);
+        $provvigione = Provvigione::find(1);
+
+        $this->assertSame('QT99999', $provvigione->id_pratica);
+        $this->assertNull($provvigione->pratica);
     }
 
     public function test_the_import_update_joins_provvigioni_to_pratiche_through_pratica_id(): void
