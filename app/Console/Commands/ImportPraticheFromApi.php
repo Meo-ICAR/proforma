@@ -37,7 +37,7 @@ class ImportPraticheFromApi extends Command
                 'data_fine' => $endDate->format('Y-m-d'),
             ];
 
-            $response = Http::withHeaders([
+            $response = Http::logged('mediafacile', 'pratiche')->withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
                 'X-Api-Key' => config('services.mediafacile.header_key'),

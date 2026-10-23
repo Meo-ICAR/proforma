@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Services\ApiCallLogger;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Unico\Core\UnicoCoreServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,8 +31,14 @@ class AppServiceProvider extends ServiceProvider
         // Proforma possiede il proprio database: le tabelle del pacchetto si creano con il normale `php artisan migrate`
         // (e quindi anche con `migrate:fresh`, nei test). Se il database è condiviso e le crea un'altra app, UNICO_CORE_MIGRATE=false.
         if (config('database.unico_core_migrate')) {
-            $this->loadMigrationsFrom(\Unico\Core\UnicoCoreServiceProvider::migrationsPath());
+            $this->loadMigrationsFrom(UnicoCoreServiceProvider::migrationsPath());
         }
+
+        // `Http::logged('servizio', 'operazione')` registra la chiamata esterna in `api_calls`.
+        PendingRequest::macro('logged', function (string $service, ?string $operation = null) {
+            /** @var PendingRequest $this */
+            return $this->withMiddleware(app(ApiCallLogger::class)->middleware($service, $operation));
+        });
 
         // Il sottotitolo delle pagine elenco occupa tutta la larghezza (di default è limitato a max-w-2xl).
         FilamentView::registerRenderHook(

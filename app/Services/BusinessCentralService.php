@@ -32,7 +32,7 @@ class BusinessCentralService
     {
         $url = "https://login.microsoftonline.com/{$this->tenantId}/oauth2/v2.0/token";
 
-        $response = Http::asForm()->post($url, [
+        $response = Http::logged('business_central', 'token')->asForm()->post($url, [
             'grant_type' => 'client_credentials',
             'client_id' => $this->clientId,
             'client_secret' => $this->clientSecret,
@@ -80,7 +80,7 @@ class BusinessCentralService
             Log::debug('URL costruito:', ['url' => $url]);
             Log::debug('Payload inviato (URL costruito):', $payload);
 
-            return Http::withToken($token)
+            return Http::logged('business_central', 'ANCWS_SendExtCoge')->withToken($token)
                 ->withQueryParameters(['Company' => $companyId])
                 ->post($url, $payload);
         }
@@ -93,7 +93,7 @@ class BusinessCentralService
         Log::debug('Payload inviato (URL diretto):', $payload);
 
         // Use the URL as is from .env (already contains parameters)
-        return Http::withToken($token)
+        return Http::logged('business_central', 'ANCWS_SendExtCoge')->withToken($token)
             ->post($url, $payload);
     }
 }

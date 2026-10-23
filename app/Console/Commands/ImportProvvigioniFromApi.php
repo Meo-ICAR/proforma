@@ -43,7 +43,7 @@ class ImportProvvigioniFromApi extends Command
                 'data_inizio' => $startDate->format('Y-m-d'),
                 'data_fine' => $endDate->format('Y-m-d'),
             ];
-            $response = Http::withHeaders([
+            $response = Http::logged('mediafacile', 'compensi')->withHeaders([
                 'Accept' => 'application/json, */*',
                 'User-Agent' => 'ProForma Import/1.0',
                 'X-Api-Key' => config('services.mediafacile.header_key'),
