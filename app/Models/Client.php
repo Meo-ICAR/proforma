@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Unico\Core\Models\Client as CoreClient;
+
 // use Wildside\Userstamps\HasUserstamps;
 
 class Client extends CoreClient

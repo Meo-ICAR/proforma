@@ -10,6 +10,11 @@ class ProvvigioniStato extends Model
     use HasFactory;
 
     /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string

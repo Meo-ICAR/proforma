@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class PrimaNotaEntry extends Model
 {
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'prima_nota_config_id',
         'data',

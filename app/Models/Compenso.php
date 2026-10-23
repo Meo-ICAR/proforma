@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Compenso extends Model
 {
     /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -41,7 +46,7 @@ class Compenso extends Model
      */
     protected $fillable = [
         'status_compenso',
-        'isperfezionato'
+        'isperfezionato',
     ];
 
     /**
@@ -53,12 +58,11 @@ class Compenso extends Model
         'isperfezionato' => 'boolean',
     ];
 
-      /**
+    /**
      * Get the stato record associated with the provvigione.
      */
     public function provvigione()
     {
         return $this->HasMany(Provvigione::class, 'stato_compenso', 'status_compenso');
     }
-
 }

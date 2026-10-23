@@ -5,17 +5,19 @@ namespace App\Services;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\Fornitore;
-use App\Models\Provvigioni;
 use App\Models\PurchaseInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PurchaseInvoiceImportService
 {
     protected $companyId;
+
     protected $filename;
+
     protected $processedInvoices = [];
 
     protected $importResults = [
@@ -23,7 +25,7 @@ class PurchaseInvoiceImportService
         'updated' => 0,
         'skipped' => 0,
         'errors' => 0,
-        'details' => []
+        'details' => [],
     ];
 
     public function setCompanyId($companyId): void
@@ -41,7 +43,7 @@ class PurchaseInvoiceImportService
         $this->companyId = $companyId;
 
         // Extract filename from path if not provided
-        if (!$this->filename) {
+        if (! $this->filename) {
             $this->filename = basename($filePath);
         }
 
@@ -59,7 +61,7 @@ class PurchaseInvoiceImportService
 
         // Handle storage path
         $actualFilePath = $filePath;
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             // Try storage path if public path doesn't exist
             $storagePath = str_replace('public/purchase-invoice-imports/', 'storage/app/private/purchase-invoice-imports/', $filePath);
             if (file_exists($storagePath)) {
@@ -68,7 +70,7 @@ class PurchaseInvoiceImportService
             } else {
                 // Try using Laravel's Storage path
                 $filename = basename($filePath);
-                $laravelStoragePath = storage_path('app/private/purchase-invoice-imports/' . $filename);
+                $laravelStoragePath = storage_path('app/private/purchase-invoice-imports/'.$filename);
                 if (file_exists($laravelStoragePath)) {
                     $actualFilePath = $laravelStoragePath;
                     Log::info('File found in Laravel storage path', ['path' => $laravelStoragePath]);
@@ -190,7 +192,7 @@ class PurchaseInvoiceImportService
                 ->select([
                     'c_sub.Fornitore_id',
                     'c_sub.invoice_at',
-                    's_sub.number as matched_purchase_invoice_number'
+                    's_sub.number as matched_purchase_invoice_number',
                 ])
                 ->join('Fornitores as p_sub', 'p_sub.vat_number', '=', 's_sub.vat_number')
                 ->join('practice_commissions as c_sub', function ($join) {
@@ -203,7 +205,7 @@ class PurchaseInvoiceImportService
                     'c_sub.Fornitore_id',
                     'c_sub.invoice_at',
                     's_sub.number',
-                    's_sub.amount'
+                    's_sub.amount',
                 ])
                 ->havingRaw('s_sub.amount = SUM(c_sub.amount)');
 
@@ -224,7 +226,7 @@ class PurchaseInvoiceImportService
             Log::info('Purchase invoices import completed', [
                 'file' => $filePath,
                 'company_id' => $this->companyId,
-                'results' => $this->importResults
+                'results' => $this->importResults,
             ]);
 
             return $this->importResults;
@@ -233,11 +235,11 @@ class PurchaseInvoiceImportService
             Log::error('Error importing purchase invoices', [
                 'file' => $filePath,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['errors']++;
-            $this->importResults['details'][] = 'Error processing file: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Error processing file: '.$e->getMessage();
 
             return $this->importResults;
         }
@@ -258,9 +260,10 @@ class PurchaseInvoiceImportService
                     'row_number' => $rowNumber,
                     'nr_' => $rowData['nr_'] ?? 'NULL',
                     'fornitore' => $rowData['fornitore'] ?? 'NULL',
-                    'raw_row' => $rowData
+                    'raw_row' => $rowData,
                 ]);
                 $this->importResults['skipped']++;
+
                 return;
             }
 
@@ -277,10 +280,11 @@ class PurchaseInvoiceImportService
                 Log::info('Skipping duplicate invoice within same import', [
                     'row_number' => $rowNumber,
                     'invoice_number' => $invoiceNumber,
-                    'previous_row' => $this->processedInvoices[$invoiceNumber]
+                    'previous_row' => $this->processedInvoices[$invoiceNumber],
                 ]);
                 $this->importResults['skipped']++;
                 $this->importResults['details'][] = "Skipped duplicate invoice: {$invoiceNumber} (row {$rowNumber})";
+
                 return;
             }
 
@@ -297,7 +301,7 @@ class PurchaseInvoiceImportService
                 Log::info('Skipping existing invoice in database', [
                     'row_number' => $rowNumber,
                     'invoice_number' => $invoiceNumber,
-                    'existing_id' => $existingInvoice->id
+                    'existing_id' => $existingInvoice->id,
                 ]);
                 $this->importResults['skipped']++;
                 $this->importResults['details'][] = "Skipped existing invoice: {$invoiceNumber} (row {$rowNumber})";
@@ -311,11 +315,11 @@ class PurchaseInvoiceImportService
             Log::error('Error processing row', [
                 'row_number' => $rowNumber,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['errors']++;
-            $this->importResults['details'][] = "Error processing row {$rowNumber}: " . $e->getMessage();
+            $this->importResults['details'][] = "Error processing row {$rowNumber}: ".$e->getMessage();
         }
     }
 
@@ -370,7 +374,7 @@ class PurchaseInvoiceImportService
         // Handle Italian date formats
         $dateFormats = [
             'd/m/Y', 'd/m/Y', 'd-m-Y', 'd/m/Y',
-            'd/m/y', 'd-m-y', 'Y-m-d'
+            'd/m/y', 'd-m-y', 'Y-m-d',
         ];
 
         foreach ($dateFormats as $format) {
@@ -387,7 +391,8 @@ class PurchaseInvoiceImportService
         // Try Excel serial date format
         if (is_numeric($value)) {
             try {
-                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int) $value);
+                $date = Date::excelToDateTimeObject((int) $value);
+
                 return $date->format('Y-m-d');
             } catch (\Exception $e) {
                 // Continue to return null
@@ -406,7 +411,7 @@ class PurchaseInvoiceImportService
         // Handle Italian datetime formats
         $dateTimeFormats = [
             'd/m/Y H:i', 'd/m/Y H:i:s', 'd-m-Y H:i',
-            'd/m/y H:i', 'd-m-y H:i', 'Y-m-d H:i:s'
+            'd/m/y H:i', 'd-m-y H:i', 'Y-m-d H:i:s',
         ];
 
         foreach ($dateTimeFormats as $format) {
@@ -440,7 +445,7 @@ class PurchaseInvoiceImportService
             $parts = explode(',', $value);
             $integer_part = str_replace('.', '', $parts[0]);
             $decimal_part = $parts[1] ?? '0';
-            $value = $integer_part . '.' . $decimal_part;
+            $value = $integer_part.'.'.$decimal_part;
         } else {
             // If no comma, just remove dots (might be thousands separators)
             $value = str_replace('.', '', $value);
@@ -497,7 +502,7 @@ class PurchaseInvoiceImportService
         $matchedCount = 0;
 
         Log::info('Starting mass Fornitore matching by exact VAT number', [
-            'company_id' => $companyId
+            'company_id' => $companyId,
         ]);
 
         // Esegue un singolo UPDATE con JOIN a livello di database
@@ -513,7 +518,7 @@ class PurchaseInvoiceImportService
 
         Log::info('Fornitore matching completed', [
             'company_id' => $companyId,
-            'matched_and_updated_invoices' => $affectedRows
+            'matched_and_updated_invoices' => $affectedRows,
         ]);
         try {
             // Get all Purchase invoices for this company that have a VAT number but no Fornitore relationship
@@ -524,7 +529,7 @@ class PurchaseInvoiceImportService
 
             Log::info('Starting Fornitore matching by VAT number', [
                 'company_id' => $companyId,
-                'invoices_to_check' => $invoices->count()
+                'invoices_to_check' => $invoices->count(),
             ]);
 
             foreach ($invoices as $invoice) {
@@ -538,19 +543,19 @@ class PurchaseInvoiceImportService
                 // Find Fornitore with matching VAT number
                 $Fornitore = $this->findFornitoreByVatNumber($cleanVatNumber, $companyId);
 
-                if (!$Fornitore && !empty($invoice->supplier)) {
+                if (! $Fornitore && ! empty($invoice->supplier)) {
                     $Fornitore = $this->findFornitoreByNameSimilarity($invoice->supplier, $companyId);
                 }
 
                 // Se il Fornitore ha un VAT number di 10 caratteri, confronta solo i primi 10
-                if (!$Fornitore && strlen($cleanVatNumber) >= 10) {
+                if (! $Fornitore && strlen($cleanVatNumber) >= 10) {
                     $first10Chars = substr($cleanVatNumber, 0, 10);
                     $Fornitore = Fornitore::where('company_id', $companyId)
                         ->whereRaw('LENGTH(vat_number) >= 10')
                         ->whereRaw('SUBSTRING(vat_number, 1, 10) = ?', [$first10Chars])
                         ->first();
 
-                    if (!$Fornitore) {
+                    if (! $Fornitore) {
                         $Fornitore = $this->findFornitoreByNameSimilarity($invoice->supplier, $companyId);
                     }
 
@@ -578,11 +583,11 @@ class PurchaseInvoiceImportService
             Log::error('Fornitore matching failed', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['Fornitore_match_errors'] = ($this->importResults['Fornitore_match_errors'] ?? 0) + 1;
-            $this->importResults['details'][] = 'Fornitore matching error: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Fornitore matching error: '.$e->getMessage();
         }
     }
 
@@ -613,8 +618,8 @@ class PurchaseInvoiceImportService
         $variations = [$vatNumber];
 
         // Add with country prefix
-        if (!str_starts_with(strtoupper($vatNumber), 'IT')) {
-            $variations[] = 'IT' . $vatNumber;
+        if (! str_starts_with(strtoupper($vatNumber), 'IT')) {
+            $variations[] = 'IT'.$vatNumber;
         }
 
         // Add with spaces and formatting variations
@@ -665,12 +670,12 @@ class PurchaseInvoiceImportService
                 // Find client with matching VAT number
                 $client = $this->findClientByVatNumber($cleanVatNumber, $companyId);
 
-                if (!$client && !empty($invoice->supplier)) {
+                if (! $client && ! empty($invoice->supplier)) {
                     // Try to match by customer name similarity
                     $client = $this->findClientByNameSimilarity($invoice->supplier, $companyId);
                 }
 
-                if (!$client && !empty($invoice->supplier)) {
+                if (! $client && ! empty($invoice->supplier)) {
                     // Try to match by full name (name + first_name)
                     $client = $this->findClientByFullName($invoice->supplier, $companyId);
                 }
@@ -712,11 +717,11 @@ class PurchaseInvoiceImportService
             Log::error('Client matching failed', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['client_match_errors'] = ($this->importResults['client_match_errors'] ?? 0) + 1;
-            $this->importResults['details'][] = 'Client matching error: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Client matching error: '.$e->getMessage();
         }
     }
 
@@ -745,7 +750,7 @@ class PurchaseInvoiceImportService
                 ->where('address_type_id', 5)
                 ->first();
 
-            if (!$existingAddress) {
+            if (! $existingAddress) {
                 $address = $client->addresses()->create([
                     'address_type_id' => 5,
                     'name' => 'Fatturazione',
@@ -946,8 +951,8 @@ class PurchaseInvoiceImportService
         // Remove common company suffixes for better matching
         $suffixes = ['s.r.l.', 'srl', 's.p.a.', 'spa', 'ltd', 'limited', 'inc', 'llc', 'gmbh'];
         foreach ($suffixes as $suffix) {
-            $string1 = preg_replace('/\b' . preg_quote($suffix) . '\b/i', '', $string1);
-            $string2 = preg_replace('/\b' . preg_quote($suffix) . '\b/i', '', $string2);
+            $string1 = preg_replace('/\b'.preg_quote($suffix).'\b/i', '', $string1);
+            $string2 = preg_replace('/\b'.preg_quote($suffix).'\b/i', '', $string2);
         }
 
         // Clean up extra spaces
@@ -985,8 +990,8 @@ class PurchaseInvoiceImportService
             // Build full name from client data
             $fullName = trim($client->name);
 
-            if (!empty($client->first_name)) {
-                $fullName = trim($client->name . ' ' . $client->first_name);
+            if (! empty($client->first_name)) {
+                $fullName = trim($client->name.' '.$client->first_name);
             }
 
             // Exact match first
@@ -996,6 +1001,7 @@ class PurchaseInvoiceImportService
                     'client_full_name' => $fullName,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
 
@@ -1006,6 +1012,7 @@ class PurchaseInvoiceImportService
                     'client_name' => $client->name,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
 
@@ -1019,6 +1026,7 @@ class PurchaseInvoiceImportService
                     'client_clean_name' => $cleanClientName,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
         }
@@ -1033,7 +1041,7 @@ class PurchaseInvoiceImportService
     {
         // Remove common company suffixes for better matching
         $suffixes = ['SPA', 'SRL', 'SNC', 'S.P.A.', 'SNC'];
-        $cleaned = preg_replace('/\b' . implode('|', array_map('preg_quote', $suffixes)) . '\b/i', '', $name);
+        $cleaned = preg_replace('/\b'.implode('|', array_map('preg_quote', $suffixes)).'\b/i', '', $name);
 
         // Clean up extra spaces and standardize
         $cleaned = preg_replace('/\s+/', ' ', trim($cleaned));

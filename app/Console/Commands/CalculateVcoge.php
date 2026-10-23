@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Vcoge;
+use App\Services\ReportingTables;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class CalculateVcoge extends Command
 {
@@ -14,21 +13,9 @@ class CalculateVcoge extends Command
 
     public function handle(): int
     {
-        Vcoge::truncate();
+        $result = ReportingTables::refreshVcoge();
 
-        DB::table('vcoge')->insertUsing(
-            ['mese', 'entrata', 'uscita'],
-            DB::table('vwcoge')->select('mese', 'entrata', 'uscita')
-        );
-
-        DB::table('vcoge')
-            ->leftJoin('vwcogestorno', 'vcoge.mese', '=', 'vwcogestorno.mese')
-            ->update([
-                'vcoge.storno_entrata' => DB::raw('COALESCE(vwcogestorno.storno_entrata, 0)'),
-                'vcoge.storno_uscita' => DB::raw('COALESCE(vwcogestorno.storno_uscita, 0)'),
-            ]);
-
-        $this->info('Calcolo provvigioni finanziarie completato.');
+        $this->info("Calcolo provvigioni finanziarie completato: {$result['inserted_or_updated']} mesi calcolati, {$result['deleted']} eliminati.");
 
         if (! $this->option('invia')) {
             return self::SUCCESS;

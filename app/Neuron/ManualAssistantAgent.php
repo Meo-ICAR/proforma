@@ -40,7 +40,7 @@ class ManualAssistantAgent extends RAG
         'clientis', 'clients',
         'coges', 'companies', 'compensos', 'enasarcos',
         'fatturas', 'firrs', 'fornitoriroles', 'fornitoris',
-        'invoiceins', 'invoices', 'onorabilita',
+        'invoiceins', 'invoices',
         'document_requests', 'pratica_clients', 'pratica_stati', 'pratica_status_history', 'pratiches',
         'prima_nota_configs', 'prima_nota_entries',
         'proformas', 'provvigioni', 'provvigioni_statos',

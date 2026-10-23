@@ -43,8 +43,8 @@ class ProformaInvoiceMatchingService
                 $this->processSalesInvoice($salesInvoice, $stats);
                 $stats['processed_invoices']++;
             } catch (\Exception $e) {
-                Log::error("Error processing sales invoice {$salesInvoice->id}: " . $e->getMessage());
-                $stats['errors'][] = "Sales Invoice {$salesInvoice->id}: " . $e->getMessage();
+                Log::error("Error processing sales invoice {$salesInvoice->id}: ".$e->getMessage());
+                $stats['errors'][] = "Sales Invoice {$salesInvoice->id}: ".$e->getMessage();
             }
         }
 
@@ -88,11 +88,6 @@ class ProformaInvoiceMatchingService
 
     /**
      * Check if two amounts match (allowing small floating point differences)
-     *
-     * @param float $amount1
-     * @param float $amount2
-     * @param float $tolerance
-     * @return bool
      */
     private function amountsMatch(float $amount1, float $amount2, float $tolerance = 10): bool
     {
@@ -101,9 +96,6 @@ class ProformaInvoiceMatchingService
 
     /**
      * Associate a proforma with a sales invoice
-     *
-     * @param Proforma $proforma
-     * @param SalesInvoice $salesInvoice
      */
     private function associateProformaWithInvoice(Proforma $proforma, SalesInvoice $salesInvoice): void
     {
@@ -124,8 +116,6 @@ class ProformaInvoiceMatchingService
 
     /**
      * Get statistics about unmatched proformas
-     *
-     * @return array
      */
     public function getUnmatchedStatistics(): array
     {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Unico\Core\Models\ClientType as CoreClientType;
+
 // use Wildside\Userstamps\HasUserstamps;
 
 class ClientType extends CoreClientType

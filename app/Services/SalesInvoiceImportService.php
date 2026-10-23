@@ -2,20 +2,18 @@
 
 namespace App\Services;
 
-use App\Models\Agent;
-use App\Models\Client;
 use App\Models\Company;
-use App\Models\PracticeCommission;
-use App\Models\Principal;
 use App\Models\SalesInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class SalesInvoiceImportService
 {
     protected $companyId;
+
     protected $filename;
 
     protected $importResults = [
@@ -23,7 +21,7 @@ class SalesInvoiceImportService
         'updated' => 0,
         'skipped' => 0,
         'errors' => 0,
-        'details' => []
+        'details' => [],
     ];
 
     public function setCompanyId($companyId): void
@@ -41,7 +39,7 @@ class SalesInvoiceImportService
         $this->companyId = Company::first()->id;
 
         // Extract filename from path if not provided
-        if (!$this->filename) {
+        if (! $this->filename) {
             $this->filename = basename($filePath);
         }
 
@@ -56,7 +54,7 @@ class SalesInvoiceImportService
 
         // Handle storage path
         $actualFilePath = $filePath;
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             // Try storage path if public path doesn't exist
             $storagePath = str_replace('public/', 'storage/app/private/sales-invoice-imports/', $filePath);
             if (file_exists($storagePath)) {
@@ -106,82 +104,10 @@ class SalesInvoiceImportService
 
             DB::commit();
 
-            /*
-             * // 1. Definiamo la subquery (la tabella derivata con i calcoli)
-             * $subquery = PracticeCommission::select([
-             *     'practice_commissions.invoice_number',
-             *     DB::raw('YEAR(practice_commissions.invoice_at) as invoice_year'),
-             *     'practice_commissions.is_payment',
-             *     'sales_invoices.number as matched_s_number'
-             * ])
-             *     ->join('sales_invoices', function ($join) {
-             *         $join->on('sales_invoices.number', 'like', DB::raw("CONCAT('%', SUBSTR(CONCAT('00000', practice_commissions.invoice_number), -5))"));
-             *     })
-             *     ->where('practice_commissions.invoice_number', '>', '0')
-             *     ->where('practice_commissions.is_payment', 0)
-             *     ->where('sales_invoices.number', 'like', 'FVI2%')
-             *     ->groupBy(
-             *         'practice_commissions.invoice_number',
-             *         DB::raw('YEAR(practice_commissions.invoice_at)'),
-             *         'practice_commissions.is_payment',
-             *         'sales_invoices.number',
-             *         'sales_invoices.amount'
-             *     )
-             *     ->havingRaw('sales_invoices.amount = SUM(practice_commissions.amount)');
-             *
-             * // 2. Eseguiamo l'UPDATE unendo la tabella principale con la subquery
-             * DB::table('practice_commissions as p')
-             *     ->joinSub($subquery, 'dati_calcolati', function ($join) {
-             *         $join
-             *             ->on('p.invoice_number', '=', 'dati_calcolati.invoice_number')
-             *             ->whereRaw('YEAR(p.invoice_at) = dati_calcolati.invoice_year')  // whereRaw per gestire la funzione YEAR()
-             *             ->on('p.is_payment', '=', 'dati_calcolati.is_payment');
-             *     })
-             *     ->update([
-             *         // Usiamo DB::raw affinché Laravel non lo tratti come una semplice stringa di testo
-             *         'p.alternative_number_invoice' => DB::raw('dati_calcolati.matched_s_number')
-             *     ]);
-             */
-
-            /*
-             * use Illuminate\Support\Facades\DB;
-             *
-             * // 1. Prepariamo la subquery esattamente come l'hai definita
-             * $subquery = DB::table('sales_invoices as s_sub')
-             *     ->select([
-             *         'c_sub.principal_id',
-             *         'c_sub.invoice_at',
-             *         's_sub.number as matched_sales_invoice_number'
-             *     ])
-             *     ->join('principals as p_sub', 'p_sub.vat_number', '=', 's_sub.vat_number')
-             *     ->join('practice_commissions as c_sub', function($join) {
-             *         $join->on('c_sub.principal_id', '=', 'p_sub.id')
-             *              ->on('c_sub.invoice_at', '=', 's_sub.registration_date');
-             *     })
-             *     ->where('c_sub.tipo', 'Istituto')
-             *     ->groupBy([
-             *         'c_sub.principal_id',
-             *         'c_sub.invoice_at',
-             *         's_sub.number',
-             *         's_sub.amount'
-             *     ])
-             *     ->havingRaw('s_sub.amount = SUM(c_sub.amount)');
-             *
-             * // 2. Eseguiamo l'UPDATE unendo la tabella principale
-             * DB::table('practice_commissions as c')
-             *     ->joinSub($subquery, 'dati_calcolati', function ($join) {
-             *         $join->on('c.principal_id', '=', 'dati_calcolati.principal_id')
-             *              ->on('c.invoice_at', '=', 'dati_calcolati.invoice_at');
-             *     })
-             *     // Eseguiamo l'update sul campo corretto
-             *     ->update([
-             *         'c.alternative_number_invoice' => DB::raw('dati_calcolati.matched_sales_invoice_number')
-             *     ]);
-             */
             Log::info('Sales invoices import completed', [
                 'file' => $filePath,
                 'company_id' => $this->companyId,
-                'results' => $this->importResults
+                'results' => $this->importResults,
             ]);
 
             return $this->importResults;
@@ -190,11 +116,11 @@ class SalesInvoiceImportService
             Log::error('Error importing sales invoices', [
                 'file' => $filePath,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['errors']++;
-            $this->importResults['details'][] = 'Error processing file: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Error processing file: '.$e->getMessage();
 
             return $this->importResults;
         }
@@ -215,9 +141,10 @@ class SalesInvoiceImportService
                     'row_number' => $rowNumber,
                     'Nr.' => $rowData['Nr.'] ?? 'NULL',
                     'Ragione_Sociale' => $rowData['Ragione_Sociale'] ?? 'NULL',
-                    'raw_row' => $rowData
+                    'raw_row' => $rowData,
                 ]);
                 $this->importResults['skipped']++;
+
                 return;
             }
 
@@ -232,7 +159,7 @@ class SalesInvoiceImportService
                 ->first();
 
             // Always create new invoice for 2025 (don't update existing)
-            if (!$existingInvoice) {
+            if (! $existingInvoice) {
                 $invoice = SalesInvoice::create($invoiceData);
                 $this->importResults['imported']++;
                 $this->importResults['details'][] = "Imported invoice: {$invoiceData['number']} (row {$rowNumber})";
@@ -244,11 +171,11 @@ class SalesInvoiceImportService
             Log::error('Error processing row', [
                 'row_number' => $rowNumber,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['errors']++;
-            $this->importResults['details'][] = "Error processing row {$rowNumber}: " . $e->getMessage();
+            $this->importResults['details'][] = "Error processing row {$rowNumber}: ".$e->getMessage();
         }
     }
 
@@ -317,7 +244,7 @@ class SalesInvoiceImportService
         // Handle Italian date formats
         $dateFormats = [
             'd/m/Y', 'd/m/Y', 'd-m-Y', 'd/m/Y',
-            'd/m/y', 'd-m-y', 'Y-m-d'
+            'd/m/y', 'd-m-y', 'Y-m-d',
         ];
 
         foreach ($dateFormats as $format) {
@@ -334,7 +261,8 @@ class SalesInvoiceImportService
         // Try Excel serial date format
         if (is_numeric($value)) {
             try {
-                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((int) $value);
+                $date = Date::excelToDateTimeObject((int) $value);
+
                 return $date->format('Y-m-d');
             } catch (\Exception $e) {
                 // Continue to return null
@@ -353,7 +281,7 @@ class SalesInvoiceImportService
         // Handle Italian datetime formats
         $dateTimeFormats = [
             'd/m/Y H:i', 'd/m/Y H:i:s', 'd-m-Y H:i',
-            'd/m/y H:i', 'd-m-y H:i', 'Y-m-d H:i:s'
+            'd/m/y H:i', 'd-m-y H:i', 'Y-m-d H:i:s',
         ];
 
         foreach ($dateTimeFormats as $format) {
@@ -387,7 +315,7 @@ class SalesInvoiceImportService
             $parts = explode(',', $value);
             $integer_part = str_replace('.', '', $parts[0]);
             $decimal_part = $parts[1] ?? '0';
-            $value = $integer_part . '.' . $decimal_part;
+            $value = $integer_part.'.'.$decimal_part;
         } else {
             // If no comma, just remove dots (might be thousands separators)
             $value = str_replace('.', '', $value);

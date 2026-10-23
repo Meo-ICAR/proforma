@@ -4,7 +4,7 @@
             "command": "wsl.exe",
             "args": [
                 "/usr/bin/php8.4",
-                "/var/www/html/proforma/artisan",
+                "/var/www/html/unicocoge/artisan",
                 "boost:mcp"
             ]
         }

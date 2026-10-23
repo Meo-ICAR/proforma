@@ -44,7 +44,7 @@ class MarkBaselineMigrationsAsRanSeeder extends Seeder
         '2026_09_14_090300_create_clients_tables' => 'clients',
         '2026_09_14_090400_create_pratiche_and_provvigioni_tables' => 'provvigioni',
         '2026_09_14_090500_create_fatturazione_tables' => 'invoices',
-        '2026_09_14_090600_create_reporting_views' => 'vwenasarco',
+        '2026_09_14_090600_create_reporting_views' => 'vwcoordinati',
         '2026_09_15_021007_create_prima_nota_configs_table' => 'prima_nota_configs',
         '2026_09_15_021102_create_prima_nota_entries_table' => 'prima_nota_entries',
     ];

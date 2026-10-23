@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -27,15 +28,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property float|null $delta
  * @property float|null $anticipo_residuo
  * @property string|null $delta_annotation
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
- *
- * @property-read \App\Models\Clienti|null $cliente
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Clienti|null $cliente
  */
 class Fattura extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
 
     /**
      * The table associated with the model.

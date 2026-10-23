@@ -22,7 +22,6 @@ Le tabelle condivise (utenti, aziende, clienti `clientis`, fornitori `fornitoris
 - Le colonne che richiamano clienti, fornitori e aziende (`proformas.fornitori_id`, `fatturas.clienti_id`, `invoices.clienti_id`, `sales_invoices.company_id`...) sono interi; `proformas.client_id` ricalca `clients.id`.
 - **Viste di reporting** (`database/views/*.sql`, create da `2026_10_11_000100_create_reporting_views`): 24 delle 34 originali. Le altre dipendevano da tabelle o colonne che non esistono più (`calls`, `leads`, `tmpprovvigioni`, `provvigioni_coge`, `invoices.fornitori_id`, `provvigioni.fornitori_id`) e si saltano. Quelle usate dal codice (`vwcoge`, `vwcogestorno`, `vwenasarco`, `vwenasarcotot`, `vwenasarcotrimestre`, `vwproformaagente`, `vwproformaistituto`) sono verificate dai test.
 - `eightynine/filament-excel-import` (solo Filament 4) è stato tolto: l'importazione delle fatture passate è un'azione Filament nativa con `maatwebsite/excel` (`ListInvoiceIns`).
-- `SalesInvoiceMatchingServiceTest` è saltato: usa factory che non sono mai esistite (da riscrivere).
 
 ## Skills Activation
 

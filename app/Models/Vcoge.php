@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class Vcoge extends Model
 {
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
     /**
      * The table associated with the model.
      *
@@ -63,6 +67,7 @@ class Vcoge extends Model
         }
 
         $data = \DateTime::createFromFormat('Y-m', $this->mese);
+
         return $data ? $data->format('m/Y') : $this->mese;
     }
 

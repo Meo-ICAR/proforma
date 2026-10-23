@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
-use App\Models\Fornitori;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Model;
 
 class PurchaseInvoice extends Model
 {
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'number',
         'supplier_invoice_number',
@@ -73,7 +75,7 @@ class PurchaseInvoice extends Model
 
     public function fornitore()
     {
-        return $this->belongsTo(Fornitori::class, 'vat_number', 'piva');
+        return $this->belongsTo(Fornitore::class, 'vat_number', 'piva');
     }
 
     public function proformas()

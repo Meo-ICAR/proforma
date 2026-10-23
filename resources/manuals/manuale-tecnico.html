@@ -497,7 +497,7 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
   </p>
 
   <h3>8.1 Contributo trimestrale</h3>
-  <p>Vista <code>vwenasarcotrimestre</code> / <code>vwenasarco</code>, join di <code>provvigioni</code> con
+  <p>Query <code>ReportingQueries::enasarcoTrimestre()</code> / <code>enasarcoAnno()</code>, join di <code>provvigioni</code> con
   <code>fornitoris.enasarco</code> (tipologia) e <code>enasarcos</code> (aliquote per anno+tipologia):</p>
   <pre><code>montante  = sum(p.importo)
 contributo = (sum(p.importo) * (e.aliquota_agente + e.aliquota_soc)) / 100</code></pre>
@@ -505,18 +505,18 @@ contributo = (sum(p.importo) * (e.aliquota_agente + e.aliquota_soc)) / 100</code
   <span class="file">Trimestrali ENASARCO</span>.</p>
 
   <h3>8.2 Conguaglio annuale</h3>
-  <p>Vista <code>vwenasarcotot</code> (join di <code>vwenasarco</code> con <code>enasarcos</code>) applica il
+  <p>Query <code>ReportingQueries::enasarcoTotali()</code> (join di <code>enasarcoAnno()</code> con <code>enasarcos</code>) applica il
   clamp fra minimale e massimale annuo e marca se il contributo grezzo ha toccato uno dei due limiti:</p>
   <pre><code>X       = CONCAT( IF(LEAST(massimo, contributo)=massimo, '+', ''),
                   IF(GREATEST(minimale, contributo)=minimale, '-', '') )
 imposta = LEAST(massimo, GREATEST(minimale, contributo))   -- contributo "clampato"</code></pre>
   <p>
     Il ricalcolo (header action "Ricalcola" in <span class="file">Venasarcotots</span>, e come effetto
-    collaterale di <code>pratiche:import-api</code>) tronca e ricostruisce <code>venasarcotot</code> dalla vista, poi
+    collaterale di <code>pratiche:import-api</code>) tronca e ricostruisce <code>venasarcotot</code> da quella query, poi
     calcola il FIRR riga per riga:
   </p>
   <pre><code>Venasarcotot::truncate();
-DB::table('venasarcotot')->insertUsing([...], DB::table('vwenasarcotot'));
+DB::table('venasarcotot')->insertUsing([...], ReportingQueries::enasarcoTotali());
 foreach (Venasarcotot::get() as $record) {
     $firr = Firr::calculateContributo($record->montante, $record->enasarco, $record->competenza);
     $record->update(['firr' => $firr]);

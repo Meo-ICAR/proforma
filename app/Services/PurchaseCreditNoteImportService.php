@@ -2,17 +2,18 @@
 
 namespace App\Services;
 
-use App\Models\Client;
 use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class PurchaseCreditNoteImportService
 {
     protected $companyId;
+
     protected $filename;
 
     protected $importResults = [
@@ -20,7 +21,7 @@ class PurchaseCreditNoteImportService
         'updated' => 0,
         'errors' => 0,
         'skipped' => 0,
-        'details' => []
+        'details' => [],
     ];
 
     public function __construct($companyId = null, $filename = null)
@@ -32,16 +33,16 @@ class PurchaseCreditNoteImportService
     /**
      * Import purchase credit notes from Excel file
      *
-     * @param string $filePath Path to the file
-     * @param string $companyId Company ID to assign to credit notes
+     * @param  string  $filePath  Path to the file
+     * @param  string  $companyId  Company ID to assign to credit notes
      * @return array Import results
      */
-    public function import(string $filePath, string $companyId = null): array
+    public function import(string $filePath, ?string $companyId = null): array
     {
         $this->companyId = $companyId ?: $this->companyId;
 
         // Extract filename from path if not provided
-        if (!$this->filename) {
+        if (! $this->filename) {
             $this->filename = basename($filePath);
         }
 
@@ -50,20 +51,20 @@ class PurchaseCreditNoteImportService
             'updated' => 0,
             'errors' => 0,
             'skipped' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         try {
             Log::info('Starting purchase credit note import', [
                 'file_path' => $filePath,
                 'filename' => $this->filename,
-                'company_id' => $this->companyId
+                'company_id' => $this->companyId,
             ]);
 
             // Read Excel file
             $data = Excel::toArray([], $filePath);
 
-            if (empty($data) || !isset($data[0])) {
+            if (empty($data) || ! isset($data[0])) {
                 throw new \Exception('File is empty or invalid format');
             }
 
@@ -75,7 +76,7 @@ class PurchaseCreditNoteImportService
             }
 
             Log::info('Processing rows', [
-                'total_rows' => count($rows)
+                'total_rows' => count($rows),
             ]);
 
             DB::beginTransaction();
@@ -87,12 +88,12 @@ class PurchaseCreditNoteImportService
                     $this->processRow($row, $rowNumber);
                 } catch (\Exception $e) {
                     $this->importResults['errors']++;
-                    $this->importResults['details'][] = "Row {$rowNumber}: " . $e->getMessage();
+                    $this->importResults['details'][] = "Row {$rowNumber}: ".$e->getMessage();
 
                     Log::error('Error processing row', [
                         'row_number' => $rowNumber,
                         'row_data' => $row,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
                     ]);
                 }
             }
@@ -106,11 +107,11 @@ class PurchaseCreditNoteImportService
             Log::error('Purchase credit note import failed', [
                 'file_path' => $filePath,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['errors']++;
-            $this->importResults['details'][] = 'Import failed: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Import failed: '.$e->getMessage();
         }
 
         return $this->importResults;
@@ -124,6 +125,7 @@ class PurchaseCreditNoteImportService
         // Skip empty rows
         if ($this->isEmptyRow($row)) {
             $this->importResults['skipped']++;
+
             return;
         }
 
@@ -149,13 +151,13 @@ class PurchaseCreditNoteImportService
             Log::info('Updated existing purchase credit note', [
                 'row_number' => $rowNumber,
                 'credit_note_id' => $existingCreditNote->id,
-                'number' => $creditNoteData['number']
+                'number' => $creditNoteData['number'],
             ]);
         } else {
             // Create new credit note
             $creditNote = PurchaseInvoice::create([
                 'company_id' => $this->companyId,
-                ...$creditNoteData
+                ...$creditNoteData,
             ]);
 
             $this->importResults['imported']++;
@@ -163,7 +165,7 @@ class PurchaseCreditNoteImportService
             Log::info('Created new purchase credit note', [
                 'row_number' => $rowNumber,
                 'credit_note_id' => $creditNote->id,
-                'number' => $creditNoteData['number']
+                'number' => $creditNoteData['number'],
             ]);
         }
     }
@@ -228,10 +230,11 @@ class PurchaseCreditNoteImportService
     protected function isEmptyRow(array $row): bool
     {
         foreach ($row as $cell) {
-            if (!empty($cell) && trim($cell) !== '') {
+            if (! empty($cell) && trim($cell) !== '') {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -258,16 +261,19 @@ class PurchaseCreditNoteImportService
 
         // Handle Excel serial date format
         if (is_numeric($value)) {
-            $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
+            $date = Date::excelToDateTimeObject($value);
+
             return $date->format('Y-m-d');
         }
 
         // Handle string date format
         try {
             $date = new \DateTime($value);
+
             return $date->format('Y-m-d');
         } catch (\Exception $e) {
             Log::warning('Could not parse date', ['value' => $value, 'error' => $e->getMessage()]);
+
             return null;
         }
     }
@@ -292,7 +298,7 @@ class PurchaseCreditNoteImportService
             $parts = explode(',', $value);
             $integer_part = str_replace('.', '', $parts[0]);
             $decimal_part = $parts[1] ?? '0';
-            $value = $integer_part . '.' . $decimal_part;
+            $value = $integer_part.'.'.$decimal_part;
         } else {
             // If no comma, just remove dots (might be thousands separators)
             $value = str_replace('.', '', $value);

@@ -2,24 +2,12 @@
 
 namespace App\Filament\Resources\SalesInvoices\Schemas;
 
-use App\Models\Client;
-use App\Models\Clienti;
-use App\Models\Company;
-use App\Models\Principal;
-use App\Models\Provvigione;
-use App\Services\SalesInvoiceCreditNoteImportService;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Auth;
 
 class SalesInvoiceForm
 {

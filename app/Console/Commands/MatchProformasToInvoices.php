@@ -32,6 +32,7 @@ class MatchProformasToInvoices extends Command
 
         if ($this->option('stats-only')) {
             $this->showStatistics($matchingService);
+
             return Command::SUCCESS;
         }
 
@@ -41,7 +42,7 @@ class MatchProformasToInvoices extends Command
         $this->info("Processed invoices: {$stats['processed_invoices']}");
         $this->info("Matched proformas: {$stats['matched_proformas']}");
 
-        if (!empty($stats['errors'])) {
+        if (! empty($stats['errors'])) {
             $this->error('Errors encountered:');
             foreach ($stats['errors'] as $error) {
                 $this->error("  - {$error}");

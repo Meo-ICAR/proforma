@@ -36,7 +36,7 @@ class SalesInvoicesTable
         return $table
             ->reorderableColumns()
             ->selectable()
-            ->paginated([ 50, 100,500,1000])
+            ->paginated([50, 100, 500, 1000])
             ->groups([
                 Group::make('customer_name')
                     ->label('Cliente')
@@ -221,13 +221,7 @@ class SalesInvoicesTable
                     ->color('info')
                     ->action(function () {
                         try {
-                            \DB::statement('
-                                insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione )
-select v.stato, v.fornitori_id, v.sended, v.compenso, v.compenso_descrizione
-from vwproformaistituto v
-left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
-where p.id is null
-                            ');
+                            \App\Services\ReportingQueries::insertMissingProformas('Istituto');
 
                             \DB::statement("
                                 update provvigioni p

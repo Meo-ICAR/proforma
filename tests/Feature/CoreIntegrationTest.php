@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Pratica;
 use App\Models\Provvigione;
+use App\Services\ReportingQueries;
 use Database\Seeders\ProvvigioniStatoSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -72,22 +74,42 @@ class CoreIntegrationTest extends TestCase
         $this->assertSame(1, $pratica->provvigioni()->count());
     }
 
-    public function test_the_reporting_views_used_by_the_code_exist_and_run(): void
+    public function test_the_enasarco_coge_and_proforma_queries_run_without_views(): void
     {
-        $used = ['vwcoge', 'vwcogestorno', 'vwenasarco', 'vwenasarcotot', 'vwenasarcotrimestre', 'vwproformaagente', 'vwproformaistituto'];
+        $queries = [
+            ReportingQueries::coge(),
+            ReportingQueries::cogeStorno(),
+            ReportingQueries::enasarcoTrimestre(),
+            ReportingQueries::enasarcoAnno(),
+            ReportingQueries::enasarcoTotali(),
+            ReportingQueries::proformaAgente(),
+            ReportingQueries::proformaIstituto(),
+        ];
+
+        foreach ($queries as $query) {
+            $this->assertIsArray($query->limit(1)->get()->all());
+        }
+
         $existing = collect(DB::select('select table_name as name from information_schema.views where table_schema = database()'))->pluck('name')->all();
+        $this->assertNotContains('vwenasarco', $existing);
+        $this->assertNotContains('vwcoge', $existing);
+    }
 
-        foreach ($used as $view) {
-            $this->assertContains($view, $existing, "vista {$view} mancante");
-        }
+    public function test_the_coge_query_groups_provvigioni_by_month_and_separates_storni(): void
+    {
+        $this->seed(ProvvigioniStatoSeeder::class);
+        $pratica = $this->pratica(['codice_pratica' => 'QT00040']);
+        $base = ['id_pratica' => 'QT00040', 'pratica_id' => $pratica->id, 'stato' => 'Proforma'];
+        DB::table('provvigioni')->insert($base + ['id' => 1, 'entrata_uscita' => 'Entrata', 'importo' => 100, 'erogated_at' => '2026-02-10 00:00:00']);
+        DB::table('provvigioni')->insert($base + ['id' => 2, 'entrata_uscita' => 'Uscita', 'importo' => 30, 'erogated_at' => '2026-02-20 00:00:00']);
+        DB::table('provvigioni')->insert($base + ['id' => 3, 'entrata_uscita' => 'Entrata', 'importo' => 40, 'status_compenso' => 'Pratica stornata', 'data_status' => '2026-03-05']);
 
-        // Quelle usate dal codice devono girare; delle altre (report nel solo database) basta l'esistenza: alcune non sono
-        // valide con ONLY_FULL_GROUP_BY, come già nel database precedente.
-        foreach ($used as $view) {
-            DB::select("select * from `{$view}` limit 1");
-        }
+        $coge = ReportingQueries::coge()->get()->firstWhere('mese', '2026-02');
+        $storno = ReportingQueries::cogeStorno()->get()->firstWhere('mese', '2026-03');
 
-        $this->assertGreaterThanOrEqual(20, count($existing));
+        $this->assertEquals(100, $coge->entrata);
+        $this->assertEquals(30, $coge->uscita);
+        $this->assertEquals(40, $storno->storno_entrata);
     }
 
     public function test_the_pratica_views_join_on_the_foreign_key(): void
@@ -112,7 +134,7 @@ class CoreIntegrationTest extends TestCase
     {
         $this->seed(ProvvigioniStatoSeeder::class);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         DB::table('provvigioni')->insert(['id' => 1, 'id_pratica' => 'QT99999', 'pratica_id' => 999999, 'stato' => 'Proforma', 'importo' => 1]);
     }

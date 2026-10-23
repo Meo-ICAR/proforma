@@ -1,5 +1,7 @@
 <?php
+
 // app/Models/InvoiceIn.php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,9 +11,17 @@ class InvoiceIn extends Model
 {
     use HasFactory;
 
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
     protected $table = 'invoiceins';
+
     protected $primaryKey = 'id';
+
     public $incrementing = true;
+
     protected $keyType = 'integer';
 
     protected $fillable = [
@@ -43,7 +53,7 @@ class InvoiceIn extends Model
         'cod_colleg_dimen_2',
         'allegato_in_file_xml',
         'note_1',
-        'note_2'
+        'note_2',
     ];
 
     protected $casts = [

@@ -10,6 +10,11 @@ class Invoice extends Model
     use SoftDeletes;
 
     /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string
@@ -97,7 +102,7 @@ class Invoice extends Model
      */
     public function supplier()
     {
-        return $this->belongsTo(Fornitori::class, 'fornitore_piva', 'piva');
+        return $this->belongsTo(Fornitore::class, 'fornitore_piva', 'piva');
     }
 
     /**

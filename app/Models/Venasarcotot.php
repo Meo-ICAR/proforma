@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Venasarcotot extends Model
 {
+    /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
     /**
      * The table associated with the model.
      *
@@ -27,7 +33,7 @@ class Venasarcotot extends Model
      * @var array
      */
     protected $fillable = [
-        'produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'
+        'produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco',
     ];
 
     /**
@@ -73,16 +79,16 @@ class Venasarcotot extends Model
             'monomandatario' => 'Monomandatario',
             'plurimandatario' => 'Plurimandatario',
             'societa' => 'Società',
-            'no' => 'No'
+            'no' => 'No',
         ];
     }
 
     /**
      * Scope a query to only include records with a specific enasarco type.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder  $query
      * @param  string  $type
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeOfEnasarcoType($query, $type)
     {

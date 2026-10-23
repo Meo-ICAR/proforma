@@ -29,14 +29,14 @@ class ImportDailyData extends Command
                 'params' => [
                     '--start-date' => $startDate,
                     '--end-date' => $endDate,
-                ]
+                ],
             ],
             [
                 'command' => 'provvigioni:import-api',
                 'params' => [
                     '--start-date' => $startDate,
                     '--end-date' => $endDate,
-                ]
+                ],
             ],
 
             /*
@@ -72,10 +72,10 @@ class ImportDailyData extends Command
                     'command' => $cmd['command'],
                     'status' => $success ? 'success' : 'failed',
                     'message' => $message,
-                    'exit_code' => $result
+                    'exit_code' => $result,
                 ];
 
-                if (!$success) {
+                if (! $success) {
                     $hasFailures = true;
                     $this->error("Command failed: {$cmd['command']} (Exit Code: $result)");
                 } else {
@@ -87,8 +87,8 @@ class ImportDailyData extends Command
                 $results[] = [
                     'command' => $cmd['command'],
                     'status' => 'error',
-                    'message' => '❌ Error: ' . $errorMsg,
-                    'exit_code' => 1
+                    'message' => '❌ Error: '.$errorMsg,
+                    'exit_code' => 1,
                 ];
                 $this->error("Error in command {$cmd['command']}: $errorMsg");
             }
@@ -105,7 +105,7 @@ class ImportDailyData extends Command
             $rows[] = [
                 $result['command'],
                 $result['message'],
-                $result['exit_code']
+                $result['exit_code'],
             ];
         }
 
@@ -113,10 +113,12 @@ class ImportDailyData extends Command
 
         if ($hasFailures) {
             $this->warn('Daily imports completed with some failures.');
+
             return 1;
         }
 
         $this->info('✅ All daily imports completed successfully!');
+
         return 0;
     }
 }

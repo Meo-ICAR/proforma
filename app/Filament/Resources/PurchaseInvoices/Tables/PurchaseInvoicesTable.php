@@ -8,9 +8,9 @@ use App\Models\Client;
 use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\PurchaseInvoice;
+use App\Services\ProformaPurchaseInvoiceMatchingService;
 use App\Services\PurchaseInvoiceImportService;
 use App\Services\PurchaseInvoiceMatchingService;
-use App\Services\ProformaPurchaseInvoiceMatchingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -296,13 +296,7 @@ class PurchaseInvoicesTable
                     ->color('info')
                     ->action(function () {
                         try {
-                            \DB::statement('
-                                insert into proformas ( stato, fornitori_id, sended_at, compenso, compenso_descrizione )
-                                select v.stato, v.fornitori_id, v.sended, v.compenso, v.compenso_descrizione
-                                from vwproformaagente v
-                                left outer join proformas p on p.fornitori_id = v.fornitori_id and p.sended_at = v.sended
-                                where p.id is null
-                            ');
+                            \App\Services\ReportingQueries::insertMissingProformas('Agente');
 
                             \DB::statement("
                                 update provvigioni p

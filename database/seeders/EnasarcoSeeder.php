@@ -12,7 +12,7 @@ class EnasarcoSeeder extends Seeder
      *
      * Aliquote/massimali ENASARCO per anno di competenza e tipologia di
      * mandato, usati dal calcolo dei contributi trimestrali/annuali
-     * (vwenasarco*, vedi manuale tecnico §8).
+     * (ReportingQueries::enasarco*, vedi manuale tecnico §8).
      */
     public function run(): void
     {

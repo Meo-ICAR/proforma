@@ -8,9 +8,8 @@ use App\Models\Company;
 use App\Models\Fornitore;
 use App\Models\Provvigione;
 use App\Models\PurchaseInvoice;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class PurchaseInvoiceMatchingService
 {
@@ -27,7 +26,7 @@ class PurchaseInvoiceMatchingService
     /**
      * Match Purchase invoices with Fornitore using VAT number
      *
-     * @param array $options Matching options
+     * @param  array  $options  Matching options
      * @return array Matching results
      */
     public function matchPurchaseInvoices(array $options = []): array
@@ -35,7 +34,7 @@ class PurchaseInvoiceMatchingService
         $defaultOptions = [
             'dry_run' => false,
             'update_existing' => false,
-            'batch_size' => 100
+            'batch_size' => 100,
         ];
 
         $options = array_merge($defaultOptions, $options);
@@ -45,7 +44,7 @@ class PurchaseInvoiceMatchingService
             'unmatched' => 0,
             'updated' => 0,
             'errors' => 0,
-            'details' => []
+            'details' => [],
         ];
 
         // Get all Purchase invoices that need matching
@@ -58,7 +57,7 @@ class PurchaseInvoiceMatchingService
                 if ($matchResult['matched']) {
                     $results['matched']++;
 
-                    if (!$options['dry_run'] && $matchResult['update_data']) {
+                    if (! $options['dry_run'] && $matchResult['update_data']) {
                         $this->updateInvoiceWithMatch($invoice, $matchResult['update_data']);
                         $results['updated']++;
                     }
@@ -68,7 +67,7 @@ class PurchaseInvoiceMatchingService
                         'invoice_number' => $invoice->number,
                         'vat_number' => $invoice->vat_number,
                         'matched_to' => $matchResult['matched_to'],
-                        'match_type' => $matchResult['match_type']
+                        'match_type' => $matchResult['match_type'],
                     ];
                 } else {
                     $results['unmatched']++;
@@ -76,16 +75,16 @@ class PurchaseInvoiceMatchingService
                         'invoice_id' => $invoice->id,
                         'invoice_number' => $invoice->number,
                         'vat_number' => $invoice->vat_number,
-                        'reason' => $matchResult['reason'] ?? 'No suitable match found'
+                        'reason' => $matchResult['reason'] ?? 'No suitable match found',
                     ];
                 }
             } catch (\Exception $e) {
                 $results['errors']++;
-                Log::error("Error matching invoice {$invoice->id}: " . $e->getMessage());
+                Log::error("Error matching invoice {$invoice->id}: ".$e->getMessage());
                 $results['details'][] = [
                     'invoice_id' => $invoice->id,
                     'invoice_number' => $invoice->number,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -106,7 +105,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             Address::updateOrCreate([
                 'addressable_id' => $invoice->invoiceable_id,
                 'addressable_type' => $invoice->invoiceable_type,
-                'address_type_id' => 5  // Sede Legale
+                'address_type_id' => 5,  // Sede Legale
             ], [
                 'name' => 'Indirizzo Fatturazione',
                 'street' => $invoice->bill_to_address,
@@ -150,7 +149,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
     private function matchSingleInvoice(PurchaseInvoice $invoice, array $options): array
     {
         // If invoice has VAT number, try to match with Fornitore using VAT
-        if (!empty($invoice->vat_number)) {
+        if (! empty($invoice->vat_number)) {
             $FornitoreMatch = $this->matchWithFornitoreByVat($invoice);
             if ($FornitoreMatch['matched']) {
                 return $FornitoreMatch;
@@ -163,6 +162,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
                 if ($Fornitore) {
                     $Fornitore->update(['piva' => $invoice->vat_number]);
                 }
+
                 return $FornitoreMatch;
             }
         }
@@ -172,13 +172,14 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             $FornitoreMatch = $this->matchWithClientByName($invoice);
             if ($FornitoreMatch['matched']) {
                 $invoice->update(['closed' => true, 'is_notpractice' => true]);
+
                 return $FornitoreMatch;
             }
         }
 
         return [
             'matched' => false,
-            'reason' => 'No matching found for supplier: ' . $invoice->supplier
+            'reason' => 'No matching found for supplier: '.$invoice->supplier,
         ];
     }
 
@@ -195,12 +196,12 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             return [
                 'matched' => true,
                 'match_type' => 'vat_to_Fornitore',
-                'matched_to' => 'Fornitore: ' . $Fornitore->name,
+                'matched_to' => 'Fornitore: '.$Fornitore->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Fornitore',
-                    'invoiceable_id' => $Fornitore->id
-                ]
+                    'invoiceable_id' => $Fornitore->id,
+                ],
             ];
         }
 
@@ -211,19 +212,19 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             return [
                 'matched' => true,
                 'match_type' => 'vat_to_client',
-                'matched_to' => 'Client: ' . $client->name,
+                'matched_to' => 'Client: '.$client->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Client',
-                    'invoiceable_id' => $client->id
-                ]
+                    'invoiceable_id' => $client->id,
+                ],
             ];
         }
 
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No Fornitore found with VAT: ' . $invoice->vat_number
+            'reason' => 'No Fornitore found with VAT: '.$invoice->vat_number,
         ];
     }
 
@@ -239,19 +240,19 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             return [
                 'matched' => true,
                 'match_type' => 'name_to_Fornitore',
-                'matched_to' => 'Fornitore: ' . $Fornitore->name,
+                'matched_to' => 'Fornitore: '.$Fornitore->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Fornitore',
-                    'invoiceable_id' => $Fornitore->id
-                ]
+                    'invoiceable_id' => $Fornitore->id,
+                ],
             ];
         }
 
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No Fornitore found with name: ' . $invoice->supplier
+            'reason' => 'No Fornitore found with name: '.$invoice->supplier,
         ];
     }
 
@@ -268,14 +269,14 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             ->first();
 
         // If no exact match, try with normalized whitespace
-        if (!$client) {
+        if (! $client) {
             $client = Client::whereRaw("REGEXP_REPLACE(TRIM(name), '[[:space:]]+', ' ') = ?", [$normalizedName])
                 ->first();
         }
 
         // If still no match, try with LIKE for more flexible matching
-        if (!$client) {
-            $client = Client::where('name', 'LIKE', '%' . $normalizedName . '%')
+        if (! $client) {
+            $client = Client::where('name', 'LIKE', '%'.$normalizedName.'%')
                 ->first();
         }
 
@@ -283,19 +284,19 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
             return [
                 'matched' => true,
                 'match_type' => 'name_to_client',
-                'matched_to' => 'Client: ' . $client->name,
+                'matched_to' => 'Client: '.$client->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Client',
-                    'invoiceable_id' => $client->id
-                ]
+                    'invoiceable_id' => $client->id,
+                ],
             ];
         }
 
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No client found with name: ' . $invoice->supplier
+            'reason' => 'No client found with name: '.$invoice->supplier,
         ];
     }
 
@@ -317,25 +318,26 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
                     'company_id' => $companyId,
                     'is_company' => 1,
                     'is_lead' => 0,
-                    'is_client' => 0
+                    'is_client' => 0,
                 ]);
             }
+
             return [
                 'matched' => true,
                 'match_type' => 'provvigione_to_Fornitore',
-                'matched_to' => 'Fornitore: ' . $provvigione->cliente->name,
+                'matched_to' => 'Fornitore: '.$provvigione->cliente->name,
                 'confidence' => 1.0,
                 'update_data' => [
                     'invoiceable_type' => 'App\Models\Fornitore',
-                    'invoiceable_id' => $provvigione->cliente->id
-                ]
+                    'invoiceable_id' => $provvigione->cliente->id,
+                ],
             ];
         }
 
         return [
             'matched' => false,
             'confidence' => 0,
-            'reason' => 'No provvigione found for Client: ' . $invoice->supplier
+            'reason' => 'No provvigione found for Client: '.$invoice->supplier,
         ];
     }
 
@@ -408,7 +410,7 @@ SET c.nome = s.unique_name, c.coge = s.unique_coge;');
 
         return $query->update([
             'invoiceable_type' => null,
-            'invoiceable_id' => null
+            'invoiceable_id' => null,
         ]);
     }
 }

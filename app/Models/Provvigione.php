@@ -12,6 +12,11 @@ class Provvigione extends Model
     use SoftDeletes;
 
     /**
+     * Tabella di Proforma: database dell'applicazione (le tabelle condivise di unico-core usano la connessione `core`).
+     */
+    protected $connection = 'mysql';
+
+    /**
      * The table associated with the model.
      *
      * @var string

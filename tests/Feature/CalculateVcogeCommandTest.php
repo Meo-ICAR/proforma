@@ -9,8 +9,7 @@ use Tests\TestCase;
 class CalculateVcogeCommandTest extends TestCase
 {
     /**
-     * The calculation itself reads MySQL views (vwcoge/vwcogestorno) that the
-     * sqlite test database doesn't have, so only the API dispatch is covered.
+     * The calculation queries are covered by CoreIntegrationTest, so only the API dispatch is covered here.
      */
     public function test_vcoge_calculate_can_be_dispatched_via_the_commands_api(): void
     {

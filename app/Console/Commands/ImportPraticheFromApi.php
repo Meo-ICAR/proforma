@@ -3,17 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\Clienti;
-use App\Models\Firr;
 use App\Models\Fornitore;
 use App\Models\Pratica;
-use App\Models\Venasarcotot;
+use App\Services\ReportingTables;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\RequestException;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Str;
 
 class ImportPraticheFromApi extends Command
 {
@@ -193,24 +190,7 @@ class ImportPraticheFromApi extends Command
             try {
                 $this->info('Calculating FIRR contributions...');
 
-                Venasarcotot::truncate();
-
-                // Insert new records from view
-                DB::table('venasarcotot')->insertUsing(
-                    ['produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'],
-                    DB::table('vwenasarcotot')
-                );
-
-                $records = Venasarcotot::getModel()::get();  // where('status', 'active')->
-                foreach ($records as $record) {
-                    $totalAmount = $record->montante;
-                    $enasarco = $record->enasarco;
-                    $competenza = $record->competenza;
-                    $firr = Firr::calculateContributo($totalAmount, $enasarco, $competenza);
-                    $record->update([
-                        'firr' => $firr,
-                    ]);
-                }
+                ReportingTables::refreshEnasarcoTotali();
             } catch (\Exception $e) {
                 $this->error('Error calculating FIRR contributions: '.$e->getMessage());
             }

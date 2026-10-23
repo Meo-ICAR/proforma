@@ -2,28 +2,20 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Venasarcotrimestre;
+use App\Services\ReportingTables;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class CalculateVenasarcoTrimestre extends Command
 {
     protected $signature = 'venasarco-trimestre:calculate';
 
-    protected $description = 'Ricalcola i contributi trimestrali ENASARCO (tabella venasarcotrimestre) dalla vista vwenasarcotrimestre, poi ricalcola anche i totali ENASARCO/FIRR (venasarcotot)';
+    protected $description = 'Ricalcola i contributi trimestrali ENASARCO (tabella venasarcotrimestre), poi ricalcola anche i totali ENASARCO/FIRR (venasarcotot)';
 
     public function handle(): int
     {
-        Venasarcotrimestre::truncate();
+        $result = ReportingTables::refreshEnasarcoTrimestre();
 
-        $columns = ['produttore', 'montante', 'competenza', 'Trimestre', 'enasarco', 'contributo'];
-
-        DB::table('venasarcotrimestre')->insertUsing(
-            $columns,
-            DB::table('vwenasarcotrimestre')->select($columns)
-        );
-
-        $this->info('Calcolo trimestrale ENASARCO completato.');
+        $this->info("Calcolo trimestrale ENASARCO completato: {$result['inserted_or_updated']} righe calcolate, {$result['deleted']} eliminate.");
 
         return $this->call('venasarcotot:calculate');
     }

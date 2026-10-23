@@ -57,7 +57,7 @@ class MatchSalesInvoices extends Command
         $this->displayResults($results);
 
         // Show updated statistics
-        if (!$options['dry_run']) {
+        if (! $options['dry_run']) {
             $this->newLine();
             $this->info('Updated statistics:');
             $newStats = $matchingService->getMatchingStats();
@@ -82,7 +82,7 @@ class MatchSalesInvoices extends Command
                 ['Matched Invoices', number_format($stats['matched_invoices'])],
                 ['Unmatched Invoices', number_format($stats['unmatched_invoices'])],
                 ['Clienti Matches', number_format($stats['clienti_matches'])],
-                ['Match Percentage', $stats['match_percentage'] . '%'],
+                ['Match Percentage', $stats['match_percentage'].'%'],
             ]
         );
     }

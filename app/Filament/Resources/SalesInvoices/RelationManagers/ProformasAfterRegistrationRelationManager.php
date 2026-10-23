@@ -178,16 +178,16 @@ class ProformasAfterRegistrationRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
-                     EditAction::make(),
+                EditAction::make(),
             ])
             ->toolbarActions([
-                     BulkActionGroup::make([
-                         DissociateBulkAction::make(),
-                     ]),
+                BulkActionGroup::make([
+                    DissociateBulkAction::make(),
+                ]),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query
-                     ->withoutGlobalScopes([
-                         SoftDeletingScope::class,
-                     ]));
+                ->withoutGlobalScopes([
+                    SoftDeletingScope::class,
+                ]));
     }
 }

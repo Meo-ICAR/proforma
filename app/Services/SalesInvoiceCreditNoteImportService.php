@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Principal;
 use App\Models\SalesInvoice;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class SalesInvoiceCreditNoteImportService
 {
     protected $companyId;
+
     protected $filename;
 
     protected $importResults = [
@@ -21,7 +21,7 @@ class SalesInvoiceCreditNoteImportService
         'updated' => 0,
         'skipped' => 0,
         'errors' => 0,
-        'details' => []
+        'details' => [],
     ];
 
     public function setCompanyId($companyId): void
@@ -39,7 +39,7 @@ class SalesInvoiceCreditNoteImportService
         $this->companyId = $companyId;
 
         // Extract filename from path if not provided
-        if (!$this->filename) {
+        if (! $this->filename) {
             $this->filename = basename($filePath);
         }
 
@@ -54,7 +54,7 @@ class SalesInvoiceCreditNoteImportService
 
         // Handle storage path
         $actualFilePath = $filePath;
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             // Only try storage path, not public path
             $storagePath = str_replace('public/', 'storage/app/private/sales-invoice-imports/', $filePath);
             if (file_exists($storagePath)) {
@@ -108,42 +108,10 @@ class SalesInvoiceCreditNoteImportService
             Log::info('Sales invoices import completed', [
                 'file' => $filePath,
                 'company_id' => $this->companyId,
-                'results' => $this->importResults
+                'results' => $this->importResults,
             ]);
-            DB::UPDATE("
-            UPDATE principals b
-JOIN (
-    -- This subquery identifies the specific principals and the new VAT values
-    SELECT p.principal_id, s.vat_number
-    FROM practice_commissions p
-    INNER JOIN sales_invoices s ON s.registration_date = p.invoice_at
-    WHERE YEAR(p.invoice_at) > 2024
-      AND p.tipo = 'Istituto'
-    GROUP BY p.principal_id, p.invoice_at, p.invoice_number, s.amount, s.vat_number
-    HAVING s.amount = SUM(p.amount)
-) src ON b.id = src.principal_id
-SET b.vat_number = src.vat_number;
-");
-            DB::UPDATE("
-UPDATE practice_commissions p
-INNER JOIN (
-    -- Subquery to find the valid matches based on your totals
-    SELECT
-        p_inner.principal_id,
-        p_inner.invoice_at,
-        s.number AS invoice_ref_number
-    FROM practice_commissions p_inner
-    INNER JOIN principals b ON b.id = p_inner.principal_id
-    INNER JOIN sales_invoices s ON s.vat_number = b.vat_number
-    WHERE p_inner.tipo = 'Istituto'
-      AND YEAR(p_inner.invoice_at) = 2025
-and p_inner.alternative_number_invoice is null
-    GROUP BY b.id, b.name, b.vat_number, p_inner.invoice_at, s.registration_date, s.number
-    HAVING ABS(SUM(p_inner.amount) - SUM(s.amount)) < 100
-) AS matched_data ON p.principal_id = matched_data.principal_id
-                 AND p.invoice_at = matched_data.invoice_at
-SET p.alternative_number_invoice = matched_data.invoice_ref_number
-WHERE p.tipo = 'Istituto'; ");
+            $this->matchEntrataCommissionsToSalesInvoices();
+
             return $this->importResults;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -166,9 +134,10 @@ WHERE p.tipo = 'Istituto'; ");
                     'row_number' => $rowNumber,
                     'Nr.' => $rowData['Nr.'] ?? 'NULL',
                     'Nome_cliente' => $rowData['Nome_cliente'] ?? 'NULL',
-                    'raw_row' => $rowData
+                    'raw_row' => $rowData,
                 ]);
                 $this->importResults['skipped']++;
+
                 return;
             }
 
@@ -211,12 +180,12 @@ WHERE p.tipo = 'Istituto'; ");
             }
         } catch (\Exception $e) {
             $this->importResults['errors']++;
-            $errorDetails = "Error processing row $rowNumber: " . $e->getMessage();
+            $errorDetails = "Error processing row $rowNumber: ".$e->getMessage();
             $this->importResults['details'][] = $errorDetails;
             Log::error('Sales invoice import error', [
                 'row_number' => $rowNumber,
                 'row' => $row,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }
@@ -273,6 +242,7 @@ WHERE p.tipo = 'Istituto'; ");
         if (empty($value)) {
             return null;
         }
+
         return trim($value);
     }
 
@@ -312,7 +282,7 @@ WHERE p.tipo = 'Istituto'; ");
             $parts = explode(',', $value);
             $integer_part = str_replace('.', '', $parts[0]);
             $decimal_part = $parts[1] ?? '0';
-            $value = $integer_part . '.' . $decimal_part;
+            $value = $integer_part.'.'.$decimal_part;
         } else {
             // If no comma, just remove dots (might be thousands separators)
             $value = str_replace('.', '', $value);
@@ -362,7 +332,7 @@ WHERE p.tipo = 'Istituto'; ");
 
         // Try to parse various datetime formats
         try {
-            return \Carbon\Carbon::parse($value);
+            return Carbon::parse($value);
         } catch (\Exception $e) {
             return null;
         }
@@ -378,104 +348,65 @@ WHERE p.tipo = 'Istituto'; ");
     }
 
     /**
-     * Match Sales invoices to Principals by VAT number
-     * Updates the relationship for matching invoices
+     * Allinea le provvigioni di entrata alle fatture di vendita.
+     *
+     * Le provvigioni di tipo Istituto fanno capo a `clientis` (nome = istituto_finanziario, partita IVA in `piva`),
+     * quelle di tipo Cliente a `clients` (nome = denominazione_riferimento, partita IVA in `vat_number`).
+     * Per ciascun soggetto la partita IVA si ricava dalla fattura di vendita con stessa data e importo totale
+     * (solo se quella presente è vuota o non lunga 11, 13 o 16 caratteri) e poi si assegna a `provvigioni.invoice_number` il numero della fattura corrispondente.
      */
-    public function matchPrincipalsByVatNumber($companyId = null): void
+    protected function matchEntrataCommissionsToSalesInvoices(): void
     {
-        // Use provided companyId or fall back to instance property
-        $companyId = $companyId ?? $this->companyId;
+        $coreDatabase = DB::connection(config('unico-core.connection'))->getDatabaseName();
 
-        $matchedCount = 0;
+        $subjects = [
+            'Istituto' => ['table' => 'clientis', 'vat' => 'piva', 'name' => 'istituto_finanziario'],
+            'Cliente' => ['table' => 'clients', 'vat' => 'vat_number', 'name' => 'denominazione_riferimento'],
+        ];
 
-        Log::info('Starting mass Principal matching by exact VAT number', [
-            'company_id' => $companyId
-        ]);
+        foreach ($subjects as $tipo => $subject) {
+            $table = "`{$coreDatabase}`.`{$subject['table']}`";
+            $vat = $subject['vat'];
+            $name = $subject['name'];
 
-        // Esegue un singolo UPDATE con JOIN a livello di database
-        $affectedRows = DB::table('sales_invoices as si')
-            ->join('principals as p', 'si.vat_number', '=', 'p.vat_number')
-            ->where('si.company_id', $companyId)
-            ->whereNotNull('si.vat_number')
-            ->whereNull('si.invoiceable_id')
-            ->update([
-                'si.invoiceable_id' => DB::raw('p.id'),
-                'si.invoiceable_type' => Principal::class,
-            ]);
+            DB::update("
+                UPDATE {$table} c
+                JOIN (
+                    SELECT p.{$name} AS subject_name, s.vat_number
+                    FROM provvigioni p
+                    INNER JOIN sales_invoices s ON s.registration_date = p.data_fattura
+                    WHERE p.entrata_uscita = 'Entrata'
+                      AND p.tipo = ?
+                      AND p.annullato = 0
+                      AND YEAR(p.data_fattura) > 2024
+                      AND s.vat_number IS NOT NULL
+                    GROUP BY p.{$name}, p.data_fattura, p.n_fattura, s.amount, s.vat_number
+                    HAVING s.amount = SUM(p.importo)
+                ) src ON c.name = src.subject_name
+                SET c.{$vat} = src.vat_number
+                WHERE c.{$vat} IS NULL OR c.{$vat} = '' OR CHAR_LENGTH(c.{$vat}) NOT IN (11, 13, 16)
+            ", [$tipo]);
 
-        Log::info('Principal matching completed', [
-            'company_id' => $companyId,
-            'matched_and_updated_invoices' => $affectedRows
-        ]);
-
-        try {
-            // Get all Sales invoices for this company that have a VAT number but no Principal relationship
-            $invoices = SalesInvoice::where('company_id', $companyId)
-                ->whereNotNull('vat_number')
-                ->whereNull('invoiceable_id')
-                ->get();
-
-            Log::info('Starting Principal matching by VAT number', [
-                'company_id' => $companyId,
-                'invoices_to_check' => $invoices->count()
-            ]);
-
-            foreach ($invoices as $invoice) {
-                // Clean VAT number for comparison
-                $cleanVatNumber = $this->cleanVatNumber($invoice->vat_number);
-
-                if (empty($cleanVatNumber)) {
-                    continue;
-                }
-
-                // Find Principal with matching VAT number
-                $Principal = $this->findPrincipalByVatNumber($cleanVatNumber, $companyId);
-
-                if (!$Principal && !empty($invoice->customer_name)) {
-                    $Principal = $this->findPrincipalByNameSimilarity($invoice->customer_name, $companyId);
-                }
-
-                // Se il Principal ha un VAT number di 10 caratteri, confronta solo i primi 10
-                if (!$Principal && strlen($cleanVatNumber) >= 10) {
-                    $first10Chars = substr($cleanVatNumber, 0, 10);
-                    $Principal = Principal::where('company_id', $companyId)
-                        ->whereRaw('LENGTH(vat_number) >= 10')
-                        ->whereRaw('SUBSTRING(vat_number, 1, 10) = ?', [$first10Chars])
-                        ->first();
-
-                    if (!$Principal) {
-                        $Principal = $this->findPrincipalByNameSimilarity($invoice->customer_name, $companyId);
-                    }
-
-                    if ($Principal) {
-                        // Rettifica il VAT number del Principal con quello completo della fattura
-                        $Principal->update(['vat_number' => $cleanVatNumber, 'contoCOGE' => $invoice->customer_name_number]);
-                    }
-                }
-
-                if ($Principal) {
-                    // Update the invoice with the Principal relationship
-                    $invoice->update([
-                        'invoiceable_type' => Principal::class,
-                        'invoiceable_id' => $Principal->id,
-                    ]);
-
-                    $matchedCount++;
-                }
-            }
-
-            // Update import results
-            $this->importResults['Principal_matches'] = $matchedCount;
-            $this->importResults['details'][] = "Matched {$matchedCount} invoices to Principals by VAT number";
-        } catch (\Exception $e) {
-            Log::error('Principal matching failed', [
-                'company_id' => $this->companyId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->importResults['Principal_match_errors'] = ($this->importResults['Principal_match_errors'] ?? 0) + 1;
-            $this->importResults['details'][] = 'Principal matching error: ' . $e->getMessage();
+            DB::update("
+                UPDATE provvigioni p
+                INNER JOIN (
+                    SELECT p_inner.{$name} AS subject_name, p_inner.data_fattura, s.number AS invoice_ref_number
+                    FROM provvigioni p_inner
+                    INNER JOIN {$table} c ON c.name = p_inner.{$name}
+                    INNER JOIN sales_invoices s ON s.vat_number = c.{$vat}
+                    WHERE p_inner.entrata_uscita = 'Entrata'
+                      AND p_inner.tipo = ?
+                      AND YEAR(p_inner.data_fattura) = 2025
+                      AND p_inner.invoice_number IS NULL
+                    GROUP BY c.id, c.name, c.{$vat}, p_inner.{$name}, p_inner.data_fattura, s.registration_date, s.number
+                    HAVING ABS(SUM(p_inner.importo) - SUM(s.amount)) < 100
+                ) matched_data ON p.{$name} = matched_data.subject_name
+                    AND p.data_fattura = matched_data.data_fattura
+                SET p.invoice_number = matched_data.invoice_ref_number
+                WHERE p.entrata_uscita = 'Entrata'
+                  AND p.tipo = ?
+                  AND p.invoice_number IS NULL
+            ", [$tipo, $tipo]);
         }
     }
 
@@ -506,8 +437,8 @@ WHERE p.tipo = 'Istituto'; ");
         $variations = [$vatNumber];
 
         // Add with country prefix
-        if (!str_starts_with(strtoupper($vatNumber), 'IT')) {
-            $variations[] = 'IT' . $vatNumber;
+        if (! str_starts_with(strtoupper($vatNumber), 'IT')) {
+            $variations[] = 'IT'.$vatNumber;
         }
 
         // Add with spaces and formatting variations
@@ -548,20 +479,15 @@ WHERE p.tipo = 'Istituto'; ");
                     continue;
                 }
 
-                $principal = $this->findPrincipalByVatNumber($cleanVatNumber, $companyId);
-                if (!empty($principal)) {
-                    continue;
-                }
-
                 // Find client with matching VAT number
                 $client = $this->findClientByVatNumber($cleanVatNumber, $companyId);
 
-                if (!$client && !empty($invoice->customer_name)) {
+                if (! $client && ! empty($invoice->customer_name)) {
                     // Try to match by customer name similarity
                     $client = $this->findClientByNameSimilarity($invoice->customer_name, $companyId);
                 }
 
-                if (!$client && !empty($invoice->customer_name)) {
+                if (! $client && ! empty($invoice->customer_name)) {
                     // Try to match by full name (name + first_name)
                     $client = $this->findClientByFullName($invoice->customer_name, $companyId);
                 }
@@ -603,11 +529,11 @@ WHERE p.tipo = 'Istituto'; ");
             Log::error('Client matching failed', [
                 'company_id' => $this->companyId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->importResults['client_match_errors'] = ($this->importResults['client_match_errors'] ?? 0) + 1;
-            $this->importResults['details'][] = 'Client matching error: ' . $e->getMessage();
+            $this->importResults['details'][] = 'Client matching error: '.$e->getMessage();
         }
     }
 
@@ -636,7 +562,7 @@ WHERE p.tipo = 'Istituto'; ");
                 ->where('address_type_id', 5)
                 ->first();
 
-            if (!$existingAddress) {
+            if (! $existingAddress) {
                 $address = $client->addresses()->create([
                     'address_type_id' => 5,
                     'name' => 'Fatturazione',
@@ -686,6 +612,7 @@ WHERE p.tipo = 'Istituto'; ");
                 'client_name' => $client->name,
                 'tax_code' => $client->tax_code,
             ]);
+
             return $client;
         }
 
@@ -715,91 +642,6 @@ WHERE p.tipo = 'Istituto'; ");
         }
 
         return null;
-    }
-
-    /**
-     * Find Principal by VAT number with flexible matching
-     */
-    protected function findPrincipalByVatNumber(string $vatNumber, string $companyId): ?Principal
-    {
-        // Try exact match first
-        $Principal = Principal::where('vat_number', $vatNumber)
-            ->where('company_id', $companyId)
-            ->first();
-
-        if ($Principal) {
-            return $Principal;
-        }
-
-        // Try cleaned versions
-        $cleanedVariations = $this->getVatNumberVariations($vatNumber);
-
-        foreach ($cleanedVariations as $variation) {
-            $Principal = Principal::where('vat_number', $variation)
-                ->where('company_id', $companyId)
-                ->first();
-
-            if ($Principal) {
-                return $Principal;
-            }
-        }
-
-        // Try to find by tax_code if vat_number column doesn't exist
-        $variations = $this->getVatNumberVariations($vatNumber);
-
-        foreach ($variations as $variation) {
-            try {
-                $client = Client::where('company_id', $companyId)
-                    ->where('vat_number', $variation)
-                    ->first();
-
-                if ($client) {
-                    return $client;
-                }
-            } catch (\Exception $e) {
-                // Column vat_number doesn't exist, try tax_code
-            }
-
-            $client = Client::where('company_id', $companyId)
-                ->where('tax_code', $variation)
-                ->first();
-
-            if ($client) {
-                return $client;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Find Principal by name similarity using fuzzy matching
-     */
-    protected function findPrincipalByNameSimilarity($PrincipalName, $companyId): ?Principal
-    {
-        if (empty($PrincipalName)) {
-            return null;
-        }
-
-        // Get all Principals for this company
-        $Principals = Principal::where('company_id', $companyId)
-            ->whereNotNull('name')
-            ->get();
-
-        $bestMatch = null;
-        $bestScore = 0;
-        $similarityThreshold = 70;  // 70% similarity threshold
-
-        foreach ($Principals as $Principal) {
-            $score = $this->calculateSimilarity($PrincipalName, $Principal->name);
-
-            if ($score > $bestScore && $score >= $similarityThreshold) {
-                $bestScore = $score;
-                $bestMatch = $Principal;
-            }
-        }
-
-        return $bestMatch;
     }
 
     /**
@@ -847,8 +689,8 @@ WHERE p.tipo = 'Istituto'; ");
         // Remove common company suffixes for better matching
         $suffixes = ['s.r.l.', 'srl', 's.p.a.', 'spa', 'ltd', 'limited', 'inc', 'llc', 'gmbh'];
         foreach ($suffixes as $suffix) {
-            $string1 = preg_replace('/\b' . preg_quote($suffix) . '\b/i', '', $string1);
-            $string2 = preg_replace('/\b' . preg_quote($suffix) . '\b/i', '', $string2);
+            $string1 = preg_replace('/\b'.preg_quote($suffix).'\b/i', '', $string1);
+            $string2 = preg_replace('/\b'.preg_quote($suffix).'\b/i', '', $string2);
         }
 
         // Clean up extra spaces
@@ -886,8 +728,8 @@ WHERE p.tipo = 'Istituto'; ");
             // Build full name from client data
             $fullName = trim($client->name);
 
-            if (!empty($client->first_name)) {
-                $fullName = trim($client->name . ' ' . $client->first_name);
+            if (! empty($client->first_name)) {
+                $fullName = trim($client->name.' '.$client->first_name);
             }
 
             // Exact match first
@@ -897,6 +739,7 @@ WHERE p.tipo = 'Istituto'; ");
                     'client_full_name' => $fullName,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
 
@@ -907,6 +750,7 @@ WHERE p.tipo = 'Istituto'; ");
                     'client_name' => $client->name,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
 
@@ -920,6 +764,7 @@ WHERE p.tipo = 'Istituto'; ");
                     'client_clean_name' => $cleanClientName,
                     'client_id' => $client->id,
                 ]);
+
                 return $client;
             }
         }
@@ -934,7 +779,7 @@ WHERE p.tipo = 'Istituto'; ");
     {
         // Remove common company suffixes for better matching
         $suffixes = ['SPA', 'SRL', 'SNC', 'S.P.A.', 'SNC'];
-        $cleaned = preg_replace('/\b' . implode('|', array_map('preg_quote', $suffixes)) . '\b/i', '', $name);
+        $cleaned = preg_replace('/\b'.implode('|', array_map('preg_quote', $suffixes)).'\b/i', '', $name);
 
         // Clean up extra spaces and standardize
         $cleaned = preg_replace('/\s+/', ' ', trim($cleaned));

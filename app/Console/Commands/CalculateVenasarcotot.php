@@ -2,33 +2,20 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Firr;
-use App\Models\Venasarcotot;
+use App\Services\ReportingTables;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class CalculateVenasarcotot extends Command
 {
     protected $signature = 'venasarcotot:calculate';
 
-    protected $description = 'Ricalcola i totali ENASARCO e FIRR (tabella venasarcotot) dalla vista vwenasarcotot';
+    protected $description = 'Ricalcola i totali ENASARCO e FIRR (tabella venasarcotot)';
 
     public function handle(): int
     {
-        Venasarcotot::truncate();
+        $result = ReportingTables::refreshEnasarcoTotali();
 
-        DB::table('venasarcotot')->insertUsing(
-            ['produttore', 'montante', 'contributo', 'X', 'imposta', 'firr', 'competenza', 'enasarco'],
-            DB::table('vwenasarcotot')
-        );
-
-        foreach (Venasarcotot::get() as $record) {
-            $record->update([
-                'firr' => Firr::calculateContributo($record->montante, $record->enasarco, $record->competenza),
-            ]);
-        }
-
-        $this->info('Calcolo ENASARCO e FIRR completato.');
+        $this->info("Calcolo ENASARCO e FIRR completato: {$result['inserted_or_updated']} righe calcolate, {$result['deleted']} eliminate.");
 
         return self::SUCCESS;
     }
