@@ -65,6 +65,10 @@ return [
         'description' => 'Ricalcola i totali ENASARCO e FIRR (azione "Ricalcola contributi" di admin/venasarcotots).',
         'options' => [],
     ],
+    'proformas:send-pending' => [
+        'description' => 'Invia ai produttori i proforma in stato Inserito non ancora spediti; cc = indirizzi in copia conoscenza (separati da virgola).',
+        'options' => ['cc', 'dry-run'],
+    ],
     'manual:sync' => [
         'description' => 'Reindicizza il manuale operativo per l\'assistente AI.',
         'options' => [],

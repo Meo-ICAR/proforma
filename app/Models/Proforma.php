@@ -376,11 +376,13 @@ class Proforma extends Model
     /**
      * Send the proforma via email
      *
+     * @param  bool  $preview  Simulazione: scrive a chi è loggato, non aggiorna lo stato.
+     * @param  list<string>  $extraCc  Indirizzi in copia conoscenza oltre a quello della company.
      * @return bool
      *
      * @throws \Exception
      */
-    public function inviaEmail($preview = false)
+    public function inviaEmail($preview = false, array $extraCc = [])
     {
         try {
             $proforma = $this->load(['provvigioni.pratica']);
@@ -403,6 +405,11 @@ class Proforma extends Model
                 $company = Company::first();
                 $ccEmail = $company ? $company->email_cc : null;
                 $bccEmail = $company ? $company->email_bcc : null;
+            }
+
+            if (! $preview) {
+                // Alla copia conoscenza della company si aggiungono quelle richieste da chi spedisce (es. il processo mensile).
+                $ccEmail = array_values(array_unique(array_filter(array_merge((array) $ccEmail, $extraCc)))) ?: null;
             }
 
             if ($preview) {
