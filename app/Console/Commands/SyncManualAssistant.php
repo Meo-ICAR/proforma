@@ -3,19 +3,19 @@
 namespace App\Console\Commands;
 
 use App\Neuron\ManualAssistantAgent;
+use App\Neuron\PlainHtmlReader;
 use Illuminate\Console\Command;
 use NeuronAI\RAG\DataLoader\FileDataLoader;
 
 /**
- * Indicizza il manuale operativo (Manual.md, Istruction.md) nel vector store
- * usato da ManualAssistantAgent. Da rilanciare ogni volta che i due documenti
- * cambiano.
+ * Indicizza i manuali (Manual.md, Istruction.md, manuale utente e manuale tecnico in HTML) nel vector store
+ * usato da ManualAssistantAgent. Da rilanciare ogni volta che i documenti cambiano.
  */
 class SyncManualAssistant extends Command
 {
     protected $signature = 'manual:sync';
 
-    protected $description = 'Indicizza Manual.md e Istruction.md nel vector store dell\'assistente AI';
+    protected $description = 'Indicizza i manuali (utente e tecnico) nel vector store dell\'assistente AI';
 
     public function handle(): int
     {
@@ -35,7 +35,10 @@ class SyncManualAssistant extends Command
                 continue;
             }
 
-            $documents = FileDataLoader::for($path)->getDocuments();
+            // I manuali .html si indicizzano come testo: senza un reader dedicato entrerebbe l'HTML grezzo, tag compresi.
+            $documents = FileDataLoader::for($path)
+                ->addReader('html', new PlainHtmlReader)
+                ->getDocuments();
             $agent->addDocuments($documents);
             $totalChunks += count($documents);
 

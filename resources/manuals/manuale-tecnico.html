@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proforma — Manuale Tecnico</title>
+<title>Manuale tecnico — UnicoCoge</title>
 <style>
   :root{
     --bg:#0f1115; --panel:#161922; --panel-2:#1c202c; --text:#e6e8ee; --muted:#9aa3b5;
@@ -65,13 +65,14 @@
 <div class="layout">
 
 <nav class="toc">
-  <h2>Manuale Tecnico</h2>
+  <h2 id="manuale-tecnico">Manuale Tecnico</h2>
   <ul>
     <li><a href="#intro">1. Introduzione</a></li>
+    <li><a href="#ruolo-suite">Ruolo nella suite</a></li>
     <li><a href="#stack">2. Stack e architettura</a></li>
     <li><a href="#struttura">3. Struttura del progetto</a></li>
   </ul>
-  <h2>Dominio dati</h2>
+  <h2 id="dominio-dati">Dominio dati</h2>
   <ul>
     <li><a href="#schema">4. Schema dati e modelli</a></li>
     <li><a href="#ciclo">5. Ciclo Provvigioni → Proforma</a></li>
@@ -81,38 +82,39 @@
     <li><a href="#riconciliazione">9. Riconciliazione fatture</a></li>
     <li><a href="#import">10. Import da MediaFacile</a></li>
   </ul>
-  <h2>Integrazione e sistema</h2>
+  <h2 id="integrazione-e-sistema">Integrazione e sistema</h2>
   <ul>
-    <li><a href="#api">11. API REST (bridge BPM)</a></li>
-    <li><a href="#api-commands">12. API di scheduling comandi</a></li>
+    <li><a href="#api">11. API REST (unicobpm)</a></li>
+    <li><a href="#api-commands">12. Comandi da unicobpm (bridge)</a></li>
     <li><a href="#auth">13. Autenticazione e pannello</a></li>
     <li><a href="#scheduling">14. Scheduling</a></li>
     <li><a href="#comandi">15. Comandi Artisan</a></li>
   </ul>
-  <h2>Riferimento</h2>
+  <h2 id="riferimento">Riferimento</h2>
   <ul>
     <li><a href="#debiti">16. Debiti tecnici (stato)</a></li>
     <li><a href="#appendice">17. Appendice: configurazione</a></li>
+    <li><a href="#fatti-dal-codice">Fatti dal codice</a></li>
   </ul>
 </nav>
 
 <main>
 
 <header class="title">
-  <h1>Proforma — Manuale Tecnico</h1>
+  <h1>UnicoCoge — Manuale Tecnico</h1>
   <p>Documentazione per sviluppatori e sistemisti che devono manutenere o estendere l'applicativo.</p>
   <p>
-    <span class="badge">Laravel 12</span>
-    <span class="badge">Filament 4</span>
-    <span class="badge">PHP 8.4</span>
+    <span class="badge">Laravel 13</span>
+    <span class="badge">Filament 5</span>
+    <span class="badge">PHP 8.3+</span>
     <span class="badge">MySQL</span>
   </p>
 </header>
 
 <section id="intro">
-  <h2>1. Introduzione</h2>
+  <h2 id="1-introduzione">1. Introduzione</h2>
   <p>
-    <strong>Proforma</strong> è l'applicativo gestionale del mediatore creditizio che copre l'intero ciclo delle
+    <strong>UnicoCoge</strong> (già Proforma) è l'applicativo gestionale del mediatore creditizio che copre l'intero ciclo delle
     provvigioni: importazione delle pratiche e delle provvigioni dal sistema di istruttoria esterno
     <strong>MediaFacile</strong>, emissione delle note proforma verso i produttori (agenti), riconciliazione delle
     fatture attive e passive, generazione automatica della primanota contabile e calcolo dei contributi
@@ -132,13 +134,33 @@
   </div>
 </section>
 
+<section id="ruolo-suite">
+  <h2 id="ruolo-nella-suite">Ruolo nella suite</h2>
+  <p>
+    UnicoCoge è l'<strong>interfaccia COGE e contributi</strong> della suite per mediatori creditizi: provvigioni,
+    proforma ai produttori, fatture attive e passive, primanota verso Business Central, ENASARCO e FIRR. Condivide con le
+    altre app il database <code>core</code> e la libreria <code>meo-icar/unico-core</code>: le tabelle condivise
+    (aziende, clienti <code>clientis</code>, fornitori <code>fornitoris</code>, pratiche, stati, tipi prodotto) sono sottoclassi
+    di <code>Unico\Core\Models\*</code>; restano proprie dell'app <code>Provvigione</code>, <code>Proforma</code>,
+    <code>Fattura</code>, <code>Invoice*</code>, <code>PurchaseInvoice</code>, <code>SalesInvoice</code>, <code>Enasarco</code>,
+    <code>Firr</code>, <code>Coges</code>, <code>PrimaNota*</code>. Le pratiche e le provvigioni arrivano dall'import API
+    (<code>pratiche:import-api</code>, <code>provvigioni:import-api</code>); il legame è <code>provvigioni.pratica_id</code> → <code>pratiches.id</code>.
+  </p>
+  <table>
+    <tr><th>Interlocutore</th><th>Cosa scambia</th></tr>
+    <tr><td>unicobpm → unicocoge</td><td>controlli (<code>GET /api/checks/{comando}</code>: ultima fattura di acquisto o di vendita, provvigioni maturate, clienti senza P.IVA, produttori senza email, proforma non pagati) e comandi in whitelist (<code>POST /api/commands/{comando}</code>, bridge di unico-core, es. <code>proformas:send-pending</code>)</td></tr>
+    <tr><td>unicocoge → Business Central</td><td>primanota e aggregato mensile COGE (§7)</td></tr>
+    <tr><td>MediaFacile → unicocoge</td><td>pratiche e compensi (§10)</td></tr>
+  </table>
+</section>
+
 <section id="stack">
-  <h2>2. Stack e architettura</h2>
+  <h2 id="2-stack-e-architettura">2. Stack e architettura</h2>
   <table>
     <tr><th>Componente</th><th>Versione / Dettaglio</th></tr>
     <tr><td>Linguaggio</td><td>PHP 8.4</td></tr>
-    <tr><td>Framework</td><td>Laravel 12 (struttura file "streamlined": nessun <span class="file">Kernel.php</span>, middleware in <span class="file">bootstrap/app.php</span>)</td></tr>
-    <tr><td>Pannello amministrativo</td><td>Filament 4.13 — unico panel <code>admin</code>, path <span class="file">/admin</span></td></tr>
+    <tr><td>Framework</td><td>Laravel 13 (struttura file "streamlined": nessun <span class="file">Kernel.php</span>, middleware in <span class="file">bootstrap/app.php</span>)</td></tr>
+    <tr><td>Pannello amministrativo</td><td>Filament 5 — unico panel <code>admin</code>, path <span class="file">/admin</span></td></tr>
     <tr><td>Database</td><td>MySQL — la maggior parte delle tabelle di dominio (provvigioni, pratiche, proformas, fornitoris, clientis, ecc.) sono <strong>tabelle legacy senza migration Laravel</strong>: lo schema esiste già a DB e i Model vi si agganciano direttamente. Solo <span class="file">prima_nota_configs</span> e <span class="file">prima_nota_entries</span> hanno una migration reale in <span class="file">database/migrations/</span> (funzionalità sviluppata più di recente).</td></tr>
     <tr><td>Autenticazione</td><td>Laravel auth standard + Socialite (Microsoft OAuth) via <code>dutchcodingcompany/filament-socialite</code></td></tr>
     <tr><td>Import Excel</td><td><code>eightynine/filament-excel-import</code>, export via <code>pxlrbt/filament-excel</code></td></tr>
@@ -151,7 +173,7 @@
 </section>
 
 <section id="struttura">
-  <h2>3. Struttura del progetto</h2>
+  <h2 id="3-struttura-del-progetto">3. Struttura del progetto</h2>
   <p>Il progetto segue la struttura standard Laravel 12. Le cartelle rilevanti per il dominio applicativo:</p>
   <table>
     <tr><th>Percorso</th><th>Contenuto</th></tr>
@@ -225,9 +247,9 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
 <hr>
 
 <section id="schema">
-  <h2>4. Schema dati e modelli principali</h2>
+  <h2 id="4-schema-dati-e-modelli-principali">4. Schema dati e modelli principali</h2>
 
-  <h3>4.1 Provvigione — la tabella centrale</h3>
+  <h3 id="4-1-provvigione-la-tabella-centrale">4.1 Provvigione — la tabella centrale</h3>
   <p>Tabella <code>provvigioni</code>, PK <code>id</code> <code>char(36)</code> (stringa, non auto-incrementante — proviene da MediaFacile). Rappresenta sia le provvigioni <strong>passive</strong> (uscita verso il produttore) sia quelle <strong>attive</strong> (entrata da istituto/cliente), distinte dalla colonna <code>entrata_uscita</code>.</p>
   <table>
     <tr><th>Colonna</th><th>Tipo</th><th>Note</th></tr>
@@ -245,7 +267,7 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
   </table>
   <p>Relazioni principali (<span class="file">app/Models/Provvigione.php</span>): <code>belongsTo(Pratica, 'id_pratica')</code>, <code>belongsTo(Fornitore, 'piva', 'piva')</code>, <code>belongsTo(Clienti, 'istituto_finanziario', 'name')</code>, <code>belongsTo(Proforma)</code>, <code>morphMany(PrimaNotaEntry, 'record')</code>.</p>
 
-  <h3>4.2 Proforma</h3>
+  <h3 id="4-2-proforma">4.2 Proforma</h3>
   <p>Tabella <code>proformas</code>, PK bigint auto-incrementante. Un proforma è il documento intermedio verso un produttore (o istituto/cliente) che <strong>aggrega più righe di Provvigione</strong>.</p>
   <table>
     <tr><th>Colonna</th><th>Note</th></tr>
@@ -258,10 +280,10 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
   </table>
   <p><code>getTotaleAttribute()</code> calcola l'importo complessivo come <code>compenso + anticipo + contributo + delta</code>. Relazioni: <code>belongsTo(Fornitore, 'fornitori_id')</code>, <code>hasMany(Provvigione, 'proforma_id')</code>.</p>
 
-  <h3>4.3 Pratica</h3>
+  <h3 id="4-3-pratica">4.3 Pratica</h3>
   <p>Tabella <code>pratiches</code>, PK <code>id</code> stringa (codice pratica MediaFacile). Contiene i dati del finanziamento (<code>rata</code>, <code>erogato</code>, <code>amount</code>, <code>net</code>, <code>nrate</code>) e le date chiave del ciclo di vita (<code>sended_at</code>, <code>approved_at</code>, <code>erogated_at</code>, <code>rejected_at</code>). <code>belongsTo(Fornitore, 'partita_iva_agente', 'piva')</code> come <code>agente()</code>; <code>hasMany(Provvigione, 'id_pratica')</code>.</p>
 
-  <h3>4.4 Anagrafiche</h3>
+  <h3 id="4-4-anagrafiche">4.4 Anagrafiche</h3>
   <ul>
     <li><strong>Fornitore</strong> (<code>fornitoris</code>, PK UUID) — i produttori/agenti. Campi di compliance (<code>oam</code>, <code>ivass</code>, <code>numero_iscrizione_rui</code>), <code>enasarco</code> (enum <code>no</code>/<code>monomandatario</code>/<code>plurimandatario</code>/<code>societa</code>, default <code>plurimandatario</code>), <code>anticipo</code>/<code>anticipo_residuo</code>/<code>contributo</code> e relative descrizioni, <code>contributoperiodicita</code>/<code>contributodalmese</code>. Il model ha due hook in <code>boot()</code>: se cambia <code>piva</code>, propaga il nuovo valore a tutte le <code>Provvigione</code> collegate; se cambia <code>email</code>, aggiorna <code>emailto</code> su tutti i Proforma ancora <code>Inserito</code> del fornitore.</li>
     <li><strong>Clienti</strong> (tabella <code>clientis</code>, PK UUID) — anagrafica istituti/mandanti, con campi normativi estesi (<code>ivass_section</code>, <code>status</code>, <code>principal_type</code>). È qui che si registra la Partita IVA usata per la riconciliazione delle fatture attive (§9) e gli "istituti fittizi" citati nel manuale utente.</li>
@@ -269,7 +291,7 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
     <li><strong>Company</strong> — anagrafica delle società del gruppo; include, in chiaro, credenziali di connessione a database esterni per-tenant (<code>db_host/db_port/db_database/db_username/db_password</code>) — <strong>da trattare come dato sensibile</strong>.</li>
   </ul>
 
-  <h3>4.5 Contabilità e riconciliazione</h3>
+  <h3 id="4-5-contabilita-e-riconciliazione">4.5 Contabilità e riconciliazione</h3>
   <ul>
     <li><strong>PrimaNotaConfig</strong> / <strong>PrimaNotaEntry</strong> (uniche tabelle con migration reale) — vedi §7.</li>
     <li><strong>Coges</strong> — mapping conto dare/avere per fonte (<code>mediafacile</code>) e tipo movimento (Entrata/Uscita), usato da <code>coge:sync-monthly</code>.</li>
@@ -277,12 +299,12 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
     <li><strong>Invoice / PurchaseInvoice / SalesInvoice / Fattura / InvoiceIn</strong> — rappresentazioni delle fatture (import Excel o SDI) usate nella riconciliazione con i proforma; si veda §9.</li>
   </ul>
 
-  <h3>4.6 ENASARCO</h3>
+  <h3 id="4-6-enasarco">4.6 ENASARCO</h3>
   <p>Vedi il dettaglio completo in §8. Tabelle coinvolte: <code>enasarcos</code> (aliquote/massimali per anno e tipologia), <code>firrs</code> (scaglioni FIRR), <code>venasarcotrimestre</code>, <code>venasarcotot</code>.</p>
 </section>
 
 <section id="ciclo">
-  <h2>5. Ciclo Provvigioni → Proforma</h2>
+  <h2 id="5-ciclo-provvigioni-proforma">5. Ciclo Provvigioni → Proforma</h2>
 
   <div class="flow">
     <div class="step">Provvigioni <code>Inserito</code></div>
@@ -298,7 +320,7 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
     <div class="step">Riconciliazione fattura → <code>Pagato</code></div>
   </div>
 
-  <h3>5.1 Emissione ("Emetti Proforma")</h3>
+  <h3 id="5-1-emissione-emetti-proforma">5.1 Emissione ("Emetti Proforma")</h3>
   <p>
     Il trigger è una <code>BulkAction</code> nella tabella delle provvigioni:
     <span class="file">app/Filament/Resources/Provvigiones/Tables/ProvvigionesTable.php</span>. Per ogni riga
@@ -326,7 +348,7 @@ php artisan migrate --force   # a questo punto: "Nothing to migrate"</code></pre
     provvigione resta comunque tracciabile singolarmente tramite <code>proforma_id</code>.
   </p>
 
-  <h3>5.2 Separazione "coordinamento"</h3>
+  <h3 id="5-2-separazione-coordinamento">5.2 Separazione "coordinamento"</h3>
   <p>
     In <code>createFromFornitore()</code>, se la provvigione è marcata <code>coordinamento</code>, il
     <code>contributo</code> fisso del nuovo proforma viene azzerato:
@@ -337,7 +359,7 @@ if ($coordinamento) {
 }</code></pre>
   <p>Il contributo fisso mensile configurato in anagrafica fornitore, quindi, si applica solo ai compensi standard, non a quelli di coordinamento — coerente con la logica descritta nel manuale utente.</p>
 
-  <h3>5.3 Anticipi</h3>
+  <h3 id="5-3-anticipi">5.3 Anticipi</h3>
   <p>
     Alla creazione, <code>anticipo</code>, <code>anticipo_residuo</code> e le relative descrizioni sono copiati
     dal <code>Fornitore</code>: sono impostazioni "standing" per produttore, non calcolate dinamicamente. Il
@@ -347,7 +369,7 @@ if ($coordinamento) {
   <pre><code>$this->fornitore->increment('anticipo_residuo', -$this->anticipo);</code></pre>
   <p>Un valore di anticipo negativo su un proforma rappresenta quindi l'erogazione di un nuovo anticipo (incrementa il residuo invece di ridurlo), coerentemente con quanto documentato per l'utente finale.</p>
 
-  <h3>5.4 Invio email / simulazione</h3>
+  <h3 id="5-4-invio-email-simulazione">5.4 Invio email / simulazione</h3>
   <p>
     Tutta la logica di invio è nel metodo <code>Proforma::inviaEmail(bool $preview = false)</code>. Punti chiave
     per chi deve fare debug su un'email non recapitata o su un anticipo non scalato:
@@ -375,7 +397,7 @@ if ($coordinamento) {
 </section>
 
 <section id="storno">
-  <h2>6. Storno provvigioni (rivalsa)</h2>
+  <h2 id="6-storno-provvigioni-rivalsa">6. Storno provvigioni (rivalsa)</h2>
   <p>
     Implementato come <code>Action::make('storna')</code> in
     <span class="file">app/Filament/Resources/Praticas/RelationManagers/ProvvigioniRelationManager.php</span>,
@@ -412,9 +434,9 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
 </section>
 
 <section id="primanota">
-  <h2>7. Primanota e sincronizzazione COGE / Business Central</h2>
+  <h2 id="7-primanota-e-sincronizzazione-coge-business-central">7. Primanota e sincronizzazione COGE / Business Central</h2>
 
-  <h3>7.1 Generazione della primanota (config-driven)</h3>
+  <h3 id="7-1-generazione-della-primanota-config-driven">7.1 Generazione della primanota (config-driven)</h3>
   <p>
     <span class="file">app/Console/Commands/GeneratePrimaNotaCommand.php</span> (<code>primanota:generate</code>,
     schedulato ogni sera alle 20:00) è completamente guidato dalla configurazione, senza logica hardcoded per
@@ -442,7 +464,7 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
     non-incrementali (stringa/UUID) — dettaglio documentato nel commento della migration.
   </p>
 
-  <h3>7.2 Sync verso Business Central</h3>
+  <h3 id="7-2-sync-verso-business-central">7.2 Sync verso Business Central</h3>
   <p>Due comandi distinti, entrambi appoggiati a <code>BusinessCentralService::inviaPrimaNota()</code>:</p>
   <ul>
     <li><code>coge:sync-primenote</code> (<span class="file">SyncPrimenoteEntry2Coge.php</span>, schedulato alle
@@ -488,7 +510,7 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
 </section>
 
 <section id="enasarco">
-  <h2>8. Calcolo ENASARCO, conguaglio e FIRR</h2>
+  <h2 id="8-calcolo-enasarco-conguaglio-e-firr">8. Calcolo ENASARCO, conguaglio e FIRR</h2>
   <p>
     Il calcolo si basa su due <strong>viste SQL</strong> che aggregano <code>provvigioni</code> (filtrate su
     <code>entrata_uscita = 'Uscita'</code>, <code>stato &lt;&gt; 'Annullato'</code>,
@@ -496,7 +518,7 @@ foreach ($provvigioniUscitaDellaPratica as $uscita) {
     <strong>post-processing in PHP</strong> per FIRR e conguaglio.
   </p>
 
-  <h3>8.1 Contributo trimestrale</h3>
+  <h3 id="8-1-contributo-trimestrale">8.1 Contributo trimestrale</h3>
   <p>Query <code>ReportingQueries::enasarcoTrimestre()</code> / <code>enasarcoAnno()</code>, join di <code>provvigioni</code> con
   <code>fornitoris.enasarco</code> (tipologia) e <code>enasarcos</code> (aliquote per anno+tipologia):</p>
   <pre><code>montante  = sum(p.importo)
@@ -504,7 +526,7 @@ contributo = (sum(p.importo) * (e.aliquota_agente + e.aliquota_soc)) / 100</code
   <p>Il risultato alimenta <code>venasarcotrimestre</code>. Vista Filament: pulsante "Ricalcola" in
   <span class="file">Trimestrali ENASARCO</span>.</p>
 
-  <h3>8.2 Conguaglio annuale</h3>
+  <h3 id="8-2-conguaglio-annuale">8.2 Conguaglio annuale</h3>
   <p>Query <code>ReportingQueries::enasarcoTotali()</code> (join di <code>enasarcoAnno()</code> con <code>enasarcos</code>) applica il
   clamp fra minimale e massimale annuo e marca se il contributo grezzo ha toccato uno dei due limiti:</p>
   <pre><code>X       = CONCAT( IF(LEAST(massimo, contributo)=massimo, '+', ''),
@@ -522,7 +544,7 @@ foreach (Venasarcotot::get() as $record) {
     $record->update(['firr' => $firr]);
 }</code></pre>
 
-  <h3>8.3 FIRR — calcolo a scaglioni progressivi</h3>
+  <h3 id="8-3-firr-calcolo-a-scaglioni-progressivi">8.3 FIRR — calcolo a scaglioni progressivi</h3>
   <p>
     <code>Firr::calculateContributo()</code> (<span class="file">app/Models/Firr.php</span>) applica gli scaglioni
     della tabella <code>firrs</code> (filtrati per tipologia ENASARCO e anno di competenza, ordinati per
@@ -540,7 +562,7 @@ foreach (Venasarcotot::get() as $record) {
   <p>Scaglioni tipici (valori di seed, uguali per mono/pluri salvo la prima soglia): 0–6.200€ (plurimandatario) /
   0–12.400€ (monomandatario) → 4%; scaglione successivo → 2%; oltre → 1%.</p>
 
-  <h3>8.4 RACES e Conguaglio — calcolati a runtime, non persistiti</h3>
+  <h3 id="8-4-races-e-conguaglio-calcolati-a-runtime-non-persistiti">8.4 RACES e Conguaglio — calcolati a runtime, non persistiti</h3>
   <p>
     La colonna finale mostrata all'utente non viene salvata a DB: è calcolata nella tabella Filament
     (<span class="file">app/Filament/Resources/Venasarcotots/Tables/VenasarcototsTable.php</span>) al momento
@@ -570,10 +592,10 @@ foreach (Venasarcotot::get() as $record) {
 </section>
 
 <section id="riconciliazione">
-  <h2>9. Riconciliazione fatture ↔ proforma</h2>
+  <h2 id="9-riconciliazione-fatture-proforma">9. Riconciliazione fatture ↔ proforma</h2>
   <p>Due servizi indipendenti in <span class="file">app/Services/</span>, entrambi eseguiti da comando Artisan o azione manuale in Filament.</p>
 
-  <h3>9.1 Fatture attive — <code>ProformaInvoiceMatchingService</code></h3>
+  <h3 id="9-1-fatture-attive-proformainvoicematchingservice">9.1 Fatture attive — <code>ProformaInvoiceMatchingService</code></h3>
   <p>
     Per ogni <code>SalesInvoice</code> non chiusa con importo e data registrazione valorizzati, cerca i Proforma
     dello stesso fornitore (per P.IVA) con <code>sended_at &lt;= registration_date</code> e non ancora abbinati
@@ -582,7 +604,7 @@ foreach (Venasarcotot::get() as $record) {
   <pre><code>abs(salesInvoice.amount - (compenso + anticipo + contributo)) <= 10   // tolleranza fissa, 10€</code></pre>
   <p>Al match: imposta <code>invoiceable_type/id</code> sul Proforma, <code>stato = 'Pagato'</code>, chiude la fattura (<code>closed = 1</code>), tutto in transazione.</p>
 
-  <h3>9.2 Fatture passive — <code>ProformaPurchaseInvoiceMatchingService</code></h3>
+  <h3 id="9-2-fatture-passive-proformapurchaseinvoicematchingservice">9.2 Fatture passive — <code>ProformaPurchaseInvoiceMatchingService</code></h3>
   <p>Filtra <code>PurchaseInvoice</code> non chiuse, non annullate, non "no pratica", con P.IVA/importo/data
   valorizzati. Doppia strategia di risoluzione del fornitore:</p>
   <ol>
@@ -606,7 +628,7 @@ foreach (Venasarcotot::get() as $record) {
 </section>
 
 <section id="import">
-  <h2>10. Import da MediaFacile</h2>
+  <h2 id="10-import-da-mediafacile">10. Import da MediaFacile</h2>
   <p>
     Entrambi i comandi (<code>pratiche:import-api</code> → <span class="file">ImportPraticheFromApi.php</span>,
     <code>provvigioni:import-api</code> → <span class="file">ImportProvvigioniFromApi.php</span>) chiamano lo
@@ -646,109 +668,58 @@ foreach (Venasarcotot::get() as $record) {
 <hr>
 
 <section id="api">
-  <h2>11. API REST esposte (bridge BPM)</h2>
+  <h2 id="11-api-rest-esposte-unicobpm">11. API REST esposte (unicobpm)</h2>
   <p>
-    <span class="file">routes/api.php</span> espone un piccolo set di endpoint generici, consumati dal sistema
-    esterno <strong>UnicoBPM</strong> per configurare processi e leggere/scrivere singoli campi senza integrazione
-    dedicata:
+    <span class="file">routes/api.php</span> espone a <strong>UnicoBPM</strong> i controlli e un piccolo set di endpoint generici
+    sui modelli. Tutte le rotte sono dentro <code>Route::middleware('bpm.auth')</code> (alias di
+    <span class="file">App\Http\Middleware\VerifyBpmApiKey</span>, <span class="file">bootstrap/app.php</span>): confronta l'header
+    <code>X-Api-Key</code> con <code>config('services.bpm.api_key')</code> (<code>BPM_BRIDGE_API_KEY</code>) con
+    <code>hash_equals()</code>; <code>503</code> se la chiave non è configurata, <code>401</code> se non combacia.
   </p>
   <table>
     <tr><th>Metodo</th><th>Rotta</th><th>Controller</th><th>Scopo</th></tr>
-    <tr><td>GET</td><td><code>/api/models/{model}/fields</code></td><td><code>ModelFieldsApiController@show</code></td><td>Elenca i campi realmente presenti su un modello (per popolare le select di configurazione lato BPM)</td></tr>
-    <tr><td>GET</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@show</code></td><td>Restituisce un record limitato alle colonne reali del modello</td></tr>
-    <tr><td>PATCH</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@update</code></td><td>Scrive un singolo campo su un record</td></tr>
-    <tr><td>GET</td><td><code>/api/users/lookup</code></td><td><code>UserLookupApiController@show</code></td><td>Verifica se un utente loggato su UnicoBPM ha un account anche qui</td></tr>
+    <tr><td>GET</td><td><code>/api/checks</code>, <code>/api/checks/{comando}</code></td><td><code>CheckStatusApiController</code></td><td>Stato dei controlli (comandi che estendono <code>StatusCheckCommand</code>): solo <code>{value, severity, details, attachment?}</code>. A chi scrivere lo decide unicobpm con la RACI del passo.</td></tr>
+    <tr><td>GET</td><td><code>/api/models/{model}/fields</code></td><td><code>ModelFieldsApiController@show</code></td><td>Campi reali di un modello (per le select dei processi)</td></tr>
+    <tr><td>GET</td><td><code>/api/models/{model}/latest</code></td><td><code>LatestModelRecordApiController@show</code></td><td>Ultimo record di un modello</td></tr>
+    <tr><td>GET</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@show</code></td><td>Un record limitato alle colonne reali</td></tr>
+    <tr><td>PATCH</td><td><code>/api/models/{model}/{id}</code></td><td><code>ModelFieldValueApiController@update</code></td><td>Scrive un singolo campo (una FK «lookup» è risolta al valore reale)</td></tr>
+    <tr><td>GET</td><td><code>/api/users/lookup</code></td><td><code>UserLookupApiController@show</code></td><td>Se un utente di unicobpm ha un account anche qui</td></tr>
   </table>
   <p>
-    <code>ModelFieldValueApiController</code> è generico e "schema-driven": risolve la stringa <code>{model}</code>
-    a una classe Eloquent tramite <code>App\Services\ModelFieldIntrospector</code>, poi:
+    I controlli di questa app sono i comandi <code>provvigioni:check-maturate</code> (provvigioni «Pratica perfezionata» ancora «Inserito»: valore il numero,
+    allegato CSV), <code>purchase-invoices:check-stale</code>, <code>sales-invoices:check-stale</code>, <code>clienti:check-missing-piva</code>,
+    <code>fornitori:check-missing-email</code> e <code>proformas:check-unpaid</code>: calcolano solo lo stato e non inviano nulla.
   </p>
-  <ul>
-    <li><code>show()</code> — <code>$record-&gt;only($columnNames)</code>, esponendo tutte le colonne reali del
-      modello risolto.</li>
-    <li><code>update()</code> — valida <code>field</code> + <code>value</code>, verifica che <code>field</code>
-      sia una colonna reale, e se il campo è una FK "lookup" (es. <code>Pratica::agente()</code>) risolve il
-      valore ricevuto al valore FK effettivo (es. converte in <code>Fornitore.piva</code>) prima di scrivere.</li>
-  </ul>
-  <div class="note">
-    <strong>Autenticazione: chiave condivisa (header <code>X-Api-Key</code>)</strong>
-    Tutte le rotte sotto <span class="file">routes/api.php</span> sono ora dentro
-    <code>Route::middleware('bpm.auth')</code>, alias di
-    <span class="file">App\Http\Middleware\VerifyBpmApiKey</span> registrato in
-    <span class="file">bootstrap/app.php</span>. Il middleware confronta l'header <code>X-Api-Key</code> della
-    richiesta con <code>config('services.bpm.api_key')</code> (env <code>BPM_BRIDGE_API_KEY</code>) usando
-    <code>hash_equals()</code>; risponde <code>503</code> se la chiave non è configurata e <code>401</code> se non
-    combacia. La chiave va comunicata a UnicoBPM fuori banda (non committarla). Prima di questa modifica gli
-    endpoint erano raggiungibili senza alcuna autenticazione — vedi §16 per lo storico del problema.
-  </div>
   <p>
-    Correlata: <span class="file">app/Http/Controllers/BpmBridgeController.php</span>
-    (<code>GET /bpm-landing/{subject_id}</code>, throttled 10 richieste/minuto) verifica un token contro
-    <code>{BPM_API_URL}/api/verify-token</code> prima di consentire l'accesso "landing" da un link generato dal
-    BPM — meccanismo di autenticazione separato e preesistente, non toccato da questa modifica.
+    <span class="file">BpmBridgeController</span> (<code>GET /bpm-landing/{subject_id}</code>, 10 richieste/minuto) verifica un token monouso contro
+    <code>{BPM_API_URL}/api/verify-token</code> prima di consentire l'accesso «landing» da un link generato dal BPM.
   </p>
 </section>
 
 <section id="api-commands">
-  <h2>12. API di scheduling comandi</h2>
+  <h2 id="12-comandi-lanciabili-da-unicobpm-bridge-di-unico-core">12. Comandi lanciabili da unicobpm (bridge di unico-core)</h2>
   <p>
-    Oltre al bridge sui modelli, <span class="file">routes/api.php</span> espone due rotte che permettono a un
-    sistema esterno di scheduling di lanciare on-demand i comandi Artisan/servizi di questa app, senza accesso SSH
-    al server. Sono protette dallo stesso middleware <code>bpm.auth</code> (§11).
+    Le rotte <code>GET /api/commands</code>, <code>POST /api/commands/{comando}</code>, <code>GET /api/commands/runs/{run}</code> e
+    <code>GET /api/bridge/health</code> non sono dell'app: le fornisce il <strong>bridge di unico-core</strong>
+    (<code>UNICO_CORE_BRIDGE=true</code>, <code>Unico\Core\Bridge\CommandDispatcher</code>, tabella <code>command_runs</code>, intestazioni
+    <code>X-Api-Key</code> e <code>X-Correlation-Id</code>). Si possono eseguire solo i comandi elencati in
+    <span class="file">config/schedulable_commands.php</span> e solo con le opzioni lì dichiarate (es. <code>pratiche:import-api</code>:
+    <code>start-date</code>, <code>end-date</code>; <code>coge:sync-monthly</code>: <code>month</code>). Un comando non in whitelist risponde <code>404</code>,
+    un'opzione non ammessa <code>422</code>. L'esecuzione è in coda e ha un esito leggibile con <code>GET /api/commands/runs/{run}</code>.
   </p>
-  <table>
-    <tr><th>Metodo</th><th>Rotta</th><th>Controller</th><th>Scopo</th></tr>
-    <tr><td>GET</td><td><code>/api/commands</code></td><td><code>CommandDispatchApiController@index</code></td><td>Elenca i comandi schedulabili e le opzioni accettate per ciascuno</td></tr>
-    <tr><td>POST</td><td><code>/api/commands/{command}</code></td><td><code>CommandDispatchApiController@store</code></td><td>Accoda l'esecuzione di un comando whitelisted</td></tr>
-  </table>
-  <p>
-    <strong>Whitelist</strong>: solo i comandi elencati in
-    <span class="file">config/schedulable_commands.php</span> possono essere eseguiti, e solo con le opzioni lì
-    dichiarate per ciascuno (es. <code>pratiche:import-api</code> accetta solo <code>start-date</code>/<code>end-date</code>).
-    Qualunque nome di comando non in whitelist risponde <code>404</code>; un'opzione non dichiarata per quel
-    comando, o con un valore non scalare (array/oggetto invece di stringa/numero/booleano), risponde
-    <code>422</code> con l'elenco delle opzioni ammesse. Questo evita sia che l'endpoint diventi una porta
-    d'ingresso per eseguire comandi Artisan arbitrari, sia un errore di tipo poco leggibile lato
-    <code>Artisan::call()</code> quando arriva un valore malformato.
-  </p>
-  <p><strong>Corpo della richiesta POST</strong> (opzionale, tutte le opzioni sotto la chiave <code>options</code>):</p>
   <pre><code>POST /api/commands/coge:sync-monthly
 X-Api-Key: &lt;chiave condivisa&gt;
 Content-Type: application/json
 
 { "options": { "month": "2026-08" } }</code></pre>
-  <p>
-    Il controller traduce ogni voce di <code>options</code> in un'opzione Artisan (<code>--month=2026-08</code>) e
-    mette in coda <code>App\Jobs\RunArtisanCommandJob</code> (<code>RunArtisanCommandJob::dispatch($command, $options)</code>),
-    rispondendo subito <code>202 Accepted</code>: gli import da MediaFacile e i sync verso Business Central possono
-    richiedere più tempo di quanto sia ragionevole attendere in una richiesta HTTP sincrona. Il job:
-  </p>
-  <ul>
-    <li>acquisisce un <code>Cache::lock()</code> scoped sul nome del comando (indipendentemente dalle opzioni):
-      se un'esecuzione dello stesso comando è già in corso, questa viene saltata (loggata a livello
-      <code>info</code>) invece di sovrapporsi — stesso principio di
-      <code>Schedule::withoutOverlapping()</code> usato per i comandi schedulati via cron (§14);</li>
-    <li>esegue <code>Artisan::call()</code> e, se l'exit code non è <code>0</code>, lancia un'eccezione così che
-      il meccanismo di retry della coda intervenga: <code>$tries = 3</code> con backoff crescente
-      (<code>30s, 120s, 300s</code>) — utile per errori transitori come un timeout verso l'API di MediaFacile o
-      Business Central;</li>
-    <li>dopo l'ultimo tentativo fallito, <code>failed()</code> registra l'errore definitivo nei log.</li>
-  </ul>
-  <p>
-    Non esiste ancora un endpoint per interrogare lo stato di un'esecuzione già accodata (oltre ai log
-    applicativi e alla tabella <code>failed_jobs</code> per i tentativi esauriti).
-  </p>
   <div class="warn">
     <strong>Richiede un worker di coda attivo</strong>
-    <code>QUEUE_CONNECTION=database</code>: se non gira <code>php artisan queue:work</code> (o equivalente
-    supervisor/systemd) sul server, i comandi restano accodati nella tabella <code>jobs</code> e non vengono mai
-    eseguiti. Verificarlo prima di dare per scontato che una chiamata "andata a buon fine" (202) abbia
-    effettivamente prodotto l'effetto atteso.
+    <code>QUEUE_CONNECTION=database</code>: senza <code>php artisan queue:work</code> (o supervisor) i comandi restano nella tabella <code>jobs</code>.
   </div>
 </section>
 
 <section id="auth">
-  <h2>13. Autenticazione e pannello Filament</h2>
+  <h2 id="13-autenticazione-e-pannello-filament">13. Autenticazione e pannello Filament</h2>
   <p>
     Panel unico <code>admin</code> (<span class="file">app/Providers/Filament/AdminPanelProvider.php</span>),
     path <span class="file">/admin</span>, <code>authGuard('web')</code>. Login classico Laravel +
@@ -768,23 +739,21 @@ Content-Type: application/json
 </section>
 
 <section id="scheduling">
-  <h2>14. Scheduling</h2>
-  <p>Definito in <span class="file">routes/console.php</span> (caricato da <span class="file">bootstrap/app.php</span>):</p>
-  <pre><code>Schedule::command('coge:sync-monthly')->monthlyOn(1, '01:00');
+  <h2 id="14-scheduling">14. Scheduling</h2>
+  <p>Definito in <span class="file">routes/console.php</span>:</p>
+  <pre><code>Schedule::job(new ImportaDaMediafacile)->dailyAt('03:00')->withoutOverlapping();
+Schedule::command('coge:sync-monthly')->monthlyOn(1, '01:00');
 Schedule::command('primanota:generate')->dailyAt('20:00')->withoutOverlapping();
-Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping();</code></pre>
-  <div class="warn">
-    <strong>Import MediaFacile non schedulati qui</strong>
-    <code>pratiche:import-api</code> e <code>provvigioni:import-api</code> (così come
-    <code>ImportDailyData</code>, <code>SyncManualAssistant</code>, <code>ParseProductDescription</code>) non
-    compaiono in <span class="file">routes/console.php</span>. Se il manuale utente li descrive come
-    "schedulati", la schedulazione va cercata a livello di crontab di sistema/hosting (fuori da questo
-    repository) — verificarlo con l'amministratore del server prima di assumere che girino automaticamente.
-  </div>
+Schedule::command('coge:sync-primenote')->dailyAt('20:20')->withoutOverlapping();</code></pre>
+  <p>
+    <code>App\Jobs\ImportaDaMediafacile</code> importa le pratiche e poi le provvigioni degli ultimi 60 giorni e avvisa gli indirizzi in
+    <code>services.mediafacile.notify_emails</code> con i numeri di righe nuove o modificate. L'importazione non parte più dalla pagina. Gli altri controlli
+    (fatture, clienti, produttori, proforma) li interroga unicobpm via API: non sono nello scheduler di questa app.
+  </p>
 </section>
 
 <section id="comandi">
-  <h2>15. Riepilogo comandi Artisan custom</h2>
+  <h2 id="15-riepilogo-comandi-artisan-custom">15. Riepilogo comandi Artisan custom</h2>
   <table>
     <tr><th>Comando</th><th>File</th><th>Opzioni</th><th>Funzione</th><th>Schedulabile via API</th></tr>
     <tr><td><code>pratiche:import-api</code></td><td>ImportPraticheFromApi.php</td><td><code>--start-date</code>, <code>--end-date</code></td><td>Importa pratiche da MediaFacile, ricostruisce ENASARCO annuale</td><td>Sì</td></tr>
@@ -805,7 +774,7 @@ Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping()
 <hr>
 
 <section id="debiti">
-  <h2>16. Debiti tecnici (stato)</h2>
+  <h2 id="16-debiti-tecnici-stato">16. Debiti tecnici (stato)</h2>
   <p>Punti emersi durante l'analisi del codice. I primi sei sono stati risolti; restano elencati perché il
   ragionamento che li ha fatti emergere resta utile per non ricadere nello stesso errore altrove nel codice.</p>
   <ul>
@@ -898,9 +867,9 @@ Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping()
 </section>
 
 <section id="appendice">
-  <h2>17. Appendice — valori di configurazione seed</h2>
+  <h2 id="17-appendice-valori-di-configurazione-seed">17. Appendice — valori di configurazione seed</h2>
 
-  <h3>17.1 Aliquote ENASARCO (tabella <code>enasarcos</code>, esempio anno 2026)</h3>
+  <h3 id="17-1-aliquote-enasarco-tabella-enasarcos-esempio-anno-2026">17.1 Aliquote ENASARCO (tabella <code>enasarcos</code>, esempio anno 2026)</h3>
   <table>
     <tr><th>Tipologia</th><th>Massimo</th><th>Minimale</th><th>Aliquota agente</th><th>Aliquota società</th></tr>
     <tr><td>Monomandatario</td><td>45.717,00 €</td><td>1.011,00 €</td><td>8,50%</td><td>8,50%</td></tr>
@@ -911,7 +880,7 @@ Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping()
   variazione normativa richiede una nuova riga per l'anno interessato, non la modifica di quella esistente
   (per preservare lo storico dei ricalcoli).</p>
 
-  <h3>17.2 Scaglioni FIRR (tabella <code>firrs</code>)</h3>
+  <h3 id="17-2-scaglioni-firr-tabella-firrs">17.2 Scaglioni FIRR (tabella <code>firrs</code>)</h3>
   <table>
     <tr><th>Scaglione</th><th>Plurimandatario</th><th>Monomandatario</th><th>Aliquota</th></tr>
     <tr><td>1°</td><td>0 – 6.200 €</td><td>0 – 12.400 €</td><td>4%</td></tr>
@@ -919,7 +888,7 @@ Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping()
     <tr><td>3°</td><td>oltre, fino a 99.999.999 €</td><td>oltre, fino a 99.999.999 €</td><td>1%</td></tr>
   </table>
 
-  <h3>17.3 Variabili d'ambiente rilevanti</h3>
+  <h3 id="17-3-variabili-d-ambiente-rilevanti">17.3 Variabili d'ambiente rilevanti</h3>
   <table>
     <tr><th>Variabile</th><th>Uso</th></tr>
     <tr><td><code>MEDIAFACILE_BASE_URL</code>, <code>MEDIAFACILE_HEADER_KEY</code></td><td>Import pratiche/provvigioni (§10), via <code>config('services.mediafacile')</code></td></tr>
@@ -934,6 +903,34 @@ Schedule::command('coge:sync-primenote')->dailyAt('20:15')->withoutOverlapping()
   momento della stesura. In caso di discrepanza fra questo documento e il comportamento reale dell'applicazione,
   fa fede il codice: aggiornare questo file quando la logica descritta cambia.
 </footer>
+
+<!-- facts:start -->
+<h2 id="fatti-dal-codice">Fatti dal codice</h2>
+<p>Sezione generata da <code>unico-core/tools/manuals/gen_facts.py</code> il 24/10/2026: rispecchia il codice, non va modificata a mano (si rigenera con <code>python3 tools/manuals/gen_facts.py /var/www/html/unicocoge</code>).</p>
+<h3 id="fatti-pacchetti">Pacchetti</h3>
+<table><thead><tr><th>Pacchetto</th><th>Vincolo</th><th>Installato</th></tr></thead><tbody><tr><td><code>dutchcodingcompany/filament-socialite</code></td><td><code>^3.0</code></td><td><code>3.3.0</code></td></tr><tr><td><code>filament/filament</code></td><td><code>^5.6</code></td><td><code>v5.10.2</code></td></tr><tr><td><code>laravel/framework</code></td><td><code>^13.8</code></td><td><code>v13.37.0</code></td></tr><tr><td><code>laravel/socialite</code></td><td><code>^5.24</code></td><td><code>v5.31.0</code></td></tr><tr><td><code>laravel/tinker</code></td><td><code>^3.0</code></td><td><code>v3.0.2</code></td></tr><tr><td><code>maatwebsite/excel</code></td><td><code>^3.1|^4.0</code></td><td><code>4.0.4</code></td></tr><tr><td><code>meo-icar/unico-core</code></td><td><code>dev-main</code></td><td><code>dev-main</code></td></tr><tr><td><code>neuron-core/neuron-ai</code></td><td><code>^3.16</code></td><td><code>3.17.2</code></td></tr><tr><td><code>php</code></td><td><code>^8.3</code></td><td><code></code></td></tr><tr><td><code>pxlrbt/filament-excel</code></td><td><code>^4.1</code></td><td><code>v4.1.1</code></td></tr><tr><td><code>smalot/pdfparser</code></td><td><code>^2.12</code></td><td><code>v2.13.1</code></td></tr><tr><td><code>socialiteproviders/microsoft</code></td><td><code>^4.7</code></td><td><code>4.10.0</code></td></tr><tr><td><code>socialiteproviders/microsoft-azure</code></td><td><code>^5.2</code></td><td><code>5.2.1</code></td></tr></tbody></table>
+<h3 id="fatti-rotte">Rotte dell'app (web e API)</h3>
+<table><thead><tr><th>Metodo</th><th>Percorso</th><th>Nome</th><th>Azione</th></tr></thead><tbody><tr><td><code>GET|POST|PUT|PATCH|DELETE|OPTIONS|QUERY</code></td><td><code>/</code></td><td><code></code></td><td><code>Illuminate\Routing\RedirectController</code></td></tr><tr><td><code>GET</code></td><td><code>/api/bridge/health</code></td><td><code>bridge.health</code></td><td><code>Unico\Core\Bridge\Http\Controllers\CommandController@health</code></td></tr><tr><td><code>GET</code></td><td><code>/api/checks</code></td><td><code>api.checks.index</code></td><td><code>Api\CheckStatusApiController@index</code></td></tr><tr><td><code>GET</code></td><td><code>/api/checks/{command}</code></td><td><code>api.checks.show</code></td><td><code>Api\CheckStatusApiController@show</code></td></tr><tr><td><code>GET</code></td><td><code>/api/commands</code></td><td><code>bridge.commands.index</code></td><td><code>Unico\Core\Bridge\Http\Controllers\CommandController@index</code></td></tr><tr><td><code>GET</code></td><td><code>/api/commands/runs/{run}</code></td><td><code>bridge.runs.show</code></td><td><code>Unico\Core\Bridge\Http\Controllers\CommandController@show</code></td></tr><tr><td><code>POST</code></td><td><code>/api/commands/{command}</code></td><td><code>bridge.commands.store</code></td><td><code>Unico\Core\Bridge\Http\Controllers\CommandController@store</code></td></tr><tr><td><code>GET</code></td><td><code>/api/models/{model}/fields</code></td><td><code>api.models.fields</code></td><td><code>Api\ModelFieldsApiController@show</code></td></tr><tr><td><code>GET</code></td><td><code>/api/models/{model}/latest</code></td><td><code>api.models.latest</code></td><td><code>Api\LatestModelRecordApiController@show</code></td></tr><tr><td><code>GET</code></td><td><code>/api/models/{model}/{id}</code></td><td><code>api.models.show-record</code></td><td><code>Api\ModelFieldValueApiController@show</code></td></tr><tr><td><code>PATCH</code></td><td><code>/api/models/{model}/{id}</code></td><td><code>api.models.update-field</code></td><td><code>Api\ModelFieldValueApiController@update</code></td></tr><tr><td><code>GET</code></td><td><code>/api/users/lookup</code></td><td><code>api.users.lookup</code></td><td><code>Api\UserLookupApiController@show</code></td></tr><tr><td><code>GET</code></td><td><code>/bpm-landing/{subject_id}</code></td><td><code>bpm.landing</code></td><td><code>BpmBridgeController@handle</code></td></tr><tr><td><code>GET</code></td><td><code>/documents/{document}/download</code></td><td><code>documents.download</code></td><td><code>Unico\Core\Http\Controllers\DocumentDownloadController</code></td></tr><tr><td><code>GET</code></td><td><code>/mail-preview</code></td><td><code></code></td><td><code>Closure</code></td></tr><tr><td><code>POST</code></td><td><code>/signature/webhook/{provider}</code></td><td><code>signature.webhook</code></td><td><code>Unico\Core\Http\Controllers\SignatureWebhookController</code></td></tr></tbody></table>
+<h3 id="fatti-comandi">Comandi Artisan dell'app</h3>
+<table><thead><tr><th>Comando</th><th>Descrizione</th><th>File</th></tr></thead><tbody><tr><td><code>vcoge:calculate</code></td><td>Ricalcola le provvigioni finanziarie (tabella vcoge)</td><td><code>CalculateVcoge.php</code></td></tr><tr><td><code>venasarco-trimestre:calculate</code></td><td>Ricalcola i contributi trimestrali ENASARCO (tabella venasarcotrimestre), poi ricalcola anche i totali ENASARCO/FIRR (venasarcotot)</td><td><code>CalculateVenasarcoTrimestre.php</code></td></tr><tr><td><code>venasarcotot:calculate</code></td><td>Ricalcola i totali ENASARCO e FIRR (tabella venasarcotot)</td><td><code>CalculateVenasarcotot.php</code></td></tr><tr><td><code>clienti:check-missing-piva</code></td><td>Stato del controllo sugli istituti attivi (non fittizi) senza partita IVA</td><td><code>CheckClientiWithoutPiva.php</code></td></tr><tr><td><code>fornitori:check-missing-email</code></td><td>Stato del controllo sui fornitori (non dipendenti) senza email, a cui non si possono inviare i proforma</td><td><code>CheckFornitoriWithoutEmail.php</code></td></tr><tr><td><code>proformas:check-unpaid</code></td><td>Stato del controllo sui proforma inviati e non ancora pagati da oltre 30 giorni</td><td><code>CheckProformasUnpaid.php</code></td></tr><tr><td><code>provvigioni:check-maturate</code></td><td>Provvigioni maturate non ancora in un proforma né escluse (valore: numero; allegato: elenco CSV)</td><td><code>CheckProvvigioniMaturate.php</code></td></tr><tr><td><code>purchase-invoices:check-stale</code></td><td></td><td><code>CheckStalePurchaseInvoices.php</code></td></tr><tr><td><code>sales-invoices:check-stale</code></td><td></td><td><code>CheckStaleSalesInvoices.php</code></td></tr><tr><td><code>primanota:generate</code></td><td>Genera le prime note serali in base alle regole configurate</td><td><code>GeneratePrimaNotaCommand.php</code></td></tr><tr><td><code>proformas:generate-storico</code></td><td>Crea i proforma fittizi dello storico dalle provvigioni con numero e data fattura ma senza proforma</td><td><code>GenerateStoricoProformas.php</code></td></tr><tr><td><code>import:daily</code></td><td>Run all daily import commands with optional date range</td><td><code>ImportDailyData.php</code></td></tr><tr><td><code>pratiche:import-api</code></td><td>Import pratiche from external API</td><td><code>ImportPraticheFromApi.php</code></td></tr><tr><td><code>provvigioni:import-api</code></td><td>Import provvigioni from external API</td><td><code>ImportProvvigioniFromApi.php</code></td></tr><tr><td><code>invoices:match</code></td><td>Abbina provvigioni e proforma alle fatture: agenti alle fatture di acquisto, istituti e clienti alle fatture di vendita</td><td><code>MatchInvoices.php</code></td></tr><tr><td><code>proformas:match-invoices</code></td><td>Match proformas to sales invoices based on amount equality</td><td><code>MatchProformasToInvoices.php</code></td></tr><tr><td><code>proformas:match-purchase-invoices</code></td><td>Match proformas to purchase invoices based on amount equality</td><td><code>MatchProformasToPurchaseInvoices.php</code></td></tr><tr><td><code>provvigioni:match-sales-invoices</code></td><td>Abbina le provvigioni di tipo Cliente alle fatture di vendita (codice fiscale della pratica, nome e importo), senza passare per il proforma</td><td><code>MatchProvvigioniToSalesInvoices.php</code></td></tr><tr><td><code>sales-invoices:match</code></td><td>Match sales invoices with clienti using VAT number</td><td><code>MatchSalesInvoices.php</code></td></tr><tr><td><code>parse:product-description</code></td><td>Parse denominazione_prodotto to extract tipo_prodotto, denominazione_banca, rata, nrate</td><td><code>ParseProductDescription.php</code></td></tr><tr><td><code>proformas:send-pending</code></td><td>Invia ai produttori i proforma in stato «Inserito» non ancora spediti (copia conoscenza opzionale)</td><td><code>SendPendingProformas.php</code></td></tr><tr><td><code>coge:sync-monthly</code></td><td>Sincronizza i dati COGE mensili con Business Central</td><td><code>SyncCogeMonthly.php</code></td></tr><tr><td><code>manual:sync</code></td><td>Indicizza Manual.md e Istruction.md nel vector store dell&#x27;assistente AI</td><td><code>SyncManualAssistant.php</code></td></tr><tr><td><code>coge:sync-primenote</code></td><td>Invia le voci di Prima Nota non ancora sincronizzate a Business Central</td><td><code>SyncPrimenoteEntry2Coge.php</code></td></tr><tr><td><code>permissions:sync-resources</code></td><td>Scansiona le risorse Filament e le sincronizza nel DB per l&#x27;applicazione corrente</td><td><code>SyncResourcesCommand.php</code></td></tr></tbody></table>
+<h3 id="fatti-schedule">Attività pianificate</h3>
+<pre>0  0  * * *  php artisan filament-excel:prune ... Next Due: 9 hours from now
+  0  3  * * *  App\Jobs\ImportaDaMediafacile ..... Next Due: 12 hours from now
+  0  1  1 * *  php artisan coge:sync-monthly ....... Next Due: 1 week from now
+  0  20 * * *  php artisan primanota:generate ..... Next Due: 5 hours from now
+  20 20 * * *  php artisan coge:sync-primenote .... Next Due: 5 hours from now</pre>
+<h3 id="fatti-modelli">Modelli (34)</h3><p><code>Address</code>, <code>AddressType</code>, <code>ApiCall</code>, <code>Client</code>, <code>ClientType</code>, <code>Clienti</code>, <code>Coges</code>, <code>Company</code>, <code>Compenso</code>, <code>Employee</code>, <code>EmployeeType</code>, <code>EmployeeTypePermission</code>, <code>Enasarco</code>, <code>Fattura</code>, <code>Firr</code>, <code>Fornitore</code>, <code>Invoice</code>, <code>InvoiceIn</code>, <code>Pratica</code>, <code>PraticheStato</code>, <code>PrimaNotaConfig</code>, <code>PrimaNotaEntry</code>, <code>Proforma</code>, <code>Provvigione</code>, <code>ProvvigioniStato</code>, <code>PurchaseInvoice</code>, <code>Resource</code>, <code>SalesInvoice</code>, <code>SocialiteUser</code>, <code>TipoProdotto</code>, <code>User</code>, <code>Vcoge</code>, <code>VenasarcoTrimestre</code>, <code>Venasarcotot</code></p>
+<h3 id="fatti-servizi">Servizi (17)</h3><p><code>ApiCallLogger</code>, <code>BusinessCentralService</code>, <code>CheckStatus</code>, <code>InvoiceMatchingService</code>, <code>ModelFieldIntrospector</code>, <code>ProformaInvoiceMatchingService</code>, <code>ProformaPurchaseInvoiceMatchingService</code>, <code>ProvvigioneInvoiceMatchingService</code>, <code>PurchaseCreditNoteImportService</code>, <code>PurchaseInvoiceImportService</code>, <code>PurchaseInvoiceMatchingService</code>, <code>ReportingQueries</code>, <code>ReportingTables</code>, <code>SalesInvoiceCreditNoteImportService</code>, <code>SalesInvoiceImportService</code>, <code>SalesInvoiceMatchingService</code>, <code>StoricoProformaService</code></p>
+<h3 id="fatti-filament">Filament</h3>
+<table><thead><tr><th>Cartella app/Filament</th><th>File in Resources</th><th>Pages</th><th>Widgets</th><th>Actions</th></tr></thead><tbody><tr><td><code>Actions</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><code>Exports</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><code>Pages</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><code>Resources</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><code>Traits</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr><tr><td><code>Widgets</code></td><td>0</td><td>0</td><td>0</td><td>0</td></tr></tbody></table>
+<table><thead><tr><th>Risorsa</th><th>Voce di menu</th><th>Slug</th><th>Modello</th></tr></thead><tbody><tr><td><code>Resources/ClientTypes/ClientTypeResource</code></td><td>Tipo consulenti</td><td><code></code></td><td><code>ClientType</code></td></tr><tr><td><code>Resources/Clientis/ClientiResource</code></td><td>Istituti</td><td><code></code></td><td><code>Clienti</code></td></tr><tr><td><code>Resources/Clients/ClientResource</code></td><td>Clienti</td><td><code></code></td><td><code>Client</code></td></tr><tr><td><code>Resources/Coges/CogesResource</code></td><td>Primenote mensili</td><td><code></code></td><td><code>Coges</code></td></tr><tr><td><code>Resources/Companies/CompanyResource</code></td><td>Parametri Azienda</td><td><code></code></td><td><code>Company</code></td></tr><tr><td><code>Resources/Enasarcos/EnasarcoResource</code></td><td>Enasarco</td><td><code></code></td><td><code>Enasarco</code></td></tr><tr><td><code>Resources/Fatturas/FatturaResource</code></td><td>Provv. Maturate</td><td><code></code></td><td><code>Fattura</code></td></tr><tr><td><code>Resources/Firrs/FirrResource</code></td><td>Aliquote FIRR</td><td><code></code></td><td><code>Firr</code></td></tr><tr><td><code>Resources/Fornitores/FornitoreResource</code></td><td>Produttori</td><td><code></code></td><td><code>Fornitore</code></td></tr><tr><td><code>Resources/InvoiceIns/InvoiceInResource</code></td><td>Fatture passive</td><td><code></code></td><td><code>InvoiceIn</code></td></tr><tr><td><code>Resources/Praticas/PraticaResource</code></td><td>Pratiche</td><td><code></code></td><td><code>Pratica</code></td></tr><tr><td><code>Resources/PraticheStatos/PraticheStatoResource</code></td><td>Pratiche Stato</td><td><code></code></td><td><code>PraticheStato</code></td></tr><tr><td><code>Resources/PrimaNotaConfigs/PrimaNotaConfigResource</code></td><td>Regole Prima Nota</td><td><code></code></td><td><code>PrimaNotaConfig</code></td></tr><tr><td><code>Resources/PrimaNotaEntries/PrimaNotaEntryResource</code></td><td>Prima Nota</td><td><code></code></td><td><code>PrimaNotaEntry</code></td></tr><tr><td><code>Resources/Proformas/ProformaResource</code></td><td>Proforma</td><td><code></code></td><td><code>Proforma</code></td></tr><tr><td><code>Resources/Provvigiones/ProvvigioneResource</code></td><td>Provvigioni</td><td><code></code></td><td><code>Provvigione</code></td></tr><tr><td><code>Resources/ProvvigioniStatos/ProvvigioniStatoResource</code></td><td>Provvigioni Stato</td><td><code></code></td><td><code>ProvvigioniStato</code></td></tr><tr><td><code>Resources/PurchaseInvoices/PurchaseInvoiceResource</code></td><td>Fatture passive</td><td><code></code></td><td><code>PurchaseInvoice</code></td></tr><tr><td><code>Resources/SalesInvoices/SalesInvoiceResource</code></td><td>Fatture attive</td><td><code></code></td><td><code>SalesInvoice</code></td></tr><tr><td><code>Resources/Users/UserResource</code></td><td>Utenti</td><td><code></code></td><td><code>User</code></td></tr><tr><td><code>Resources/Vcoges/VcogeResource</code></td><td>Primenote provvigionali</td><td><code></code></td><td><code>Vcoge</code></td></tr><tr><td><code>Resources/VenasarcoTrimestres/VenasarcoTrimestreResource</code></td><td>ENASARCO trimestrali</td><td><code></code></td><td><code>VenasarcoTrimestre</code></td></tr><tr><td><code>Resources/Venasarcotots/VenasarcototResource</code></td><td>ENASARCO Conguaglio</td><td><code></code></td><td><code>Venasarcotot</code></td></tr></tbody></table>
+<table><thead><tr><th>Tipo</th><th>Classe</th><th>Titolo</th></tr></thead><tbody><tr><td>Widget</td><td><code>Widgets/IstruzioniWidget</code></td><td>Istruzioni e Guide</td></tr><tr><td>Page</td><td><code>Pages/AssistenteAi</code></td><td>Assistente AI</td></tr><tr><td>Page</td><td><code>Pages/Dashboard</code></td><td>Manuale</td></tr><tr><td>Page</td><td><code>Pages/Manuale</code></td><td>Manuale Utente</td></tr><tr><td>Page</td><td><code>Resources/ClientTypes/Pages/CreateClientType</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ClientTypes/Pages/EditClientType</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ClientTypes/Pages/ListClientTypes</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clientis/Pages/CreateClienti</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clientis/Pages/EditClienti</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clientis/Pages/ListClientis</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clients/Pages/CreateClient</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clients/Pages/EditClient</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clients/Pages/ListClients</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Clients/Pages/ListConsulenti</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Coges/Pages/CreateCoges</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Coges/Pages/EditCoges</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Coges/Pages/ListCoges</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Coges/Pages/ViewCoges</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Companies/Pages/CreateCompany</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Companies/Pages/EditCompany</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Companies/Pages/ListCompanies</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Companies/Pages/ViewCompany</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Enasarcos/Pages/CreateEnasarco</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Enasarcos/Pages/EditEnasarco</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Enasarcos/Pages/ListEnasarcos</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Enasarcos/Pages/ViewEnasarco</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fatturas/Pages/CreateFattura</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fatturas/Pages/EditFattura</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fatturas/Pages/ListFatturas</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Firrs/Pages/CreateFirr</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Firrs/Pages/EditFirr</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Firrs/Pages/ListFirrs</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fornitores/Pages/CreateFornitore</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fornitores/Pages/EditFornitore</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fornitores/Pages/ListFornitores</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Fornitores/Pages/ViewFornitore</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/InvoiceIns/Pages/CreateInvoiceIn</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/InvoiceIns/Pages/EditInvoiceIn</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/InvoiceIns/Pages/ImportInvoiceins</code></td><td>Import Fatture</td></tr><tr><td>Page</td><td><code>Resources/InvoiceIns/Pages/ListInvoiceIns</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Praticas/Pages/CreatePratica</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Praticas/Pages/EditPratica</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Praticas/Pages/ListPraticas</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Praticas/Pages/ViewPratica</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PraticheStatos/Pages/CreatePraticheStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PraticheStatos/Pages/EditPraticheStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PraticheStatos/Pages/ListPraticheStatos</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PraticheStatos/Pages/ViewPraticheStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaConfigs/Pages/CreatePrimaNotaConfig</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaConfigs/Pages/EditPrimaNotaConfig</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaConfigs/Pages/ListPrimaNotaConfigs</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaEntries/Pages/CreatePrimaNotaEntry</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaEntries/Pages/EditPrimaNotaEntry</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PrimaNotaEntries/Pages/ListPrimaNotaEntries</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Proformas/Pages/CreateProforma</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Proformas/Pages/EditProforma</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Proformas/Pages/ListProformas</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Provvigiones/Pages/CreateProvvigione</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Provvigiones/Pages/EditProvvigione</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Provvigiones/Pages/ListProvvigiones</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Provvigiones/Pages/ListProvvigioniAttive</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Provvigiones/Pages/ViewProvvigione</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ProvvigioniStatos/Pages/CreateProvvigioniStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ProvvigioniStatos/Pages/EditProvvigioniStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ProvvigioniStatos/Pages/ListProvvigioniStatos</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/ProvvigioniStatos/Pages/ViewProvvigioniStato</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PurchaseInvoices/Pages/CreatePurchaseInvoice</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PurchaseInvoices/Pages/EditPurchaseInvoice</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/PurchaseInvoices/Pages/ListPurchaseInvoices</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/SalesInvoices/Pages/CreateSalesInvoice</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/SalesInvoices/Pages/EditSalesInvoice</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/SalesInvoices/Pages/ListSalesInvoices</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Users/Pages/CreateUser</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Users/Pages/EditUser</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Users/Pages/ListUsers</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Users/Pages/ViewUser</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Vcoges/Pages/CreateVcoge</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Vcoges/Pages/EditVcoge</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Vcoges/Pages/ListVcoges</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Vcoges/Pages/ViewVcoge</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/VenasarcoTrimestres/Pages/CreateVenasarcoTrimestre</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/VenasarcoTrimestres/Pages/EditVenasarcoTrimestre</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/VenasarcoTrimestres/Pages/ListVenasarcoTrimestres</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/VenasarcoTrimestres/Pages/ViewVenasarcoTrimestre</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Venasarcotots/Pages/CreateVenasarcotot</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Venasarcotots/Pages/EditVenasarcotot</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Venasarcotots/Pages/ListVenasarcotots</code></td><td></td></tr><tr><td>Page</td><td><code>Resources/Venasarcotots/Pages/ViewVenasarcotot</code></td><td></td></tr></tbody></table>
+<h3 id="fatti-database">Database</h3><p>11 migration nell'app (le tabelle condivise sono nelle migration di unico-core).</p>
+<h3 id="fatti-env">Variabili .env usate dal codice</h3><p>Solo i nomi: i valori stanno nel <code>.env</code> e non vanno mai scritti qui.</p>
+<table><thead><tr><th>Variabile (.env)</th><th>Letta in</th></tr></thead><tbody><tr><td><code>ANTHROPIC_API_KEY</code></td><td><code>app/Neuron/ManualAssistantAgent.php</code></td></tr><tr><td><code>ANTHROPIC_MODEL</code></td><td><code>app/Neuron/ManualAssistantAgent.php</code></td></tr><tr><td><code>APP_DEBUG</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_ENV</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_FAKER_LOCALE</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_FALLBACK_LOCALE</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_KEY</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_LOCALE</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_MAINTENANCE_DRIVER</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_MAINTENANCE_STORE</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_NAME</code></td><td><code>config/app.php</code>, <code>config/cache.php</code>, <code>config/database.php</code></td></tr><tr><td><code>APP_PREVIOUS_KEYS</code></td><td><code>config/app.php</code></td></tr><tr><td><code>APP_URL</code></td><td><code>config/app.php</code>, <code>config/filesystems.php</code>, <code>config/mail.php</code></td></tr><tr><td><code>AUTH_GUARD</code></td><td><code>config/auth.php</code></td></tr><tr><td><code>AUTH_MODEL</code></td><td><code>config/auth.php</code></td></tr><tr><td><code>AUTH_PASSWORD_BROKER</code></td><td><code>config/auth.php</code></td></tr><tr><td><code>AUTH_PASSWORD_RESET_TOKEN_TABLE</code></td><td><code>config/auth.php</code></td></tr><tr><td><code>AUTH_PASSWORD_TIMEOUT</code></td><td><code>config/auth.php</code></td></tr><tr><td><code>AWS_ACCESS_KEY_ID</code></td><td><code>config/cache.php</code>, <code>config/filesystems.php</code>, <code>config/queue.php</code></td></tr><tr><td><code>AWS_BUCKET</code></td><td><code>config/filesystems.php</code></td></tr><tr><td><code>AWS_DEFAULT_REGION</code></td><td><code>config/cache.php</code>, <code>config/filesystems.php</code>, <code>config/queue.php</code></td></tr><tr><td><code>AWS_ENDPOINT</code></td><td><code>config/filesystems.php</code></td></tr><tr><td><code>AWS_SECRET_ACCESS_KEY</code></td><td><code>config/cache.php</code>, <code>config/filesystems.php</code>, <code>config/queue.php</code></td></tr><tr><td><code>AWS_URL</code></td><td><code>config/filesystems.php</code></td></tr><tr><td><code>AWS_USE_PATH_STYLE_ENDPOINT</code></td><td><code>config/filesystems.php</code></td></tr><tr><td><code>BC_CLIENT_ID</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_CLIENT_SECRET</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_COMPANY_ID</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_ENVIRONMENT</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_PRIMANOTA_DARE_SIGN</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_SCOPE</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BC_TENANT_ID</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BEANSTALKD_QUEUE</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>BEANSTALKD_QUEUE_HOST</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>BEANSTALKD_QUEUE_RETRY_AFTER</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>BPM_API_URL</code></td><td><code>config/services.php</code></td></tr><tr><td><code>BPM_BRIDGE_API_KEY</code></td><td><code>config/services.php</code></td></tr><tr><td><code>CACHE_PREFIX</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>CACHE_STORE</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>COGE_URL_POST</code></td><td><code>app/Services/BusinessCentralService.php</code></td></tr><tr><td><code>CORE_DB_DATABASE</code></td><td><code>config/database.php</code></td></tr><tr><td><code>CORE_DB_HOST</code></td><td><code>config/database.php</code></td></tr><tr><td><code>CORE_DB_PASSWORD</code></td><td><code>config/database.php</code></td></tr><tr><td><code>CORE_DB_PORT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>CORE_DB_USERNAME</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_CACHE_CONNECTION</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>DB_CACHE_LOCK_CONNECTION</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>DB_CACHE_LOCK_TABLE</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>DB_CACHE_TABLE</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>DB_CHARSET</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_COLLATION</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_CONNECTION</code></td><td><code>config/database.php</code>, <code>config/queue.php</code></td></tr><tr><td><code>DB_DATABASE</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_ENCRYPT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_FOREIGN_KEYS</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_HOST</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_PASSWORD</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_PORT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_QUEUE</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>DB_QUEUE_CONNECTION</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>DB_QUEUE_RETRY_AFTER</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>DB_QUEUE_TABLE</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>DB_SOCKET</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_TRUST_SERVER_CERTIFICATE</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_URL</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DB_USERNAME</code></td><td><code>config/database.php</code></td></tr><tr><td><code>DEBUGBAR_ADD_AJAX_TIMING</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_AJAX_HANDLER_AUTO_SHOW</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_AJAX_HANDLER_ENABLE_TAB</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_CAPTURE_AJAX</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_CLOCKWORK</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_AUTH</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_CACHE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_CONFIG</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_DB</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_DEFAULT_REQUEST</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_EVENTS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_EXCEPTIONS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_FILES</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_GATE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_JOBS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_LARAVEL</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_LIVEWIRE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_LOG</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_LOGS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_MAIL</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_MEMORY</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_MESSAGES</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_MODELS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_PENNANT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_PHPINFO</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_ROUTE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_SESSION</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_SYMFONY_REQUEST</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_TIME</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_COLLECTORS_VIEWS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_DEBUG_BACKTRACE_LIMIT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_DEFER_DATASETS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_EDITOR</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_ENABLED</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_ERROR_HANDLER</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_ERROR_LEVEL</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_HIDE_EMPTY_TABS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_INCLUDE_VENDORS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_INJECT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_LOCAL_SITES_PATH</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPEN_STORAGE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_AUTH_SHOW_GUARDS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_AUTH_SHOW_NAME</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_CACHE_VALUES</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_BACKTRACE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_DURATION_BACKGROUND</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_EXPLAIN_ENABLED</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_HARD_LIMIT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_HINTS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_MEMORY_USAGE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_ONLY_SLOW_QUERIES</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_SHOW_COPY</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_SLOW_THRESHOLD</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_SOFT_LIMIT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_DB_TIMELINE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_EVENTS_DATA</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_LOGS_FILE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MAIL_SHOW_BODY</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MAIL_TIMELINE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MEMORY_PRECISION</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MEMORY_RESET_PEAK</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MEMORY_WITH_BASELINE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MESSAGES_CAPTURE_DUMPS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_MESSAGES_TRACE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_ROUTE_LABEL</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_SYMFONY_REQUEST_LABEL</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_TIME_MEMORY_USAGE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_VIEWS_DATA</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_VIEWS_GROUP</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_VIEWS_INERTIA_PAGES</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_VIEWS_TIMELINE</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_OPTIONS_WITH_PARAMS</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_REMOTE_SITES_PATH</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_ROUTE_DOMAIN</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_ROUTE_PREFIX</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_CONNECTION</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_DRIVER</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_ENABLED</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_HOSTNAME</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_PATH</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_PORT</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_STORAGE_PROVIDER</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DEBUGBAR_THEME</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>DYNAMODB_CACHE_TABLE</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>DYNAMODB_ENDPOINT</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>FILESYSTEM_DISK</code></td><td><code>config/filesystems.php</code></td></tr><tr><td><code>GEMINI_BASE_URL</code></td><td><code>app/Neuron/ManualAssistantAgent.php</code></td></tr><tr><td><code>GEMINI_EMBEDDINGS_MODEL</code></td><td><code>app/Neuron/ManualAssistantAgent.php</code></td></tr><tr><td><code>GOOGLE_API_KEY</code></td><td><code>app/Neuron/ManualAssistantAgent.php</code></td></tr><tr><td><code>IGNITION_EDITOR</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>IGNITION_LOCAL_SITES_PATH</code></td><td><code>config/debugbar.php</code></td></tr><tr><td><code>LOG_CHANNEL</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_DAILY_DAYS</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_DEPRECATIONS_CHANNEL</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_DEPRECATIONS_TRACE</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_LEVEL</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_PAPERTRAIL_HANDLER</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_SLACK_EMOJI</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_SLACK_USERNAME</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_SLACK_WEBHOOK_URL</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_STACK</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_STDERR_FORMATTER</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>LOG_SYSLOG_FACILITY</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>MAIL_EHLO_DOMAIN</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_FROM_ADDRESS</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_FROM_NAME</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_HOST</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_LOG_CHANNEL</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_MAILER</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_PASSWORD</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_PORT</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_SCHEME</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_SENDMAIL_PATH</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_URL</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MAIL_USERNAME</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>MEDIAFACILE_BASE_URL</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MEDIAFACILE_HEADER_KEY</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MEDIAFACILE_NOTIFY_EMAILS</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MEMCACHED_HOST</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>MEMCACHED_PASSWORD</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>MEMCACHED_PERSISTENT_ID</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>MEMCACHED_PORT</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>MEMCACHED_USERNAME</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>MICROSOFT_CLIENT_ID</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MICROSOFT_CLIENT_SECRET</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MICROSOFT_REDIRECT_URI</code></td><td><code>config/services.php</code></td></tr><tr><td><code>MYSQL_ATTR_SSL_CA</code></td><td><code>config/database.php</code></td></tr><tr><td><code>PAPERTRAIL_PORT</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>PAPERTRAIL_URL</code></td><td><code>config/logging.php</code></td></tr><tr><td><code>POSTMARK_API_KEY</code></td><td><code>config/services.php</code></td></tr><tr><td><code>POSTMARK_MESSAGE_STREAM_ID</code></td><td><code>config/mail.php</code></td></tr><tr><td><code>PROXY</code></td><td><code>config/services.php</code></td></tr><tr><td><code>QUEUE_CONNECTION</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>QUEUE_FAILED_DRIVER</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>REDIS_BACKOFF_ALGORITHM</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_BACKOFF_BASE</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_BACKOFF_CAP</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_CACHE_CONNECTION</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>REDIS_CACHE_DB</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_CACHE_LOCK_CONNECTION</code></td><td><code>config/cache.php</code></td></tr><tr><td><code>REDIS_CLIENT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_CLUSTER</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_DB</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_HOST</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_MAX_RETRIES</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_PASSWORD</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_PERSISTENT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_PORT</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_PREFIX</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_QUEUE</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>REDIS_QUEUE_CONNECTION</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>REDIS_QUEUE_RETRY_AFTER</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>REDIS_URL</code></td><td><code>config/database.php</code></td></tr><tr><td><code>REDIS_USERNAME</code></td><td><code>config/database.php</code></td></tr><tr><td><code>RESEND_API_KEY</code></td><td><code>config/services.php</code></td></tr><tr><td><code>SESSION_CONNECTION</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_COOKIE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_DOMAIN</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_DRIVER</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_ENCRYPT</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_EXPIRE_ON_CLOSE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_HTTP_ONLY</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_LIFETIME</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_PARTITIONED_COOKIE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_PATH</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_SAME_SITE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_SECURE_COOKIE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_STORE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SESSION_TABLE</code></td><td><code>config/session.php</code></td></tr><tr><td><code>SLACK_BOT_USER_DEFAULT_CHANNEL</code></td><td><code>config/services.php</code></td></tr><tr><td><code>SLACK_BOT_USER_OAUTH_TOKEN</code></td><td><code>config/services.php</code></td></tr><tr><td><code>SQS_PREFIX</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>SQS_QUEUE</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>SQS_SUFFIX</code></td><td><code>config/queue.php</code></td></tr><tr><td><code>UNICO_CORE_MIGRATE</code></td><td><code>config/database.php</code></td></tr></tbody></table>
+<h3 id="fatti-test">Test</h3>
+<table><thead><tr><th>Suite</th><th>File di test</th></tr></thead><tbody><tr><td><code>Feature</code></td><td>14</td></tr><tr><td><code>Unit</code></td><td>5</td></tr></tbody></table>
+<!-- facts:end -->
 
 </main>
 </div>

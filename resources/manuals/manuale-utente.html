@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Manuale utente — UnicoCoge</title>
+    <style>
+        :root { color-scheme: light; }
+        body { margin: 0 auto; max-width: 54rem; padding: 2rem 1.25rem 4rem; color: #1c1917; background: #fff; font: 1.02rem/1.55 Georgia, "Times New Roman", serif; }
+        h1, h2, h3 { font-family: "Segoe UI", system-ui, sans-serif; line-height: 1.25; }
+        h1 { font-size: 1.85rem; margin-bottom: 0.25rem; }
+        h2 { font-size: 1.3rem; margin-top: 2.2rem; border-bottom: 1px solid #e7e5e4; padding-bottom: 0.3rem; }
+        h3 { font-size: 1.08rem; margin-top: 1.4rem; }
+        .sottotitolo { margin-top: 0; color: #57534e; }
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.92rem; }
+        th, td { border: 1px solid #d6d3d1; padding: 0.4rem 0.55rem; vertical-align: top; text-align: left; }
+        th { background: #f5f5f4; font-family: "Segoe UI", system-ui, sans-serif; }
+        code, pre { font-family: ui-monospace, "Cascadia Code", monospace; font-size: 0.86em; }
+        pre { background: #fafaf9; border: 1px solid #e7e5e4; padding: 0.75rem 1rem; overflow-x: auto; }
+        .gap { background: #fffbeb; border-left: 4px solid #d97706; padding: 0.75rem 1rem; margin: 1rem 0; }
+        .nota { background: #f0f9ff; border-left: 4px solid #0284c7; padding: 0.75rem 1rem; margin: 1rem 0; }
+        a { color: #9a3412; }
+        @media print {
+            body { max-width: none; padding: 0; }
+            a { color: inherit; text-decoration: none; }
+            h2, h3 { break-after: avoid; }
+            table, pre, .gap, .nota { break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Manuale utente</h1>
+    <p class="sottotitolo">UnicoCoge — gestione contabile delle provvigioni dei mediatori creditizi: proforma, fatture, prima nota, ENASARCO e FIRR.</p>
+    <nav aria-label="Indice"><ol><li><a href="#1-provvigioni">1. Provvigioni</a></li><li><a href="#2-proforma-e-pagamenti">2. Proforma e pagamenti</a></li><li><a href="#3-anagrafiche-e-configurazioni-fiscali">3. Anagrafiche e configurazioni fiscali</a></li><li><a href="#4-pratiche-e-storni-rivalsa">4. Pratiche e storni (rivalsa)</a></li><li><a href="#5-contabilita-e-riconciliazione">5. Contabilità e riconciliazione</a></li><li><a href="#6-enasarco-e-firr">6. ENASARCO e FIRR</a></li><li><a href="#7-operazioni-automatiche">7. Operazioni automatiche</a></li><li><a href="#8-impostazioni-utenti-e-assistente">8. Impostazioni, utenti e assistente</a></li></ol></nav>
+    <p>UnicoCoge (già Proforma) è l’applicazione del mediatore creditizio per l’<strong>intero ciclo provvigionale</strong>: import delle pratiche e dei compensi, emissione dei proforma ai produttori, riconciliazione con le fatture, prima nota verso la contabilità (Business Central) e contributi ENASARCO e FIRR. Il manuale è scritto per i contabili; le parti tecniche sono nel manuale tecnico.</p>
+
+    <h2 id="1-provvigioni">1. Provvigioni</h2>
+    <h3 id="1-1-provvigioni-passive-uscite-verso-i-produttori">1.1 Provvigioni passive (uscite verso i produttori)</h3>
+    <p>La schermata principale mostra le provvigioni maturate dalla rete di vendita. Colonne principali: Stato, Produttore, Provvigione, Coordinamento, Data perfezionamento, Cliente, Istituto finanziario, Data erogazione, Data fattura, Pratica. Stati: <code>Inserito</code>, <code>Sospeso</code>, <code>Proforma</code>, <code>Pagato</code>, <code>Annullato</code>, <code>Escluso</code>, <code>Fatturato</code>, <code>Stornato</code>.</p>
+    <ul>
+        <li><strong>Inverti stato</strong> (icona freccia): alterna una provvigione tra <em>Inserito</em> e <em>Sospeso</em>, per escluderla dal prossimo proforma (per esempio per documentazione mancante).</li>
+        <li><strong>Emetti proforma</strong>: seleziona le righe in stato <em>Inserito</em>; il sistema le raggruppa per partita IVA del produttore e tiene separati i compensi standard da quelli di <em>coordinamento</em>.</li>
+        <li><strong>Annulla provvigioni</strong>: porta le righe selezionate in <em>Annullato</em>. <strong>Excel</strong>: esporta la lista raggruppata per produttore, con i totali.</li>
+    </ul>
+    <p>Filtri: Stato (di default Inserito e Sospeso), Coordinamento, Abbinato a fattura, Erogato, Stato compenso, Produttore, Istituto, <strong>Fino al mese</strong> (provvigioni perfezionate entro il mese scelto, di default il mese scorso), Mese e Trimestre di erogazione. Se una provvigione non compare, verifica che la data di erogazione della pratica rientri in questi filtri.</p>
+    <h3 id="1-2-provvigioni-attive-entrate-dagli-istituti">1.2 Provvigioni attive (entrate dagli istituti)</h3>
+    <p>Dal menu <em>Provvigioni attive</em>: quanto gli istituti finanziari devono alla società, con gli stessi filtri della vista passiva. Si selezionano le provvigioni del proforma fornito dalla banca (importate) e la data del proforma. Nell’abbinamento alle fatture attive potranno essere abbinati <strong>solo i proforma con data successiva alla data di registrazione della fattura</strong>. Le provvigioni dei clienti si abbinano da sole alle fatture attive.</p>
+
+    <h2 id="2-proforma-e-pagamenti">2. Proforma e pagamenti</h2>
+    <p>Il proforma è il documento intermedio che precede la fattura elettronica e dice al produttore quanto può fatturare. Stati: <em>Inserito</em>, <em>Spedito</em>, <em>Pagato</em>, <em>Annullato</em>; tipi: Agente, Istituto, Cliente.</p>
+    <ul>
+        <li><strong>Invia email proforma</strong>: invio reale al produttore. <strong>Simulazione invio</strong>: l’email arriva a te, per controllare impaginazione e calcoli.</li>
+        <li><strong>Forza data invio</strong>: per un invio fatto fuori dal sistema; aggiorna il montante anticipi senza spedire l’email.</li>
+        <li>Nel dettaglio, la scheda <strong>Compensi</strong> gestisce il recupero degli <em>anticipi</em>: un importo positivo viene scalato dal compenso del mese, un valore negativo indica l’erogazione di un nuovo anticipo. La scheda <strong>Provvigioni abbinate</strong> permette di togliere una provvigione: il totale si aggiorna subito e la provvigione torna <em>Inserito</em>.</li>
+        <li><strong>Welcome bonus</strong>: modifica il proforma e inserisci l’importo nella voce <em>Contributo</em>.</li>
+    </ul>
+
+    <h2 id="3-anagrafiche-e-configurazioni-fiscali">3. Anagrafiche e configurazioni fiscali</h2>
+    <h3 id="3-1-produttori">3.1 Produttori</h3>
+    <p>Ogni scheda deve avere l’<strong>email</strong> (per l’invio dei proforma) e il <strong>tipo ENASARCO</strong> (monomandatario, plurimandatario, società, non soggetto), da cui dipende il calcolo contributivo. Un badge segnala i produttori senza email e blocca gli invii massivi errati. Scheda <em>Anticipazioni e contributi</em>: periodicità del contributo fisso, montante degli anticipi residuo e piano di rientro (unica soluzione o rate). Scheda <em>Dati gestionali</em>: coordinatore, conto COGE, denominazione in fattura elettronica.</p>
+    <h3 id="3-2-istituti-e-clienti">3.2 Istituti e clienti</h3>
+    <p>Gli istituti mandanti possono includere <strong>istituti fittizi</strong> (utili in istruttoria): per questi la partita IVA di fatturazione è <strong>obbligatoria</strong>. L’assenza di P. IVA su un istituto attivo è segnalata da un badge. Sono disponibili anche le anagrafiche di Clienti e Consulenti, Aziende e Tipi cliente.</p>
+
+    <h2 id="4-pratiche-e-storni-rivalsa">4. Pratiche e storni (rivalsa)</h2>
+    <p>Le pratiche arrivano dall’import da MediaFacile e si consultano in sola lettura, con le provvigioni collegate. Filtri: stato pratica (di default PERFEZIONATA e IN AMMORTAMENTO), tipo prodotto, presenza della data di erogazione. In caso di <strong>storno</strong> (per esempio recesso del cliente) il sistema genera le <em>rivalse</em> sugli agenti coinvolti: una provvigione negativa compensata nel primo proforma utile. «Annulla storno» elimina anche la riga di storno passivo.</p>
+
+    <h2 id="5-contabilita-e-riconciliazione">5. Contabilità e riconciliazione</h2>
+    <h3 id="5-1-prime-note-provvigionali">5.1 Prime note provvigionali</h3>
+    <p>Riepilogo mensile di entrate, uscite, saldo e storni delle provvigioni relative a pratiche erogate. Un clic su <em>Entrata</em> o <em>Uscita</em> apre le provvigioni di quel mese. Dopo aver verificato i totali, <strong>Invia in contabilità</strong> trasmette la prima nota a Business Central. I conti dare/avere si configurano in Impostazioni → Primenote.</p>
+    <h3 id="5-2-fatture-passive-e-attive">5.2 Fatture passive e attive</h3>
+    <p>Dal menu <em>Contabilità</em>: <strong>Fatture passive</strong> (dai produttori e consulenti) e <strong>Fatture attive</strong> (verso gli istituti). Si importano da file Excel (anche le note di credito). <strong>Riconcilia con proforma</strong> abbina le fatture ai proforma emessi prima della data di registrazione, per partita IVA e importo. Una fattura non riconosciuta si abbina a mano con <strong>Associa</strong> (anche creando l’anagrafica dai dati della fattura); un delta superiore a 5 euro si abbina solo scrivendo la giustificazione. <strong>Chiudi selezionati</strong> segna come riconciliate le fatture scelte; <strong>Ricava storico proforma</strong> ricostruisce i proforma storici.</p>
+
+    <h2 id="6-enasarco-e-firr">6. ENASARCO e FIRR</h2>
+    <p>Il calcolo è automatico in base al tipo definito in anagrafica. <strong>Trimestrali</strong>: i contributi maturati nel trimestre per produttore. <strong>Conguaglio e FIRR</strong>: a fine anno (o su richiesta) confronta il calcolato con il versato, con la quota RACES e il FIRR; filtro per anno di competenza (di default l’anno precedente). Le <strong>aliquote</strong> si aggiornano per anno in Impostazioni → Enasarco.</p>
+
+    <h2 id="7-operazioni-automatiche">7. Operazioni automatiche</h2>
+    <table>
+        <thead><tr><th>Quando</th><th>Cosa</th></tr></thead>
+        <tbody>
+            <tr><td>Ogni giorno alle 03:00</td><td>Import da MediaFacile delle pratiche e poi delle provvigioni degli ultimi 60 giorni; gli indirizzi indicati ricevono una email con quante righe sono nuove o modificate. L’importazione non parte più dalla pagina.</td></tr>
+            <tr><td>Ogni giorno alle 20:00 e 20:20</td><td>Generazione delle prime note e sincronizzazione con Business Central di quelle non ancora inviate.</td></tr>
+            <tr><td>Il 1° del mese alle 01:00</td><td>Invio a Business Central dell’aggregato mensile.</td></tr>
+        </tbody>
+    </table>
+    <p>Alcuni controlli li interroga ogni giorno UnicoBPM (ultima fattura di acquisto o di vendita troppo vecchia, provvigioni maturate, clienti senza partita IVA, produttori senza email, proforma non pagati) e manda le email ai ruoli previsti; tra questi, il 3 del mese l’elenco delle provvigioni maturate al contabile responsabile, il 5 un promemoria al contabile per rettificarle o escluderle, il 10 l’invio automatico dei proforma ai produttori.</p>
+
+    <h2 id="8-impostazioni-utenti-e-assistente">8. Impostazioni, utenti e assistente</h2>
+    <table>
+        <thead><tr><th>Voce</th><th>Cosa puoi fare</th></tr></thead>
+        <tbody>
+            <tr><td>Primenote</td><td>Configura i conti (dare/avere) per ogni tipo di movimento.</td></tr>
+            <tr><td>Enasarco</td><td>Aggiorna massimali e aliquote annuali.</td></tr>
+            <tr><td>Utenti</td><td>Gestisci gli accessi dei colleghi.</td></tr>
+        </tbody>
+    </table>
+    <p>La voce <strong>Assistente AI</strong> risponde alle domande sull’uso dell’applicazione (da questo manuale e dal manuale tecnico) e sui dati; se la risposta non basta, il pulsante di contatto invia la domanda al supporto.</p>
+
+</body>
+</html>
